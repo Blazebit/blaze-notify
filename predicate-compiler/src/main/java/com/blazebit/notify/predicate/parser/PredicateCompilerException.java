@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.predicate.parser;
 
-package com.blazebit.notify.predicate.model;
+public class PredicateCompilerException extends RuntimeException {
 
-public class EnumInCollectionPredicate extends InPredicate<EnumAtom, CollectionAtom> {
+    private static final long serialVersionUID = 1L;
 
-	public EnumInCollectionPredicate(EnumAtom left, CollectionAtom right, boolean negated) {
-		super(left, right, negated);
-	}
-	
-	@Override
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
+	public PredicateCompilerException() {
+		super();
 	}
 
-	@Override
-	public <T> T accept(ResultVisitor<T> visitor) {
-		return visitor.visit(this);
+	public PredicateCompilerException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public PredicateCompilerException(String message) {
+		super(message);
+	}
+
+	public PredicateCompilerException(Throwable cause) {
+		super(cause);
 	}
 }

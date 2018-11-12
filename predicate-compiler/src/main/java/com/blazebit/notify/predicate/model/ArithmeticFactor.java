@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class ArithmeticFactor implements ArithmeticExpression {
@@ -36,8 +38,8 @@ public class ArithmeticFactor implements ArithmeticExpression {
 	}
 
 	@Override
-	public TermType getType() {
-		return TermType.NUMERIC;
+	public DomainType getType() {
+		return expression.getType();
 	}
 
 	@Override

@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.predicate.parser;
 
-package com.blazebit.notify.domain.runtime.model;
+public class TypeErrorException extends PredicateCompilerException {
 
-/**
- * @author Christian Beikov
- * @since 1.0.0
- */
-public enum DomainPredicate {
-    NULLNESS,
-    EMPTYNESS,
-    RELATIONAL,
-    EQUALITY;
+    private static final long serialVersionUID = 1L;
+
+	public TypeErrorException() {
+		super();
+	}
+
+	public TypeErrorException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public TypeErrorException(String message) {
+		super(message);
+	}
+
+	public TypeErrorException(Throwable cause) {
+		super(cause);
+	}
 }

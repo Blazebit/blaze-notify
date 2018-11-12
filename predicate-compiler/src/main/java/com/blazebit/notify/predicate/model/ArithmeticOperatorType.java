@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainOperator;
+
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -24,10 +26,10 @@ import java.util.Map;
 
 public enum ArithmeticOperatorType {
 	
-	PLUS("+"),
-	MINUS("-"),
-	MULTIPLY("*"),
-	DIVIDE("/");
+	PLUS("+", DomainOperator.PLUS),
+	MINUS("-", DomainOperator.MINUS),
+	MULTIPLY("*", DomainOperator.MULTIPLICATION),
+	DIVIDE("/", DomainOperator.DIVISION);
 	
 	private static Map<String, ArithmeticOperatorType> OPERATOR_MAP;
 	
@@ -40,15 +42,21 @@ public enum ArithmeticOperatorType {
 	}
 	
 	private final String operator;
+	private final DomainOperator domainOperator;
 
-	private ArithmeticOperatorType(String operator) {
+	private ArithmeticOperatorType(String operator, DomainOperator domainOperator) {
 		this.operator = operator;
+		this.domainOperator = domainOperator;
 	}
 
 	public String getOperator() {
 		return operator;
 	}
-	
+
+	public DomainOperator getDomainOperator() {
+		return domainOperator;
+	}
+
 	public static ArithmeticOperatorType valueOfOperator(String operator) {
 		ArithmeticOperatorType operatorType = OPERATOR_MAP.get(operator);
 		if (operatorType == null) {

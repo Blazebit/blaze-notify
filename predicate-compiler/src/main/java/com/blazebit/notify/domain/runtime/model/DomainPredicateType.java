@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.predicate.model;
+package com.blazebit.notify.domain.runtime.model;
 
-import java.util.List;
-
-public class ArithmeticInPredicate extends InPredicate<ArithmeticExpression, List<ArithmeticFactor>> {
-
-	public ArithmeticInPredicate(ArithmeticExpression left, List<ArithmeticFactor> right, boolean negated) {
-		super(left, right, negated);
-	}
-	
-	@Override
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
-	}
-
-	@Override
-	public <T> T accept(ResultVisitor<T> visitor) {
-		return visitor.visit(this);
-	}	
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public enum DomainPredicateType {
+    NULLNESS,
+    EMPTYNESS,
+    RELATIONAL,
+    EQUALITY;
 }

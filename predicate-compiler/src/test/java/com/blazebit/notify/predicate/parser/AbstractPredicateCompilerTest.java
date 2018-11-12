@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.predicate.parser;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.predicate.model.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -25,29 +26,23 @@ import java.util.Calendar;
 
 public abstract class AbstractPredicateCompilerTest {
 
-	protected static Expression parseArithmeticExpression(String input) {
-		return PredicateCompiler.parse(input, new PredicateCompiler.RuleInvoker() {
+	private final PredicateCompiler predicateCompiler;
+
+	protected AbstractPredicateCompilerTest() {
+		this.predicateCompiler = new PredicateCompiler(getTestDomainModel());
+	}
+
+	protected abstract DomainModel getTestDomainModel();
+
+	protected Predicate parsePredicate(String input) {
+	    return predicateCompiler.parsePredicate(input);
+    }
+
+	protected Expression parseArithmeticExpression(String input) {
+		return predicateCompiler.parse(input, new PredicateCompiler.RuleInvoker() {
 			@Override
 			public ParserRuleContext invokeRule(PredicateParser parser) {
 				return parser.arithmetic_expression();
-			}
-		});
-	}
-
-	protected static Expression parseStringExpression(String input) {
-		return PredicateCompiler.parse(input, new PredicateCompiler.RuleInvoker() {
-			@Override
-			public ParserRuleContext invokeRule(PredicateParser parser) {
-				return parser.string_expression();
-			}
-		});
-	}
-
-	protected static Expression parseDateTimeExpression(String input) {
-		return PredicateCompiler.parse(input, new PredicateCompiler.RuleInvoker() {
-			@Override
-			public ParserRuleContext invokeRule(PredicateParser parser) {
-				return parser.datetime_expression();
 			}
 		});
 	}
@@ -60,84 +55,72 @@ public abstract class AbstractPredicateCompilerTest {
 		return new ConjunctivePredicate(Arrays.asList(conjuncts));
 	}
 	
-	protected static DateTimeAtom time(Calendar value) {
-		return new DateTimeAtom(Literal.of(value));
+	protected Atom time(Calendar value) {
+		return new Atom(predicateCompiler.getLiteralFactory().ofCalendar(value));
 	}
 	
-	protected static DateTimeAtom time(String value) {
-		return new DateTimeAtom(Literal.ofDateTimeString(wrapTimestamp(value)));
+	protected Atom time(String value) {
+	    return new Atom(predicateCompiler.getLiteralFactory().ofDateTimeString(value));
 	}
 	
 	protected static String wrapTimestamp(String dateTimeStr) {
 		return "TIMESTAMP('" + dateTimeStr + "')";
 	}
 	
-	protected static DateTimeAtom now() {
-		return new DateTimeAtom(true);
+	protected Atom now() {
+		return new Atom(predicateCompiler.getLiteralFactory().currentTimestamp());
 	}
 	
-	protected static StringAtom string(String value) {
-		return new StringAtom(Literal.of(value));
+	protected Atom string(String value) {
+		return new Atom(predicateCompiler.getLiteralFactory().ofString(value));
 	}
 	
-	protected static ArithmeticAtom number(long value) {
-		return new ArithmeticAtom(Literal.of(new BigDecimal(value)));
+	protected Atom number(long value) {
+		return new Atom(predicateCompiler.getLiteralFactory().ofBigDecimal(new BigDecimal(value)));
 	}
 	
-	protected static ArithmeticAtom number(BigDecimal value) {
-		return new ArithmeticAtom(Literal.of(value));
+	protected Atom number(BigDecimal value) {
+	    return new Atom(predicateCompiler.getLiteralFactory().ofBigDecimal(value));
 	}
 	
-	protected static ArithmeticAtom number(String value) {
-		return new ArithmeticAtom(Literal.ofNumericString(value));
+	protected Atom number(String value) {
+	    return new Atom(predicateCompiler.getLiteralFactory().ofNumericString(value));
 	}
 	
-	protected static ArithmeticAtom arithmeticAttr(String identifier) {
-		return new ArithmeticAtom(new Attribute(identifier, TermType.NUMERIC));
+	protected Atom attr(String identifier) {
+	    return new Atom(new Attribute(identifier, getTestDomainModel().getType(identifier)));
 	}
 	
-	protected static DateTimeAtom dateTimeAttr(String identifier) {
-		return new DateTimeAtom(new Attribute(identifier, TermType.DATE_TIME));
-	}
-	
-	protected static StringAtom stringAttr(String identifier) {
-		return new StringAtom(new Attribute(identifier, TermType.STRING));
+	protected Atom enumValue(String enumName, String enumKey) {
+		return new Atom(predicateCompiler.getLiteralFactory().ofEnumValue(new EnumValue(enumName, enumKey)));
 	}
 
-	protected static EnumAtom enumAttr(String identifier) {
-		return new EnumAtom(new Attribute(identifier, TermType.ENUM));
-	}
-
-	protected static EnumAtom enumValue(String enumName, String enumKey) {
-		return new EnumAtom(Literal.of(new EnumValue(enumName, enumKey)));
-	}
-
-	protected static CollectionAtom collectionAttr(String identifier) {
-		return new CollectionAtom(new Attribute(identifier, TermType.COLLECTION));
-	}
+//	protected static CollectionAtom collectionAttr(String identifier) {
+//		return new CollectionAtom(new Attribute(identifier, TermType.COLLECTION));
+//	}
 	
 	protected static ComparisonPredicate neq(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.NOT_EQUAL);
+		return new ComparisonPredicate(left, right, ComparisonOperator.NOT_EQUAL);
 	}
 	
 	protected static ComparisonPredicate eq(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.EQUAL);
+		return new ComparisonPredicate(left, right, ComparisonOperator.EQUAL);
 	}
 	
 	protected static ComparisonPredicate gt(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.GREATER);
+		return new ComparisonPredicate(left, right, ComparisonOperator.GREATER);
 	}
 	
 	protected static ComparisonPredicate ge(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.GREATER_OR_EQUAL);
+		return new ComparisonPredicate(left, right, ComparisonOperator.GREATER_OR_EQUAL);
 	}
 	
 	protected static ComparisonPredicate lt(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.LOWER);
+		return new ComparisonPredicate(left, right, ComparisonOperator.LOWER);
 	}
 	
 	protected static ComparisonPredicate le(TermExpression left, TermExpression right) {
-		return new ComparisonPredicate(left, right, ComparisonOperatorType.LOWER_OR_EQUAL);
+		return new ComparisonPredicate(left, right, ComparisonOperator.LOWER_OR_EQUAL);
 	}
 	
 	protected static ArithmeticFactor pos(ArithmeticExpression expression) {
@@ -156,35 +139,19 @@ public abstract class AbstractPredicateCompilerTest {
 		return new ChainingArithmeticExpression(left, right, ArithmeticOperatorType.MINUS);
 	}
 	
-	protected static BetweenPredicate<ArithmeticExpression> between(ArithmeticExpression left, ArithmeticExpression lower, ArithmeticExpression upper) {
-		return new ArithmeticBetweenPredicate(left, upper, lower);
+	protected static BetweenPredicate between(ArithmeticExpression left, ArithmeticExpression lower, ArithmeticExpression upper) {
+		return new BetweenPredicate(left, upper, lower);
 	}
 	
-	protected static BetweenPredicate<DateTimeAtom> between(DateTimeAtom left, DateTimeAtom lower, DateTimeAtom upper) {
-		return new DateTimeBetweenPredicate(left, upper, lower);
-	}
+//	protected static StringInCollectionPredicate inCollection(StringAtom value, CollectionAtom collection) {
+//		return new StringInCollectionPredicate(value, collection, false);
+//	}
 	
-	protected static StringInCollectionPredicate inCollection(StringAtom value, CollectionAtom collection) {
-		return new StringInCollectionPredicate(value, collection, false);
-	}
-	
-	protected static StringInPredicate in(StringAtom value, StringAtom... items) {
-		return new StringInPredicate(value, Arrays.asList(items), false);
-	}
-	
-	protected static ArithmeticInCollectionPredicate inCollection(ArithmeticExpression value, CollectionAtom collection) {
-		return new ArithmeticInCollectionPredicate(value, collection, false);
-	}
-	
-	protected static ArithmeticInPredicate in(ArithmeticExpression value, ArithmeticFactor... items) {
-		return new ArithmeticInPredicate(value, Arrays.asList(items), false);
+	protected static InPredicate in(ArithmeticExpression value, ArithmeticExpression... items) {
+		return new InPredicate(value, Arrays.asList(items), false);
 	}
 
-	protected static EnumInCollectionPredicate inCollection(EnumAtom value, CollectionAtom collection) {
-		return new EnumInCollectionPredicate(value, collection, false);
-	}
-
-	protected static EnumInPredicate in(EnumAtom value, EnumAtom... items) {
-		return new EnumInPredicate(value, Arrays.asList(items), false);
-	}
+	interface ExpectedExpressionProducer<T extends AbstractPredicateCompilerTest> {
+	    Expression getExpectedExpression(T testInstance);
+    }
 }

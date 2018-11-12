@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class ChainingArithmeticExpression implements ArithmeticExpression {
@@ -42,8 +44,8 @@ public class ChainingArithmeticExpression implements ArithmeticExpression {
 	}
 
 	@Override
-	public TermType getType() {
-		return TermType.NUMERIC;
+	public DomainType getType() {
+		return left.getType();
 	}
 
 	@Override

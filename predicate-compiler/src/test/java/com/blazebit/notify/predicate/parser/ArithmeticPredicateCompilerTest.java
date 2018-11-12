@@ -16,16 +16,23 @@
 
 package com.blazebit.notify.predicate.parser;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.predicate.model.Expression;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class ArithmeticPredicateCompilerTest extends AbstractPredicateCompilerTest {
-	
+
 	@Test
 	public void comparisonWithLiteralTest() {
 		Expression expr = parseArithmeticExpression("1 + 2");
 		assertEquals(plus(pos(number(1)), pos(number(2))), expr);
+	}
+
+	@Override
+	protected DomainModel getTestDomainModel() {
+		// TODO: define test domain model
+		return null;
 	}
 }

@@ -39,35 +39,12 @@ conditional_primary
     ;
 
 comparison_expression
-    : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		#ArithmeticComparisonPredicate
-    | left=datetime_expression 		comparison_operator 			right=datetime_expression		#DateTimeComparisonPredicate
-    | left=string_expression 		equality_comparison_operator 	right=string_expression			#StringComparisonPredicate
-    | left=enum_expression 			equality_comparison_operator 	right=enum_expression			#EnumComparisonPredicate
-    | between_expression                                                                            #BetweenPredicate
-    | in_expression                                                                                 #InPredicate
-    | null_expression                                                                               #NullPredicate
+    : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		                                        #ComparisonPredicate
+    | left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression                                        #BetweenPredicate
+    | arithmetic_expression 	(not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP         #InPredicate
+	| arithmetic_expression 	(not=NOT)? IN 			attribute			                                                                #InCollectionPredicate
+    | left=arithmetic_expression		kind=(IS_NULL | IS_NOT_NULL)                                                                        #IsNullPredicate
     ;
-
-between_expression
-	: left=datetime_expression BETWEEN lower=datetime_expression AND upper=datetime_expression			#DateTimeBetweenPredicate
-	| left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression	#ArithmeticBetweenPredicate
-	;
-
-in_expression
-	: string_expression 	(not=NOT)? IN 			LP (in_items+=string_atom)? (COMMA in_items+=string_atom)* RP				#StringInPredicate
-	| string_expression 	(not=NOT)? IN 			LP collection_attribute RP												    #StringInCollectionPredicate
-	| arithmetic_expression (not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP	#ArithmeticInPredicate
-	| arithmetic_expression (not=NOT)? IN 			LP collection_attribute RP												    #ArithmeticInCollectionPredicate
-	| enum_expression 		(not=NOT)? IN 	        LP (in_items+=enum_atom)? (COMMA in_items+=enum_atom)* RP				    #EnumInPredicate
-	| enum_expression       (not=NOT)? IN 			LP collection_attribute RP												    #EnumInCollectionPredicate
-	;
-
-null_expression
-	: left=datetime_expression 		kind=(IS_NULL | IS_NOT_NULL)		#DateTimeIsNullPredicate
-	| left=arithmetic_expression	kind=(IS_NULL | IS_NOT_NULL) 		#ArithmeticIsNullPredicate
-	| left=string_expression		kind=(IS_NULL | IS_NOT_NULL) 		#StringIsNullPredicate
-	| left=enum_expression			kind=(IS_NULL | IS_NOT_NULL) 		#EnumIsNullPredicate
-	;
 
 equality_comparison_operator
     : OP_EQ
@@ -94,34 +71,34 @@ arithmetic_term
     ;
 
 arithmetic_factor
-    : sign=( OP_PLUS | OP_MINUS )? arithmetic_primary   #SimpleArithmeticPrimary
+    : sign=( OP_PLUS | OP_MINUS )? arithmetic_primary   #ArithmeticPrimary
     ;
 
 arithmetic_in_item
-	: sign=( OP_PLUS | OP_MINUS )? arithmetic_atom  #ArithmeticInItem
+	: sign=( OP_PLUS | OP_MINUS )? atom  #ArithmeticInItem
 	;
 
 arithmetic_primary
-    : arithmetic_atom               #ArithmeticAtom
+    : atom               #ArithmeticAtom
     | LP arithmetic_expression RP   #ArithmeticPrimaryParanthesis
     ;
 
+atom
+    : attribute
+    | datetime_literal
+    | numeric_literal
+    | string_literal
+    | enum_literal
+    ;
+
+attribute
+    : identifier    #DomainAttribute
+    ;
 /****************************************************************
  * Date & Time
  ****************************************************************/
 
-datetime_expression
-	: datetime_atom
-	;
 
-datetime_atom
-	: datetime_attribute
-	| datetime_literal
-    ;
-
-datetime_attribute
-    : identifier    #DatetimeAttribute
-	;
 
 datetime_literal
 	: TIMESTAMP_LITERAL     #TimestampLiteral
@@ -132,19 +109,6 @@ datetime_literal
  * String
  ****************************************************************/
 
-string_expression
-	: string_atom
-	;
-
-string_atom
-	: string_attribute
-	| string_literal
-	;
-
-string_attribute
-	: identifier    #StringAttribute
-	;
-
 string_literal
 	: STRING_LITERAL    #StringLiteral
 	;
@@ -152,19 +116,6 @@ string_literal
 /****************************************************************
  * Enum
  ****************************************************************/
-
-enum_expression
-	: enum_atom
-	;
-
-enum_atom
-	: enum_attribute
-	| enum_literal
-	;
-
-enum_attribute
-	: identifier    #EnumAttribute
-	;
 
 enum_literal
 	: ENUM_VALUE_FUNCTION LP enumName=STRING_LITERAL COMMA enumKey=STRING_LITERAL RP  #EnumLiteral
@@ -174,25 +125,8 @@ enum_literal
  * Numeric
  ****************************************************************/
 
-arithmetic_atom
-    : numeric_attribute
-    | numeric_literal
-    ;
-
-numeric_attribute
-    : identifier    #NumericAttribute
-	;
-
 numeric_literal
     : NUMERIC_LITERAL   #NumericLiteral
-	;
-
-/****************************************************************
- * Collection
- ****************************************************************/
-
-collection_attribute
-	: identifier    #CollectionAttribute
 	;
 
 identifier

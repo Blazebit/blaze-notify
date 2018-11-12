@@ -17,7 +17,7 @@
 package com.blazebit.notify.domain.runtime.model.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicate;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
 import java.util.Map;
@@ -32,9 +32,9 @@ public class AbstractDomainTypeImpl extends AbstractMetadataHolderImpl implement
     private final String name;
     private final Class<?> javaType;
     private final Set<DomainOperator> enabledOperators;
-    private final Set<DomainPredicate> enabledPredicates;
+    private final Set<DomainPredicateType> enabledPredicates;
 
-    public AbstractDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicate> enabledPredicates) {
+    public AbstractDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
         super(metadata);
         this.name = name;
         this.javaType = javaType;
@@ -58,7 +58,7 @@ public class AbstractDomainTypeImpl extends AbstractMetadataHolderImpl implement
     }
 
     @Override
-    public Set<DomainPredicate> getEnabledPredicates() {
+    public Set<DomainPredicateType> getEnabledPredicates() {
         return enabledPredicates;
     }
 }

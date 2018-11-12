@@ -16,26 +16,28 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public enum ComparisonOperatorType {
+public enum ComparisonOperator {
 	
-	GREATER(">"),
-	GREATER_OR_EQUAL(">="),
-	LOWER("<"),
-	LOWER_OR_EQUAL("<="),
-	EQUAL("="),
-	NOT_EQUAL("!=");
+	GREATER(">", DomainPredicateType.RELATIONAL),
+	GREATER_OR_EQUAL(">=", DomainPredicateType.RELATIONAL),
+	LOWER("<", DomainPredicateType.RELATIONAL),
+	LOWER_OR_EQUAL("<=", DomainPredicateType.RELATIONAL),
+	EQUAL("=", DomainPredicateType.EQUALITY),
+	NOT_EQUAL("!=", DomainPredicateType.EQUALITY);
 	
-	private static final Map<String, ComparisonOperatorType> OPERATOR_MAP;
+	private static final Map<String, ComparisonOperator> OPERATOR_MAP;
 	
 	static {
-		Map<String, ComparisonOperatorType> operator_map = new HashMap<>();
+		Map<String, ComparisonOperator> operator_map = new HashMap<>();
 		
-		for (ComparisonOperatorType operatorType : ComparisonOperatorType.values()) {
+		for (ComparisonOperator operatorType : ComparisonOperator.values()) {
 			operator_map.put(operatorType.getOperator(), operatorType);
 		}
 		
@@ -43,17 +45,19 @@ public enum ComparisonOperatorType {
 	}
 	
 	private final String operator;
+	private final DomainPredicateType domainPredicateType;
 
-	private ComparisonOperatorType(String operator) {
+	private ComparisonOperator(String operator, DomainPredicateType domainPredicateType) {
 		this.operator = operator;
+		this.domainPredicateType = domainPredicateType;
 	}
 
 	public String getOperator() {
 		return operator;
 	}
 	
-	public static ComparisonOperatorType valueOfOperator(String operator) {
-		ComparisonOperatorType operatorType = OPERATOR_MAP.get(operator);
+	public static ComparisonOperator valueOfOperator(String operator) {
+		ComparisonOperator operatorType = OPERATOR_MAP.get(operator);
 		if (operatorType == null) {
 			throw new IllegalArgumentException("Invalid operator: " + operator);
 		} else {
@@ -61,4 +65,7 @@ public enum ComparisonOperatorType {
 		}
 	}
 
+	public DomainPredicateType getDomainPredicateType() {
+		return domainPredicateType;
+	}
 }

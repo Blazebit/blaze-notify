@@ -17,7 +17,7 @@
 package com.blazebit.notify.domain.runtime.model.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicate;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
@@ -32,7 +32,7 @@ public class EntityDomainTypeImpl extends AbstractDomainTypeImpl implements Enti
 
     private final Map<String, EntityDomainTypeAttribute> attributes;
 
-    public EntityDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicate> enabledPredicates, Map<String, EntityDomainTypeAttribute> attributes) {
+    public EntityDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates, Map<String, EntityDomainTypeAttribute> attributes) {
         super(metadata, name, javaType, enabledOperators, enabledPredicates);
         this.attributes = attributes;
     }

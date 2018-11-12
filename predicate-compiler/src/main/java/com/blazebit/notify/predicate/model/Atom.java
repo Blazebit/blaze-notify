@@ -16,22 +16,35 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
-public class CollectionAtom implements TermExpression {
+public class Atom implements ArithmeticExpression {
 	private final Attribute attribute;
-
-	public CollectionAtom(Attribute attribute) {
+	private final Literal literal;
+	
+	public Atom(Attribute attribute) {
 		this.attribute = attribute;
+		this.literal = null;
 	}
 	
+	public Atom(Literal literal) {
+		this.attribute = null;
+		this.literal = literal;
+	}
+
 	public Attribute getAttribute() {
 		return attribute;
 	}
 
+	public Literal getLiteral() {
+		return literal;
+	}
+
 	@Override
-	public TermType getType() {
-		return TermType.COLLECTION;
+	public DomainType getType() {
+		return attribute == null ? literal.getType() : attribute.getType();
 	}
 
 	@Override
@@ -48,12 +61,13 @@ public class CollectionAtom implements TermExpression {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		CollectionAtom that = (CollectionAtom) o;
-		return Objects.equals(attribute, that.attribute);
+		Atom that = (Atom) o;
+		return Objects.equals(attribute, that.attribute) &&
+				Objects.equals(literal, that.literal);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(attribute);
+		return Objects.hash(attribute, literal);
 	}
 }

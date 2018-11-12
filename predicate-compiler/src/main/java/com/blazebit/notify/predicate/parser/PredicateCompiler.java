@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.predicate.parser;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.predicate.model.Predicate;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
@@ -26,6 +27,9 @@ import java.util.BitSet;
 
 public class PredicateCompiler {
 
+    private final DomainModel domainModel;
+    private final LiteralFactory literalFactory;
+
     private static final RuleInvoker predicateRuleInvoker = new RuleInvoker() {
         @Override
         public ParserRuleContext invokeRule(PredicateParser parser) {
@@ -33,11 +37,20 @@ public class PredicateCompiler {
         }
     };
 
-    public static Predicate parsePredicate(String input) {
+    public PredicateCompiler(DomainModel domainModel) {
+        this.domainModel = domainModel;
+        this.literalFactory = new LiteralFactory(domainModel);
+    }
+
+    public LiteralFactory getLiteralFactory() {
+        return literalFactory;
+    }
+
+    public Predicate parsePredicate(String input) {
         return parse(input, predicateRuleInvoker);
     }
 
-	static Predicate parse(String input, RuleInvoker ruleInvoker) {
+	Predicate parse(String input, RuleInvoker ruleInvoker) {
 		SimpleErrorListener errorListener = new SimpleErrorListener();
     	PredicateLexer lexer = new PredicateLexer(CharStreams.fromString(input));
         lexer.removeErrorListeners();
@@ -49,7 +62,7 @@ public class PredicateCompiler {
 
         ParserRuleContext ctx = ruleInvoker.invokeRule(parser);
 
-        PredicateVisitorImpl visitor = new PredicateVisitorImpl();
+        PredicateModelGenerator visitor = new PredicateModelGenerator(domainModel, literalFactory);
         return (Predicate) visitor.visit(ctx);
 	}
 

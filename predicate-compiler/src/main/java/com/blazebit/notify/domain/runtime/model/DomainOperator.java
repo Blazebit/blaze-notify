@@ -27,5 +27,6 @@ public enum DomainOperator {
     MINUS,
     MULTIPLICATION,
     DIVISION,
-    MODULO;
+    MODULO,
+    INVERT;
 }

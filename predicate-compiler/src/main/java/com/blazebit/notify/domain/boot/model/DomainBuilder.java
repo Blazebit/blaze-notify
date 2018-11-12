@@ -18,7 +18,7 @@ package com.blazebit.notify.domain.boot.model;
 
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicate;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
 /**
@@ -31,7 +31,7 @@ public interface DomainBuilder {
 
     public DomainBuilder withOperator(String typeName, DomainOperator operator);
 
-    public DomainBuilder withPredicate(String typeName, DomainPredicate predicate);
+    public DomainBuilder withPredicate(String typeName, DomainPredicateType predicate);
 
     public DomainFunctionBuilder createFunction(String name);
 

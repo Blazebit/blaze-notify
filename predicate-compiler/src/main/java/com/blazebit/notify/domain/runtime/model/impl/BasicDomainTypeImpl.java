@@ -17,7 +17,7 @@
 package com.blazebit.notify.domain.runtime.model.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicate;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.BasicDomainType;
 
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class BasicDomainTypeImpl extends AbstractDomainTypeImpl implements BasicDomainType {
 
-    public BasicDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicate> enabledPredicates) {
+    public BasicDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
         super(metadata, name, javaType, enabledOperators, enabledPredicates);
     }
 }

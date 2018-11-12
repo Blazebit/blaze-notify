@@ -16,24 +16,35 @@
 
 package com.blazebit.notify.predicate.model;
 
+import java.util.List;
 import java.util.Objects;
 
-public abstract class InPredicate<L extends TermExpression, R> extends AbstractPredicate {
-	private final L left;
-	private final R right;
+public class InPredicate extends AbstractPredicate {
+	private final TermExpression left;
+	private final List<ArithmeticExpression> inItems;
 
-	public InPredicate(L left, R right, boolean negated) {
+	public InPredicate(TermExpression left, List<ArithmeticExpression> inItems, boolean negated) {
 		super(negated);
 		this.left = left;
-		this.right = right;
+		this.inItems = inItems;
 	}
 	
-	public L getLeft() {
+	public TermExpression getLeft() {
 		return left;
 	}
 
-	public R getRight() {
-		return right;
+	public List<ArithmeticExpression> getInItems() {
+		return inItems;
+	}
+
+	@Override
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
+	public <T> T accept(ResultVisitor<T> visitor) {
+		return visitor.visit(this);
 	}
 
 	@Override
@@ -41,13 +52,13 @@ public abstract class InPredicate<L extends TermExpression, R> extends AbstractP
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		if (!super.equals(o)) return false;
-		InPredicate<?, ?> that = (InPredicate<?, ?>) o;
+		InPredicate that = (InPredicate) o;
 		return Objects.equals(left, that.left) &&
-				Objects.equals(right, that.right);
+				Objects.equals(inItems, that.inItems);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(super.hashCode(), left, right);
+		return Objects.hash(super.hashCode(), left, inItems);
 	}
 }

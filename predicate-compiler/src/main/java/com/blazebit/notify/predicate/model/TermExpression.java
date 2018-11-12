@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 public interface TermExpression extends Expression {
-    TermType getType();
+    DomainType getType();
 }

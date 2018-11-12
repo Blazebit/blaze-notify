@@ -26,6 +26,14 @@ public class EnumValue {
         this.enumKey = enumKey;
     }
 
+    public String getEnumName() {
+        return enumName;
+    }
+
+    public String getEnumKey() {
+        return enumKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

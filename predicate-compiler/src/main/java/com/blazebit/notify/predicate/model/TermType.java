@@ -21,19 +21,19 @@ import java.util.List;
 
 
 public enum TermType {
-	NUMERIC(ComparisonOperatorType.values()),
-	DATE_TIME(ComparisonOperatorType.values()),
-	STRING(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
-	ENUM(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
+	NUMERIC(ComparisonOperator.values()),
+	DATE_TIME(ComparisonOperator.values()),
+	STRING(ComparisonOperator.EQUAL, ComparisonOperator.NOT_EQUAL),
+	ENUM(ComparisonOperator.EQUAL, ComparisonOperator.NOT_EQUAL),
 	COLLECTION();
 	
-	private final List<ComparisonOperatorType> allowedOperatorTypes;
+	private final List<ComparisonOperator> allowedOperatorTypes;
 	
-	private TermType(ComparisonOperatorType... operatorTypes) {
+	private TermType(ComparisonOperator... operatorTypes) {
 		this.allowedOperatorTypes = Arrays.asList(operatorTypes);
 	}
 
-	public List<ComparisonOperatorType> getAllowedComparisonOperatorTypes() {
+	public List<ComparisonOperator> getAllowedComparisonOperatorTypes() {
 		return allowedOperatorTypes;
 	}
 }

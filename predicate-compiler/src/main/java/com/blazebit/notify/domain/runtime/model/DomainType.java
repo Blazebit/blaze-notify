@@ -30,6 +30,6 @@ public interface DomainType extends MetadataHolder {
 
     public Set<DomainOperator> getEnabledOperators();
 
-    public Set<DomainPredicate> getEnabledPredicates();
+    public Set<DomainPredicateType> getEnabledPredicates();
 
 }

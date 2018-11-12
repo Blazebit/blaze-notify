@@ -19,28 +19,38 @@ package com.blazebit.notify.predicate.model;
 
 import java.util.Objects;
 
-public abstract class BetweenPredicate<T extends TermExpression> extends AbstractPredicate {
-	private final T left;
-	private final T upper;
-	private final T lower;
+public class BetweenPredicate extends AbstractPredicate {
+	private final TermExpression left;
+	private final TermExpression upper;
+	private final TermExpression lower;
 
-	public BetweenPredicate(T left, T upper, T lower) {
+	public BetweenPredicate(TermExpression left, TermExpression upper, TermExpression lower) {
 		super(false);
 		this.left = left;
 		this.upper = upper;
 		this.lower = lower;
 	}
 
-	public T getLeft() {
+	public TermExpression getLeft() {
 		return left;
 	}
 
-	public T getUpper() {
+	public TermExpression getUpper() {
 		return upper;
 	}
 
-	public T getLower() {
+	public TermExpression getLower() {
 		return lower;
+	}
+
+	@Override
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
+	public <T> T accept(ResultVisitor<T> visitor) {
+		return visitor.visit(this);
 	}
 
 	@Override
@@ -48,7 +58,7 @@ public abstract class BetweenPredicate<T extends TermExpression> extends Abstrac
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		if (!super.equals(o)) return false;
-		BetweenPredicate<?> that = (BetweenPredicate<?>) o;
+		BetweenPredicate that = (BetweenPredicate) o;
 		return Objects.equals(left, that.left) &&
 				Objects.equals(upper, that.upper) &&
 				Objects.equals(lower, that.lower);

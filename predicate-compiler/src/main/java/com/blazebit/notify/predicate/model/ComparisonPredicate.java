@@ -21,9 +21,9 @@ import java.util.Objects;
 public class ComparisonPredicate extends AbstractPredicate {
 	private final TermExpression left;
 	private final TermExpression right;
-	private final ComparisonOperatorType operator;
+	private final ComparisonOperator operator;
 
-	public ComparisonPredicate(TermExpression left, TermExpression right, ComparisonOperatorType operator) {
+	public ComparisonPredicate(TermExpression left, TermExpression right, ComparisonOperator operator) {
 		this.left = left;
 		this.right = right;
 		this.operator = operator;
@@ -37,7 +37,7 @@ public class ComparisonPredicate extends AbstractPredicate {
 		return right;
 	}
 
-	public ComparisonOperatorType getOperator() {
+	public ComparisonOperator getOperator() {
 		return operator;
 	}
 

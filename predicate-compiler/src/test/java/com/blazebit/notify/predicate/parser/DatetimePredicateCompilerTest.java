@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.predicate.parser;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.predicate.model.Expression;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,21 +33,61 @@ import static org.junit.Assert.assertEquals;
 public class DatetimePredicateCompilerTest extends AbstractPredicateCompilerTest {
 	
 	private final String expr;
-	private final Expression expectedExpression;
+	private final ExpectedExpressionProducer<DatetimePredicateCompilerTest> expectedExpressionProducer;
 	
-	public DatetimePredicateCompilerTest(String expr, Expression expectedExpression) {
+	public DatetimePredicateCompilerTest(String expr, ExpectedExpressionProducer<DatetimePredicateCompilerTest> expectedExpressionProducer) {
 		this.expr = expr;
-		this.expectedExpression = expectedExpression;
+		this.expectedExpressionProducer = expectedExpressionProducer;
 	}
 	
 	@Parameters(name = "{1} {2}")
 	public static Collection<Object[]> getTestData() {
 		Object[][] literals = {
-				{ "CURRENT_TIMESTAMP", now() },
-				{ "TIMESTAMP('2014-01-01')", time("2014-01-01") },
-				{ "TIMESTAMP('2014-01-01 00:00:00')", time("2014-01-01 00:00:00") },
-				{ "TIMESTAMP('2014-01-01 00:00:00.000')", time("2014-01-01 00:00:00.000") },
-				{ "TIMESTAMP('2014-01-01 01:01:01.100')", time("2014-01-01 01:01:01.100") }
+				{
+				    "CURRENT_TIMESTAMP",
+                    new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            return testInstance.now();
+                        }
+                    }
+                },
+				{
+				    "TIMESTAMP('2014-01-01')",
+                    new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            return testInstance.time("2014-01-01");
+                        }
+                    }
+                },
+				{
+				    "TIMESTAMP('2014-01-01 00:00:00')",
+                    new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            return testInstance.time("2014-01-01 00:00:00");
+                        }
+                    }
+                },
+				{
+				    "TIMESTAMP('2014-01-01 00:00:00.000')",
+                    new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            return testInstance.time("2014-01-01 00:00:00.000");
+                        }
+                    }
+                },
+				{
+				    "TIMESTAMP('2014-01-01 01:01:01.100')",
+                    new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            return testInstance.time("2014-01-01 01:01:01.100");
+                        }
+                    }
+				}
 		};
 		
 		List<Object[]> parameters = new ArrayList<>(literals.length);
@@ -62,6 +103,12 @@ public class DatetimePredicateCompilerTest extends AbstractPredicateCompilerTest
 	
 	@Test
 	public void comparisonWithLiteralTest() {
-		assertEquals(expectedExpression, parseDateTimeExpression(expr));
+		assertEquals(expectedExpressionProducer.getExpectedExpression(this), parseArithmeticExpression(expr));
+	}
+
+	@Override
+	protected DomainModel getTestDomainModel() {
+		// TODO: define test domain model
+		return null;
 	}
 }

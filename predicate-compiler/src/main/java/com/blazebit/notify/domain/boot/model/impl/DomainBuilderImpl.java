@@ -19,7 +19,7 @@ package com.blazebit.notify.domain.boot.model.impl;
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicate;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 import com.blazebit.notify.domain.runtime.model.impl.DomainModelImpl;
@@ -37,7 +37,7 @@ public class DomainBuilderImpl implements DomainBuilder {
 
     private Map<String, DomainType> domainTypes = new HashMap<>();
     private Map<String, Set<DomainOperator>> enabledOperators = new HashMap<>();
-    private Map<String, Set<DomainPredicate>> enabledPredicates = new HashMap<>();
+    private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
     private Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>();
     private Map<String, EntityDomainTypeDefinition> domainTypeDefinitions = new HashMap<>();
     private Map<Class<?>, EntityDomainTypeDefinition> domainTypeDefinitionsByJavaType = new HashMap<>();
@@ -72,13 +72,13 @@ public class DomainBuilderImpl implements DomainBuilder {
     }
 
     @Override
-    public DomainBuilder withPredicate(String typeName, DomainPredicate predicate) {
-        Set<DomainPredicate> domainPredicates = enabledPredicates.get(typeName);
-        if (domainPredicates == null) {
-            domainPredicates = EnumSet.of(predicate);
-            enabledPredicates.put(typeName, domainPredicates);
+    public DomainBuilder withPredicate(String typeName, DomainPredicateType predicate) {
+        Set<DomainPredicateType> domainPredicateTypes = enabledPredicates.get(typeName);
+        if (domainPredicateTypes == null) {
+            domainPredicateTypes = EnumSet.of(predicate);
+            enabledPredicates.put(typeName, domainPredicateTypes);
         } else {
-            domainPredicates.add(predicate);
+            domainPredicateTypes.add(predicate);
         }
         return this;
     }

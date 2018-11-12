@@ -16,13 +16,15 @@
 
 package com.blazebit.notify.predicate.model;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class Attribute {
 	private final String identifier;
-	private final TermType type;
+	private final DomainType type;
 
-	public Attribute(String identifier, TermType type) {
+	public Attribute(String identifier, DomainType type) {
 		this.identifier = identifier;
 		this.type = type;
 	}
@@ -31,7 +33,7 @@ public class Attribute {
 		return identifier;
 	}
 
-	public TermType getType() {
+	public DomainType getType() {
 		return type;
 	}
 

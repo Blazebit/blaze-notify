@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.predicate.parser;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.predicate.model.Expression;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,18 +33,35 @@ import static org.junit.Assert.assertEquals;
 public class StringPredicateCompilerTest extends AbstractPredicateCompilerTest {
 	
 	private final String expr;
-	private final Expression expectedExpression;
+	private final ExpectedExpressionProducer<StringPredicateCompilerTest> expectedExpressionProducer;
 	
-	public StringPredicateCompilerTest(String expr, Expression expectedExpression) {
-		this.expr = expr;
-		this.expectedExpression = expectedExpression;
+	public StringPredicateCompilerTest(String expr, ExpectedExpressionProducer<StringPredicateCompilerTest> expectedExpressionProducer) {
+        this.expr = expr;
+		this.expectedExpressionProducer = expectedExpressionProducer;
 	}
 	
 	@Parameters(name = "{1} {2}")
 	public static Collection<Object[]> getTestData() {
 		Object[][] literals = {
-				{ "''", string("") },
-				{ "'abc'", string("abc") }
+				{
+				    "''",
+                    new ExpectedExpressionProducer<StringPredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(StringPredicateCompilerTest testInstance) {
+                            return testInstance.string("");
+                        }
+                    }
+
+                },
+				{
+				    "'abc'",
+                    new ExpectedExpressionProducer<StringPredicateCompilerTest>() {
+                        @Override
+                        public Expression getExpectedExpression(StringPredicateCompilerTest testInstance) {
+                            return testInstance.string("abc");
+                        }
+                    }
+				}
 		};
 		
 		List<Object[]> parameters = new ArrayList<>(literals.length);
@@ -59,6 +77,12 @@ public class StringPredicateCompilerTest extends AbstractPredicateCompilerTest {
 
 	@Test
 	public void comparisonWithLiteralTest() {
-		assertEquals(expectedExpression, parseStringExpression(expr));
+		assertEquals(expectedExpressionProducer.getExpectedExpression(this), parseArithmeticExpression(expr));
 	}
+
+    @Override
+    protected DomainModel getTestDomainModel() {
+        // TODO: define test domain model
+	    return null;
+    }
 }
