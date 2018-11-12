@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.domain.boot.model;
 
-import com.blazebit.notify.domain.boot.model.impl.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinition;
 
 import java.util.Map;
 

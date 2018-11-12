@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model.impl;
+package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;

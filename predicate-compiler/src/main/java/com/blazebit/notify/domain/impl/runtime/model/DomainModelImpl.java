@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model.impl;
+package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainModel;

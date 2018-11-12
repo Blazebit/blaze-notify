@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model;
+package com.blazebit.notify.domain.spi;
 
-import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
-import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.boot.model.DomainBuilder;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainTypeDefinition<X extends DomainTypeDefinition<X>> extends MetadataDefinitionHolder<X> {
+public interface DomainBuilderProvider {
 
-    public String getName();
+    public DomainBuilder createEmptyBuilder();
 
-    public Class<?> getJavaType();
-
-    public DomainType getType(MetamodelBuildingContext context);
+    public DomainBuilder createDefaultBuilder();
 
 }

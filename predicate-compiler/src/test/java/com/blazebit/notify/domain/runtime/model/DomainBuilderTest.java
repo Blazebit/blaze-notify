@@ -16,8 +16,8 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
+import com.blazebit.notify.domain.Domain;
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
-import com.blazebit.notify.domain.boot.model.impl.DomainBuilderImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,11 +25,16 @@ public class DomainBuilderTest {
 
     @Test
     public void testBuildSimpleModel() {
-        DomainBuilder domainBuilder = new DomainBuilderImpl();
+        // Given
+        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
         domainBuilder.createEntityType("Test")
                 .addAttribute("name", "String")
         .build();
+
+        // When
         DomainModel domainModel = domainBuilder.build();
+
+        // Then
         EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
         Assert.assertEquals("String", entityDomainType.getAttribute("name").getType().getName());
     }

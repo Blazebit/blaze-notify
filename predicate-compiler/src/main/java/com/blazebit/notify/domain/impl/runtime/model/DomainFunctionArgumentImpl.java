@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model.impl;
+package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.boot.model.DomainFunctionArgumentDefinition;
-import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
+import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
-import java.util.List;
 import java.util.Map;
 
 /**

@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model.impl;
+package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.MetadataDefinition;
 import com.blazebit.notify.domain.boot.model.MetadataDefinitionHolder;
-import com.blazebit.notify.domain.runtime.model.DomainFunction;
-import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
-import com.blazebit.notify.domain.runtime.model.impl.DomainFunctionArgumentImpl;
 
 import java.util.HashMap;
 import java.util.Map;

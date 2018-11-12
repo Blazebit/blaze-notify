@@ -16,6 +16,9 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * @author Christian Beikov
  * @since 1.0.0
@@ -29,4 +32,8 @@ public enum DomainOperator {
     DIVISION,
     MODULO,
     INVERT;
+
+    public static Set<DomainOperator> arithmetic() {
+        return EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS, DomainOperator.MULTIPLICATION, DomainOperator.DIVISION, DomainOperator.MODULO, DomainOperator.UNARY_MINUS, DomainOperator.UNARY_PLUS, DomainOperator.INVERT);
+    }
 }

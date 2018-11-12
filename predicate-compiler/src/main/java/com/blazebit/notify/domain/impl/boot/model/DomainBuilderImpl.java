@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model.impl;
+package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.*;
-import com.blazebit.notify.domain.runtime.model.impl.DomainModelImpl;
+import com.blazebit.notify.domain.impl.runtime.model.DomainModelImpl;
 
 import java.util.*;
 

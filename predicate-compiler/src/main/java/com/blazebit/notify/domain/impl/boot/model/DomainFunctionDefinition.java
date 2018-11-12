@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model.impl;
+package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
-import com.blazebit.notify.domain.runtime.model.impl.DomainFunctionImpl;
+import com.blazebit.notify.domain.impl.runtime.model.DomainFunctionImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;

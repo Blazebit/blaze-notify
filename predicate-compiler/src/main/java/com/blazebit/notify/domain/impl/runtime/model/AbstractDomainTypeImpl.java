@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model.impl;
+package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
-import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
+import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
 import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.DomainType;
@@ -41,6 +41,13 @@ public abstract class AbstractDomainTypeImpl implements DomainType {
         this.javaType = typeDefinition.getJavaType();
         this.enabledOperators = context.getOperators(typeDefinition);
         this.enabledPredicates = context.getPredicates(typeDefinition);
+    }
+
+    protected AbstractDomainTypeImpl(String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
+        this.name = name;
+        this.javaType = javaType;
+        this.enabledOperators = enabledOperators;
+        this.enabledPredicates = enabledPredicates;
     }
 
     @Override

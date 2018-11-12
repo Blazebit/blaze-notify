@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model.impl;
+package com.blazebit.notify.domain.impl.runtime.model;
 
-import com.blazebit.notify.domain.boot.model.impl.EntityDomainTypeAttributeDefinition;
-import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
+import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;

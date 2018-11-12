@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model.impl;
+package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
-import com.blazebit.notify.domain.runtime.model.impl.EntityDomainTypeAttributeImpl;
-import com.blazebit.notify.domain.runtime.model.impl.EntityDomainTypeImpl;
+import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeAttributeImpl;
+import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeImpl;
 
 /**
  * @author Christian Beikov

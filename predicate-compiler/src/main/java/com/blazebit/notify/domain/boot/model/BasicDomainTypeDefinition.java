@@ -16,19 +16,10 @@
 
 package com.blazebit.notify.domain.boot.model;
 
-import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
-import com.blazebit.notify.domain.runtime.model.DomainType;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainTypeDefinition<X extends DomainTypeDefinition<X>> extends MetadataDefinitionHolder<X> {
-
-    public String getName();
-
-    public Class<?> getJavaType();
-
-    public DomainType getType(MetamodelBuildingContext context);
+public interface BasicDomainTypeDefinition extends DomainTypeDefinition<BasicDomainTypeDefinition> {
 
 }
