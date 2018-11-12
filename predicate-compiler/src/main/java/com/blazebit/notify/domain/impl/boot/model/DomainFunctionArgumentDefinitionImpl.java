@@ -53,8 +53,11 @@ public class DomainFunctionArgumentDefinitionImpl extends MetadataDefinitionHold
         } else {
             typeDefinition = domainBuilder.getDomainTypeDefinition(typeName);
             if (typeDefinition == null) {
-                String name = this.name == null || this.name.isEmpty() ? "" : "(" + this.name + ")";
-                context.addError("The argument type '" + typeName + "' defined for the function argument index " + index + name + " of function " + owner.getName() + " is unknown!");
+                typeDefinition = domainBuilder.getDomainTypeDefinition(javaType);
+                if (typeDefinition == null) {
+                    String name = this.name == null || this.name.isEmpty() ? "" : "(" + this.name + ")";
+                    context.addError("The argument type '" + typeName + "' defined for the function argument index " + index + name + " of function " + owner.getName() + " is unknown!");
+                }
             }
             if (collection) {
                 typeDefinition = domainBuilder.getCollectionDomainTypeDefinition(typeDefinition);

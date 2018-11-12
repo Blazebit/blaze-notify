@@ -25,7 +25,7 @@ import java.util.Set;
  */
 public enum DomainPredicateType {
     NULLNESS,
-    EMPTINESS,
+    COLLECTION,
     RELATIONAL,
     EQUALITY;
 

@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model;
+package com.blazebit.notify.domain.impl.runtime.model.basic;
 
-import java.util.Map;
+import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainModel {
+public class ResolvedLiteralImpl implements ResolvedLiteral {
 
-    public DomainType getType(String name);
+    private final DomainType type;
+    private final Object value;
 
-    public DomainType getType(Class<?> javaType);
+    public ResolvedLiteralImpl(DomainType type, Object value) {
+        this.type = type;
+        this.value = value;
+    }
 
-    public Map<String, DomainType> getTypes();
+    @Override
+    public DomainType getType() {
+        return type;
+    }
 
-    public DomainFunction getFunction(String name);
-
-    public NumericLiteralTypeResolver getNumericLiteralTypeResolver();
-
-    public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver();
-
-    public StringLiteralTypeResolver getStringLiteralTypeResolver();
-
-    public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver();
-
+    @Override
+    public Object getValue() {
+        return value;
+    }
 }

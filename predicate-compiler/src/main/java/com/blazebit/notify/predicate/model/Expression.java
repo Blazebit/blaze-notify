@@ -16,8 +16,6 @@
 
 package com.blazebit.notify.predicate.model;
 
-import org.w3c.dom.Attr;
-
 public interface Expression {
     public static interface Visitor {
 		public void visit(ArithmeticFactor e);

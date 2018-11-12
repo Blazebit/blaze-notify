@@ -16,28 +16,12 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.Map;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainModel {
+public interface BooleanLiteralTypeResolver {
 
-    public DomainType getType(String name);
-
-    public DomainType getType(Class<?> javaType);
-
-    public Map<String, DomainType> getTypes();
-
-    public DomainFunction getFunction(String name);
-
-    public NumericLiteralTypeResolver getNumericLiteralTypeResolver();
-
-    public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver();
-
-    public StringLiteralTypeResolver getStringLiteralTypeResolver();
-
-    public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver();
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value);
 
 }

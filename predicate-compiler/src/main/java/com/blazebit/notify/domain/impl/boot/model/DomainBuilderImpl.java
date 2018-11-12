@@ -38,6 +38,10 @@ public class DomainBuilderImpl implements DomainBuilder {
     private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
     private Map<String, DomainTypeDefinitionImplementor<?>> domainTypeDefinitions = new HashMap<>();
     private Map<Class<?>, DomainTypeDefinitionImplementor<?>> domainTypeDefinitionsByJavaType = new HashMap<>();
+    private NumericLiteralTypeResolver numericLiteralTypeResolver;
+    private BooleanLiteralTypeResolver booleanLiteralTypeResolver;
+    private StringLiteralTypeResolver stringLiteralTypeResolver;
+    private TemporalLiteralTypeResolver temporalLiteralTypeResolver;
 
     DomainBuilderImpl withDomainTypeDefinition(DomainTypeDefinitionImplementor<?> domainTypeDefinition) {
         domainTypeDefinitions.put(domainTypeDefinition.getName(), domainTypeDefinition);
@@ -85,6 +89,30 @@ public class DomainBuilderImpl implements DomainBuilder {
         if (domainType.getJavaType() != null) {
             existingDomainTypeDefinitionsByJavaType.put(domainType.getJavaType(), existingDomainTypeDefinition);
         }
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(BooleanLiteralTypeResolver typeResolver) {
+        this.booleanLiteralTypeResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(NumericLiteralTypeResolver typeResolver) {
+        this.numericLiteralTypeResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(StringLiteralTypeResolver typeResolver) {
+        this.stringLiteralTypeResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver) {
+        this.temporalLiteralTypeResolver = typeResolver;
         return this;
     }
 
@@ -208,6 +236,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return new DomainModelImpl(domainTypes, domainFunctions);
+        return new DomainModelImpl(domainTypes, domainFunctions, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver);
     }
 }

@@ -30,13 +30,25 @@ public interface DomainFunctionBuilder {
 
     public DomainFunctionBuilder withArgument(String name, String typeName, MetadataDefinition<?>... metadataDefinitions);
 
+    public DomainFunctionBuilder withArgument(String name, Class<?> javaType);
+
+    public DomainFunctionBuilder withArgument(String name, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions);
+
     public DomainFunctionBuilder withCollectionArgument(String name, String typeName);
 
     public DomainFunctionBuilder withCollectionArgument(String name, String typeName, MetadataDefinition<?>... metadataDefinitions);
 
+    public DomainFunctionBuilder withCollectionArgument(String name, Class<?> javaType);
+
+    public DomainFunctionBuilder withCollectionArgument(String name, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions);
+
     public DomainFunctionBuilder withArgumentTypes(String... typeNames);
 
+    public DomainFunctionBuilder withArgumentTypes(Class<?>... typeNames);
+
     public DomainFunctionBuilder withResultType(String typeName);
+
+    public DomainFunctionBuilder withResultType(Class<?> javaType);
 
     public DomainFunctionBuilder withMetadata(MetadataDefinition<?> metadataDefinition);
 

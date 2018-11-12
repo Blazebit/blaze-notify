@@ -16,10 +16,7 @@
 
 package com.blazebit.notify.domain.boot.model;
 
-import com.blazebit.notify.domain.runtime.model.DomainModel;
-import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
-import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.*;
 
 /**
  * @author Christian Beikov
@@ -28,6 +25,14 @@ import com.blazebit.notify.domain.runtime.model.DomainType;
 public interface DomainBuilder {
 
     public DomainBuilder withDomainType(DomainType entityDomainType);
+
+    public DomainBuilder withLiteralTypeResolver(BooleanLiteralTypeResolver typeResolver);
+
+    public DomainBuilder withLiteralTypeResolver(NumericLiteralTypeResolver typeResolver);
+
+    public DomainBuilder withLiteralTypeResolver(StringLiteralTypeResolver typeResolver);
+
+    public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver);
 
     public DomainBuilder withOperator(String typeName, DomainOperator operator);
 

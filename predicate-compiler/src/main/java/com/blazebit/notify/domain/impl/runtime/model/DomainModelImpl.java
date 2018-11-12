@@ -16,9 +16,7 @@
 
 package com.blazebit.notify.domain.impl.runtime.model;
 
-import com.blazebit.notify.domain.runtime.model.DomainFunction;
-import com.blazebit.notify.domain.runtime.model.DomainModel;
-import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +30,12 @@ public class DomainModelImpl implements DomainModel {
     private final Map<String, DomainType> domainTypes;
     private final Map<Class<?>, DomainType> domainTypesByJavaType;
     private final Map<String, DomainFunction> domainFunctions;
+    private final NumericLiteralTypeResolver numericLiteralTypeResolver;
+    private final BooleanLiteralTypeResolver booleanLiteralTypeResolver;
+    private final StringLiteralTypeResolver stringLiteralTypeResolver;
+    private final TemporalLiteralTypeResolver temporalLiteralTypeResolver;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<String, DomainFunction> domainFunctions) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<String, DomainFunction> domainFunctions, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver) {
         this.domainTypes = domainTypes;
         this.domainFunctions = domainFunctions;
         Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>(domainTypes.size());
@@ -44,6 +46,10 @@ public class DomainModelImpl implements DomainModel {
         }
 
         this.domainTypesByJavaType = domainTypesByJavaType;
+        this.numericLiteralTypeResolver = numericLiteralTypeResolver;
+        this.booleanLiteralTypeResolver = booleanLiteralTypeResolver;
+        this.stringLiteralTypeResolver = stringLiteralTypeResolver;
+        this.temporalLiteralTypeResolver = temporalLiteralTypeResolver;
     }
 
     @Override
@@ -64,5 +70,25 @@ public class DomainModelImpl implements DomainModel {
     @Override
     public DomainFunction getFunction(String name) {
         return domainFunctions.get(name);
+    }
+
+    @Override
+    public NumericLiteralTypeResolver getNumericLiteralTypeResolver() {
+        return numericLiteralTypeResolver;
+    }
+
+    @Override
+    public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver() {
+        return booleanLiteralTypeResolver;
+    }
+
+    @Override
+    public StringLiteralTypeResolver getStringLiteralTypeResolver() {
+        return stringLiteralTypeResolver;
+    }
+
+    @Override
+    public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver() {
+        return temporalLiteralTypeResolver;
     }
 }

@@ -18,8 +18,10 @@ package com.blazebit.notify.domain.impl.spi;
 
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.impl.boot.model.DomainBuilderImpl;
-import com.blazebit.notify.domain.impl.runtime.model.basic.BasicDomainTypes;
+import com.blazebit.notify.domain.impl.runtime.model.basic.JavaDomainModel;
 import com.blazebit.notify.domain.spi.DomainBuilderProvider;
+
+import java.util.Calendar;
 
 /**
  * @author Christian Beikov
@@ -35,11 +37,19 @@ public class DomainBuilderProviderImpl implements DomainBuilderProvider {
     @Override
     public DomainBuilder createDefaultBuilder() {
         DomainBuilderImpl domainBuilder = new DomainBuilderImpl();
-        domainBuilder.withDomainType(BasicDomainTypes.INTEGER);
-        domainBuilder.withDomainType(BasicDomainTypes.DECIMAL);
-        domainBuilder.withDomainType(BasicDomainTypes.BOOLEAN);
-        domainBuilder.withDomainType(BasicDomainTypes.CALENDAR);
-        domainBuilder.withDomainType(BasicDomainTypes.STRING);
+        domainBuilder.withDomainType(JavaDomainModel.INTEGER);
+        domainBuilder.withDomainType(JavaDomainModel.DECIMAL);
+        domainBuilder.withDomainType(JavaDomainModel.BOOLEAN);
+        domainBuilder.withDomainType(JavaDomainModel.CALENDAR);
+        domainBuilder.withDomainType(JavaDomainModel.STRING);
+        domainBuilder.withLiteralTypeResolver(JavaDomainModel.NUMERIC_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withLiteralTypeResolver(JavaDomainModel.STRING_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withLiteralTypeResolver(JavaDomainModel.TEMPORAL_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withLiteralTypeResolver(JavaDomainModel.BOOLEAN_LITERAL_TYPE_RESOLVER);
+        domainBuilder.createFunction("CURRENT_TIMESTAMP")
+                .withExactArgumentCount(0)
+                .withResultType(Calendar.class)
+                .build();
         return domainBuilder;
     }
 }

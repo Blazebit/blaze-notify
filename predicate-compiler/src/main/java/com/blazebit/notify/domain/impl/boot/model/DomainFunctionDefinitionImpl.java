@@ -35,7 +35,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
     private int minArgumentCount;
     private int argumentCount;
     private String resultTypeName;
-    private String resultJavaType;
+    private Class<?> resultJavaType;
     private boolean collection;
     private Boolean positional;
     private List<DomainFunctionArgumentDefinitionImpl> argumentDefinitions = new ArrayList<>();
@@ -77,11 +77,11 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
         this.resultTypeName = resultTypeName;
     }
 
-    public String getResultJavaType() {
+    public Class<?> getResultJavaType() {
         return resultJavaType;
     }
 
-    public void setResultJavaType(String resultJavaType) {
+    public void setResultJavaType(Class<?> resultJavaType) {
         this.resultJavaType = resultJavaType;
     }
 
@@ -127,7 +127,10 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
         } else {
             resultTypeDefinition = domainBuilder.getDomainTypeDefinition(resultTypeName);
             if (resultTypeDefinition == null) {
-                context.addError("The result type '" + resultTypeName + "' defined for the function " + name + " is unknown!");
+                resultTypeDefinition = domainBuilder.getDomainTypeDefinition(resultJavaType);
+                if (resultTypeDefinition == null) {
+                    context.addError("The result type '" + resultTypeName + "' defined for the function " + name + " is unknown!");
+                }
             }
             if (collection) {
                 resultTypeDefinition = domainBuilder.getCollectionDomainTypeDefinition(resultTypeDefinition);
