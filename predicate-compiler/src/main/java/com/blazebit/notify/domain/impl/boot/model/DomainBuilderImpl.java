@@ -31,11 +31,11 @@ import java.util.*;
 public class DomainBuilderImpl implements DomainBuilder {
 
     private Map<String, DomainType> domainTypes = new HashMap<>();
-    private Map<String, DomainTypeDefinition> existingDomainTypeDefinitions = new HashMap<>();
-    private Map<String, DomainFunctionDefinition> domainFunctionDefinitions = new HashMap<>();
+    private Map<String, DomainTypeDefinition<?>> existingDomainTypeDefinitions = new HashMap<>();
+    private Map<Class<?>, DomainTypeDefinition<?>> existingDomainTypeDefinitionsByJavaType = new HashMap<>();
+    private Map<String, DomainFunctionDefinitionImpl> domainFunctionDefinitions = new HashMap<>();
     private Map<String, Set<DomainOperator>> enabledOperators = new HashMap<>();
     private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
-    private Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>();
     private Map<String, EntityDomainTypeDefinitionImpl> domainTypeDefinitions = new HashMap<>();
     private Map<Class<?>, EntityDomainTypeDefinitionImpl> domainTypeDefinitionsByJavaType = new HashMap<>();
 
@@ -47,13 +47,13 @@ public class DomainBuilderImpl implements DomainBuilder {
         return this;
     }
 
-    DomainBuilderImpl withDomainFunctionDefinition(DomainFunctionDefinition domainFunctionDefinition) {
+    DomainBuilderImpl withDomainFunctionDefinition(DomainFunctionDefinitionImpl domainFunctionDefinition) {
         domainFunctionDefinitions.put(domainFunctionDefinition.getName(), domainFunctionDefinition);
         return this;
     }
 
-    public DomainTypeDefinition getDomainTypeDefinition(String typeName) {
-        DomainTypeDefinition domainTypeDefinition = domainTypeDefinitions.get(typeName);
+    public DomainTypeDefinition<?> getDomainTypeDefinition(String typeName) {
+        DomainTypeDefinition<?> domainTypeDefinition = domainTypeDefinitions.get(typeName);
         if (domainTypeDefinition == null) {
             return existingDomainTypeDefinitions.get(typeName);
         }
@@ -61,12 +61,29 @@ public class DomainBuilderImpl implements DomainBuilder {
         return domainTypeDefinition;
     }
 
+    public DomainTypeDefinition<?> getDomainTypeDefinition(Class<?> javaType) {
+        DomainTypeDefinition<?> domainTypeDefinition = domainTypeDefinitionsByJavaType.get(javaType);
+        if (domainTypeDefinition == null) {
+            return existingDomainTypeDefinitionsByJavaType.get(javaType);
+        }
+
+        return domainTypeDefinition;
+    }
+
+    public DomainTypeDefinition<?> getCollectionDomainTypeDefinition(DomainTypeDefinition<?> typeDefinition) {
+        if (typeDefinition == null) {
+            return null;
+        }
+        return new CollectionDomainTypeDefinitionImpl("Collection", Collection.class, typeDefinition);
+    }
+
     @Override
     public DomainBuilderImpl withDomainType(DomainType domainType) {
         domainTypes.put(domainType.getName(), domainType);
-        existingDomainTypeDefinitions.put(domainType.getName(), new ExistingDomainTypeDefinition(domainType));
+        ExistingDomainTypeDefinitionImpl existingDomainTypeDefinition = new ExistingDomainTypeDefinitionImpl(domainType);
+        existingDomainTypeDefinitions.put(domainType.getName(), existingDomainTypeDefinition);
         if (domainType.getJavaType() != null) {
-            domainTypesByJavaType.put(domainType.getJavaType(), domainType);
+            existingDomainTypeDefinitionsByJavaType.put(domainType.getJavaType(), existingDomainTypeDefinition);
         }
         return this;
     }
@@ -91,11 +108,11 @@ public class DomainBuilderImpl implements DomainBuilder {
         return withElements(enabledPredicates, typeName, predicates);
     }
 
-    public Set<DomainOperator> getOperators(DomainTypeDefinition typeDefinition) {
+    public Set<DomainOperator> getOperators(DomainTypeDefinition<?> typeDefinition) {
         return getElements(enabledOperators, typeDefinition.getName());
     }
 
-    public Set<DomainPredicateType> getPredicates(DomainTypeDefinition typeDefinition) {
+    public Set<DomainPredicateType> getPredicates(DomainTypeDefinition<?> typeDefinition) {
         return getElements(enabledPredicates, typeDefinition.getName());
     }
 
@@ -154,7 +171,7 @@ public class DomainBuilderImpl implements DomainBuilder {
         for (EntityDomainTypeDefinitionImpl typeDefinition : domainTypeDefinitions.values()) {
             typeDefinition.bindTypes(this, context);
         }
-        for (DomainFunctionDefinition domainFunctionDefinition : domainFunctionDefinitions.values()) {
+        for (DomainFunctionDefinitionImpl domainFunctionDefinition : domainFunctionDefinitions.values()) {
             domainFunctionDefinition.bindTypes(this, context);
         }
 
@@ -166,7 +183,7 @@ public class DomainBuilderImpl implements DomainBuilder {
         }
         Map<String, DomainFunction> domainFunctions = new HashMap<>(domainFunctionDefinitions.size());
         if (!context.hasErrors()) {
-            for (DomainFunctionDefinition functionDefinition : domainFunctionDefinitions.values()) {
+            for (DomainFunctionDefinitionImpl functionDefinition : domainFunctionDefinitions.values()) {
                 domainFunctions.put(functionDefinition.getName(), functionDefinition.getFunction(context));
             }
         }

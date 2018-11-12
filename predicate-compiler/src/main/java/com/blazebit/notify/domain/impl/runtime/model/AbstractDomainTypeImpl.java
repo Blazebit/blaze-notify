@@ -35,7 +35,7 @@ public abstract class AbstractDomainTypeImpl implements DomainType {
     private final Set<DomainOperator> enabledOperators;
     private final Set<DomainPredicateType> enabledPredicates;
 
-    public AbstractDomainTypeImpl(DomainTypeDefinition typeDefinition, MetamodelBuildingContext context) {
+    public AbstractDomainTypeImpl(DomainTypeDefinition<?> typeDefinition, MetamodelBuildingContext context) {
         context.addType(typeDefinition, this);
         this.name = typeDefinition.getName();
         this.javaType = typeDefinition.getJavaType();

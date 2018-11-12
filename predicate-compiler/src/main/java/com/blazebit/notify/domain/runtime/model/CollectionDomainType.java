@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.boot.model;
-
-import java.util.Map;
+package com.blazebit.notify.domain.runtime.model;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface EntityDomainTypeDefinition extends DomainTypeDefinition<EntityDomainTypeDefinition> {
+public interface CollectionDomainType extends DomainType {
 
-    public Map<String, EntityDomainTypeAttributeDefinition> getAttributes();
+    public DomainType getElementType();
 
 }

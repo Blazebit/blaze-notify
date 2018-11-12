@@ -17,6 +17,7 @@
 package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
+import com.blazebit.notify.domain.boot.model.EntityDomainTypeAttributeDefinition;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeAttributeImpl;
 import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeImpl;
@@ -25,26 +26,30 @@ import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeImpl;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class EntityDomainTypeAttributeDefinition extends MetadataDefinitionHolderImpl<EntityDomainTypeAttributeDefinition> {
+public class EntityDomainTypeAttributeDefinitionImpl extends MetadataDefinitionHolderImpl<EntityDomainTypeAttributeDefinition> implements EntityDomainTypeAttributeDefinition {
 
     private final EntityDomainTypeDefinitionImpl owner;
     private final String name;
     private final String typeName;
     private final Class<?> javaType;
-    private DomainTypeDefinition typeDefinition;
+    private final boolean collection;
+    private DomainTypeDefinition<?> typeDefinition;
     private EntityDomainTypeAttribute attribute;
 
-    public EntityDomainTypeAttributeDefinition(EntityDomainTypeDefinitionImpl owner, String name, String typeName, Class<?> javaType) {
+    public EntityDomainTypeAttributeDefinitionImpl(EntityDomainTypeDefinitionImpl owner, String name, String typeName, Class<?> javaType, boolean collection) {
         this.owner = owner;
         this.name = name;
         this.typeName = typeName;
         this.javaType = javaType;
+        this.collection = collection;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public EntityDomainTypeDefinitionImpl getOwner() {
         return owner;
     }
@@ -57,7 +62,13 @@ public class EntityDomainTypeAttributeDefinition extends MetadataDefinitionHolde
         return javaType;
     }
 
-    public DomainTypeDefinition getTypeDefinition() {
+    @Override
+    public boolean isCollection() {
+        return collection;
+    }
+
+    @Override
+    public DomainTypeDefinition<?> getTypeDefinition() {
         return typeDefinition;
     }
 
@@ -65,7 +76,13 @@ public class EntityDomainTypeAttributeDefinition extends MetadataDefinitionHolde
         this.attribute = null;
         typeDefinition = domainBuilder.getDomainTypeDefinition(typeName);
         if (typeDefinition == null) {
-            context.addError("The type '" + typeName + "' defined for the attribute " + owner.getName() + "#" + name + " is unknown!");
+            typeDefinition = domainBuilder.getDomainTypeDefinition(javaType);
+            if (typeDefinition == null) {
+                context.addError("The type '" + typeName + "' defined for the attribute " + owner.getName() + "#" + name + " is unknown!");
+            }
+        }
+        if (collection) {
+            typeDefinition = domainBuilder.getCollectionDomainTypeDefinition(typeDefinition);
         }
     }
 

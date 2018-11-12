@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.domain.impl.runtime.model;
 
-import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinitionImpl;
 import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
@@ -35,7 +35,7 @@ public class EntityDomainTypeAttributeImpl implements EntityDomainTypeAttribute 
     private final DomainType type;
     private final Map<Class<?>, Object> metadata;
 
-    public EntityDomainTypeAttributeImpl(EntityDomainType owner, EntityDomainTypeAttributeDefinition attributeDefinition, MetamodelBuildingContext context) {
+    public EntityDomainTypeAttributeImpl(EntityDomainType owner, EntityDomainTypeAttributeDefinitionImpl attributeDefinition, MetamodelBuildingContext context) {
         this.owner = owner;
         this.name = attributeDefinition.getName();
         this.type = context.getType(attributeDefinition.getTypeDefinition());

@@ -16,38 +16,42 @@
 
 package com.blazebit.notify.domain.impl.boot.model;
 
+import com.blazebit.notify.domain.boot.model.DomainFunctionArgumentDefinition;
+import com.blazebit.notify.domain.boot.model.DomainFunctionDefinition;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.impl.runtime.model.DomainFunctionImpl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class DomainFunctionDefinition extends MetadataDefinitionHolderImpl<DomainFunctionDefinition> {
+public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<DomainFunctionDefinition> implements DomainFunctionDefinition {
 
     private final String name;
     private int minArgumentCount;
     private int argumentCount;
-    private List<String> argumentNames = new ArrayList<>();
-    private List<String> argumentTypeNames = new ArrayList<>();
     private String resultTypeName;
-    private List<DomainFunctionArgumentDefinitionImpl> argumentDefinitions;
-    private DomainTypeDefinition resultTypeDefinition;
+    private String resultJavaType;
+    private boolean collection;
+    private Boolean positional;
+    private List<DomainFunctionArgumentDefinitionImpl> argumentDefinitions = new ArrayList<>();
+    private DomainTypeDefinition<?> resultTypeDefinition;
     private DomainFunction function;
 
-    public DomainFunctionDefinition(String name) {
+    public DomainFunctionDefinitionImpl(String name) {
         this.name = name;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public int getMinArgumentCount() {
         return minArgumentCount;
     }
@@ -56,28 +60,13 @@ public class DomainFunctionDefinition extends MetadataDefinitionHolderImpl<Domai
         this.minArgumentCount = minArgumentCount;
     }
 
+    @Override
     public int getArgumentCount() {
         return argumentCount;
     }
 
     public void setArgumentCount(int argumentCount) {
         this.argumentCount = argumentCount;
-    }
-
-    public List<String> getArgumentNames() {
-        return argumentNames;
-    }
-
-    public void setArgumentNames(List<String> argumentNames) {
-        this.argumentNames = argumentNames;
-    }
-
-    public List<String> getArgumentTypeNames() {
-        return argumentTypeNames;
-    }
-
-    public void setArgumentTypeNames(List<String> argumentTypeNames) {
-        this.argumentTypeNames = argumentTypeNames;
     }
 
     public String getResultTypeName() {
@@ -88,11 +77,44 @@ public class DomainFunctionDefinition extends MetadataDefinitionHolderImpl<Domai
         this.resultTypeName = resultTypeName;
     }
 
-    public List<DomainFunctionArgumentDefinitionImpl> getArgumentDefinitions() {
-        return argumentDefinitions;
+    public String getResultJavaType() {
+        return resultJavaType;
     }
 
-    public DomainTypeDefinition getResultTypeDefinition() {
+    public void setResultJavaType(String resultJavaType) {
+        this.resultJavaType = resultJavaType;
+    }
+
+    public boolean isCollection() {
+        return collection;
+    }
+
+    public void setCollection(boolean collection) {
+        this.collection = collection;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<DomainFunctionArgumentDefinition> getArgumentDefinitions() {
+        return (List<DomainFunctionArgumentDefinition>) (List<?>) argumentDefinitions;
+    }
+
+    public void addArgumentDefinition(String name, String typeName, Class<?> javaType, boolean collection) {
+        if (positional == null) {
+            if (name == null || name.isEmpty()) {
+                positional = true;
+            } else {
+                positional = false;
+            }
+        }
+        if (positional && name != null && !name.isEmpty() || !positional && (name == null || name.isEmpty())) {
+            throw new IllegalArgumentException("Can't mix positional and named parameters!");
+        }
+        argumentDefinitions.add(new DomainFunctionArgumentDefinitionImpl(this, name, argumentDefinitions.size(), typeName, javaType, collection));
+    }
+
+    @Override
+    public DomainTypeDefinition<?> getResultTypeDefinition() {
         return resultTypeDefinition;
     }
 
@@ -105,16 +127,13 @@ public class DomainFunctionDefinition extends MetadataDefinitionHolderImpl<Domai
             if (resultTypeDefinition == null) {
                 context.addError("The result type '" + resultTypeName + "' defined for the function " + name + " is unknown!");
             }
-        }
-        if (argumentTypeNames.size() == 0) {
-            argumentDefinitions = Collections.emptyList();
-        } else {
-            argumentDefinitions = new ArrayList<>(argumentTypeNames.size());
-            for (int i = 0; i < argumentTypeNames.size(); i++) {
-                DomainFunctionArgumentDefinitionImpl domainFunctionArgumentDefinition = new DomainFunctionArgumentDefinitionImpl(this, name, i, argumentTypeNames.get(i));
-                domainFunctionArgumentDefinition.bindTypes(domainBuilder, context);
-                argumentDefinitions.add(domainFunctionArgumentDefinition);
+            if (collection) {
+                resultTypeDefinition = domainBuilder.getCollectionDomainTypeDefinition(resultTypeDefinition);
             }
+        }
+
+        for (DomainFunctionArgumentDefinitionImpl argumentDefinition : argumentDefinitions) {
+            argumentDefinition.bindTypes(domainBuilder, context);
         }
     }
 

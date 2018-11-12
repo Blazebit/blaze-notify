@@ -38,4 +38,21 @@ public class DomainBuilderTest {
         EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
         Assert.assertEquals("String", entityDomainType.getAttribute("name").getType().getName());
     }
+
+    @Test
+    public void testBuildCollectionModel() {
+        // Given
+        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        domainBuilder.createEntityType("Test")
+                .addCollectionAttribute("names", "String")
+                .build();
+
+        // When
+        DomainModel domainModel = domainBuilder.build();
+
+        // Then
+        EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
+        Assert.assertEquals("Collection", entityDomainType.getAttribute("names").getType().getName());
+        Assert.assertEquals("String", ((CollectionDomainType) entityDomainType.getAttribute("names").getType()).getElementType().getName());
+    }
 }

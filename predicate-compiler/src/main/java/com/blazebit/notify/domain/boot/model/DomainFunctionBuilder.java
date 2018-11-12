@@ -28,6 +28,8 @@ public interface DomainFunctionBuilder {
 
     public DomainFunctionBuilder withArgument(String name, String typeName);
 
+    public DomainFunctionBuilder withCollectionArgument(String name, String typeName);
+
     public DomainFunctionBuilder withArgumentTypes(String... typeNames);
 
     public DomainFunctionBuilder withResultType(String typeName);

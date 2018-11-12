@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.domain.impl.boot.model;
 
+import com.blazebit.notify.domain.boot.model.EntityDomainTypeAttributeDefinition;
 import com.blazebit.notify.domain.boot.model.EntityDomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
@@ -32,7 +33,7 @@ public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl
 
     private final String name;
     private final Class<?> javaType;
-    private final Map<String, EntityDomainTypeAttributeDefinition> attributes;
+    private final Map<String, EntityDomainTypeAttributeDefinitionImpl> attributes;
     private EntityDomainType domainType;
 
     public EntityDomainTypeDefinitionImpl(String name, Class<?> javaType) {
@@ -51,7 +52,7 @@ public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl
         return javaType;
     }
 
-    public void addAttribute(EntityDomainTypeAttributeDefinition attribute) {
+    public void addAttribute(EntityDomainTypeAttributeDefinitionImpl attribute) {
         attributes.put(attribute.getName(), attribute);
     }
 
@@ -60,13 +61,14 @@ public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Map<String, EntityDomainTypeAttributeDefinition> getAttributes() {
-        return attributes;
+        return (Map<String, EntityDomainTypeAttributeDefinition>) (Map<?, ?>) attributes;
     }
 
     public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
         this.domainType = null;
-        for (EntityDomainTypeAttributeDefinition attributeDefinition : attributes.values()) {
+        for (EntityDomainTypeAttributeDefinitionImpl attributeDefinition : attributes.values()) {
             attributeDefinition.bindTypes(domainBuilder, context);
         }
     }

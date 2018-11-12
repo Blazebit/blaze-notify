@@ -30,7 +30,7 @@ public interface DomainFunctionArgumentDefinition extends MetadataDefinitionHold
 
     public String getTypeName();
 
-    public DomainTypeDefinition getTypeDefinition();
+    public DomainTypeDefinition<?> getTypeDefinition();
 
     public DomainFunctionArgument getDomainFunctionArgument();
 

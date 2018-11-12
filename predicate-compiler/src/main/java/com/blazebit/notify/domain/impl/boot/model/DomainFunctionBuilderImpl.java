@@ -28,11 +28,11 @@ import java.util.Arrays;
 public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
 
     private final DomainBuilderImpl domainBuilder;
-    private final DomainFunctionDefinition domainFunctionDefinition;
+    private final DomainFunctionDefinitionImpl domainFunctionDefinition;
 
     public DomainFunctionBuilderImpl(DomainBuilderImpl domainBuilder, String name) {
         this.domainBuilder = domainBuilder;
-        this.domainFunctionDefinition = new DomainFunctionDefinition(name);
+        this.domainFunctionDefinition = new DomainFunctionDefinitionImpl(name);
     }
 
     @Override
@@ -49,20 +49,21 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
 
     @Override
     public DomainFunctionBuilder withArgument(String name, String typeName) {
-        if (domainFunctionDefinition.getArgumentNames().size() != domainFunctionDefinition.getArgumentTypeNames().size()) {
-            throw new IllegalArgumentException("Can't mix positional and named parameters!");
-        }
-        domainFunctionDefinition.getArgumentNames().add(name);
-        domainFunctionDefinition.getArgumentTypeNames().add(typeName);
+        domainFunctionDefinition.addArgumentDefinition(name, typeName, null, false);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionArgument(String name, String typeName) {
+        domainFunctionDefinition.addArgumentDefinition(name, typeName, null, true);
         return this;
     }
 
     @Override
     public DomainFunctionBuilder withArgumentTypes(String... typeNames) {
-        if (domainFunctionDefinition.getArgumentNames().size() != domainFunctionDefinition.getArgumentTypeNames().size()) {
-            throw new IllegalArgumentException("Can't mix positional and named parameters!");
+        for (String typeName : typeNames) {
+            domainFunctionDefinition.addArgumentDefinition(null, typeName, null, false);
         }
-        domainFunctionDefinition.setArgumentTypeNames(Arrays.asList(typeNames));
         return this;
     }
 

@@ -37,6 +37,11 @@ public class BasicDomainTypeImpl extends AbstractDomainTypeImpl implements Basic
     }
 
     @Override
+    public DomainTypeKind getKind() {
+        return DomainTypeKind.BASIC;
+    }
+
+    @Override
     public <T> T getMetadata(Class<T> metadataType) {
         return null;
     }

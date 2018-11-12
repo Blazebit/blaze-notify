@@ -26,6 +26,10 @@ public interface EntityDomainTypeBuilder {
 
     public EntityDomainTypeBuilder addAttribute(String attributeName, Class<?> javaType);
 
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, String elementTypeName);
+
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, Class<?> elementJavaType);
+
     public DomainBuilder build();
 
 }

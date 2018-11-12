@@ -28,8 +28,17 @@ public interface DomainType extends MetadataHolder {
 
     public Class<?> getJavaType();
 
+    public DomainTypeKind getKind();
+
     public Set<DomainOperator> getEnabledOperators();
 
     public Set<DomainPredicateType> getEnabledPredicates();
+
+    public static enum DomainTypeKind {
+        BASIC,
+        ENUM,
+        ENTITY,
+        COLLECTION;
+    }
 
 }

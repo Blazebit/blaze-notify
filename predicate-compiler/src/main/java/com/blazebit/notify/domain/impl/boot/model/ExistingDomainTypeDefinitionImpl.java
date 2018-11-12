@@ -28,11 +28,11 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class ExistingDomainTypeDefinition implements DomainTypeDefinition {
+public class ExistingDomainTypeDefinitionImpl implements DomainTypeDefinition {
 
     private final DomainType domainType;
 
-    public ExistingDomainTypeDefinition(DomainType domainType) {
+    public ExistingDomainTypeDefinitionImpl(DomainType domainType) {
         this.domainType = domainType;
     }
 

@@ -16,12 +16,13 @@
 
 package com.blazebit.notify.domain.impl.runtime.model;
 
-import com.blazebit.notify.domain.boot.model.EntityDomainTypeDefinition;
-import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeAttributeDefinitionImpl;
+import com.blazebit.notify.domain.impl.boot.model.EntityDomainTypeDefinitionImpl;
 import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,14 +35,20 @@ public class EntityDomainTypeImpl extends AbstractDomainTypeImpl implements Enti
     private final Map<String, EntityDomainTypeAttribute> attributes;
     private final Map<Class<?>, Object> metadata;
 
-    public EntityDomainTypeImpl(EntityDomainTypeDefinition typeDefinition, MetamodelBuildingContext context) {
+    @SuppressWarnings("unchecked")
+    public EntityDomainTypeImpl(EntityDomainTypeDefinitionImpl typeDefinition, MetamodelBuildingContext context) {
         super(typeDefinition, context);
         Map<String, EntityDomainTypeAttribute> attributes = new HashMap<>(typeDefinition.getAttributes().size());
-        for (EntityDomainTypeAttributeDefinition attributeDefinition : typeDefinition.getAttributes().values()) {
+        for (EntityDomainTypeAttributeDefinitionImpl attributeDefinition : (Collection<EntityDomainTypeAttributeDefinitionImpl>) (Collection<?>) typeDefinition.getAttributes().values()) {
             attributes.put(attributeDefinition.getName(), attributeDefinition.createAttribute(this, context));
         }
         this.attributes = attributes;
         this.metadata = context.createMetadata(typeDefinition);
+    }
+
+    @Override
+    public DomainTypeKind getKind() {
+        return DomainTypeKind.ENTITY;
     }
 
     @Override

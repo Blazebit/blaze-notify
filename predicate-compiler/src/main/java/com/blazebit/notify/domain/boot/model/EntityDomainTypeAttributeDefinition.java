@@ -16,14 +16,17 @@
 
 package com.blazebit.notify.domain.boot.model;
 
-import java.util.Map;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface EntityDomainTypeDefinition extends DomainTypeDefinition<EntityDomainTypeDefinition> {
+public interface EntityDomainTypeAttributeDefinition extends MetadataDefinitionHolder<EntityDomainTypeAttributeDefinition> {
 
-    public Map<String, EntityDomainTypeAttributeDefinition> getAttributes();
+    public String getName();
 
+    public EntityDomainTypeDefinition getOwner();
+
+    public boolean isCollection();
+
+    public DomainTypeDefinition<?> getTypeDefinition();
 }

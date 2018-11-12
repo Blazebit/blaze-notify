@@ -17,7 +17,7 @@
 package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.impl.boot.model.DomainFunctionArgumentDefinitionImpl;
-import com.blazebit.notify.domain.impl.boot.model.DomainFunctionDefinition;
+import com.blazebit.notify.domain.boot.model.DomainFunctionDefinition;
 import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
@@ -40,12 +40,13 @@ public class DomainFunctionImpl implements DomainFunction {
     private final List<DomainFunctionArgument> arguments;
     private final Map<Class<?>, Object> metadata;
 
+    @SuppressWarnings("unchecked")
     public DomainFunctionImpl(DomainFunctionDefinition functionDefinition, MetamodelBuildingContext context) {
         this.name = functionDefinition.getName();
         this.minArgumentCount = functionDefinition.getMinArgumentCount();
         this.argumentCount = functionDefinition.getArgumentCount();
         this.resultType = context.getType(functionDefinition.getResultTypeDefinition());
-        List<DomainFunctionArgumentDefinitionImpl> argumentTypeDefinitions = functionDefinition.getArgumentDefinitions();
+        List<DomainFunctionArgumentDefinitionImpl> argumentTypeDefinitions = (List<DomainFunctionArgumentDefinitionImpl>) (List<?>) functionDefinition.getArgumentDefinitions();
         List<DomainFunctionArgument> domainFunctionArguments = new ArrayList<>(argumentTypeDefinitions.size());
         for (int i = 0; i < argumentTypeDefinitions.size(); i++) {
             domainFunctionArguments.add(argumentTypeDefinitions.get(i).createFunctionArgument(this, context));

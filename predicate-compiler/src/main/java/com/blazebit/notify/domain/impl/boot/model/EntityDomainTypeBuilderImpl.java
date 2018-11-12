@@ -34,13 +34,25 @@ public class EntityDomainTypeBuilderImpl implements EntityDomainTypeBuilder {
 
     @Override
     public EntityDomainTypeBuilderImpl addAttribute(String attributeName, String typeName) {
-        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinition(domainTypeDefinition, attributeName, typeName, null));
+        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, typeName, null, false));
         return this;
     }
 
     @Override
     public EntityDomainTypeBuilderImpl addAttribute(String attributeName, Class<?> javaType) {
-        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinition(domainTypeDefinition, attributeName, null, javaType));
+        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, javaType, false));
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilderImpl addCollectionAttribute(String attributeName, String typeName) {
+        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, typeName, null, true));
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilderImpl addCollectionAttribute(String attributeName, Class<?> javaType) {
+        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, javaType, true));
         return this;
     }
 

@@ -17,6 +17,7 @@
 package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainFunctionArgumentDefinition;
+import com.blazebit.notify.domain.boot.model.DomainFunctionDefinition;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
@@ -32,14 +33,18 @@ public class DomainFunctionArgumentDefinitionImpl extends MetadataDefinitionHold
     private final String name;
     private final int index;
     private final String typeName;
-    private DomainTypeDefinition typeDefinition;
+    private final Class<?> javaType;
+    private final boolean collection;
+    private DomainTypeDefinition<?> typeDefinition;
     private DomainFunctionArgument domainFunctionArgument;
 
-    public DomainFunctionArgumentDefinitionImpl(DomainFunctionDefinition owner, String name, int index, String typeName) {
+    public DomainFunctionArgumentDefinitionImpl(DomainFunctionDefinition owner, String name, int index, String typeName, Class<?> javaType, boolean collection) {
         this.owner = owner;
         this.name = name;
         this.index = index;
         this.typeName = typeName;
+        this.javaType = javaType;
+        this.collection = collection;
     }
 
     public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
@@ -50,6 +55,9 @@ public class DomainFunctionArgumentDefinitionImpl extends MetadataDefinitionHold
             if (typeDefinition == null) {
                 String name = this.name == null || this.name.isEmpty() ? "" : "(" + this.name + ")";
                 context.addError("The argument type '" + typeName + "' defined for the function argument index " + index + name + " of function " + owner.getName() + " is unknown!");
+            }
+            if (collection) {
+                typeDefinition = domainBuilder.getCollectionDomainTypeDefinition(typeDefinition);
             }
         }
     }
@@ -70,7 +78,7 @@ public class DomainFunctionArgumentDefinitionImpl extends MetadataDefinitionHold
     }
 
     @Override
-    public DomainTypeDefinition getTypeDefinition() {
+    public DomainTypeDefinition<?> getTypeDefinition() {
         return typeDefinition;
     }
 

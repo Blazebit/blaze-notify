@@ -32,7 +32,7 @@ import java.util.*;
 public class MetamodelBuildingContext {
 
     private final DomainBuilderImpl domainBuilder;
-    private final Map<DomainTypeDefinition, DomainType> buildingTypes = new HashMap<>();
+    private final Map<DomainTypeDefinition<?>, DomainType> buildingTypes = new HashMap<>();
     private List<String> errors = new ArrayList<>();
 
     public MetamodelBuildingContext(DomainBuilderImpl domainBuilder) {
@@ -51,24 +51,24 @@ public class MetamodelBuildingContext {
         return errors;
     }
 
-    public void addType(DomainTypeDefinition typeDefinition, DomainType domainType) {
+    public void addType(DomainTypeDefinition<?> typeDefinition, DomainType domainType) {
         buildingTypes.put(typeDefinition, domainType);
     }
 
-    public DomainType getType(DomainTypeDefinition typeDefinition) {
+    public DomainType getType(DomainTypeDefinition<?> typeDefinition) {
         DomainType domainType = buildingTypes.get(typeDefinition);
         if (domainType == null) {
-            return typeDefinition.getType(this);
+            domainType = typeDefinition.getType(this);
         }
 
         return domainType;
     }
 
-    public Set<DomainOperator> getOperators(DomainTypeDefinition typeDefinition) {
+    public Set<DomainOperator> getOperators(DomainTypeDefinition<?> typeDefinition) {
         return domainBuilder.getOperators(typeDefinition);
     }
 
-    public Set<DomainPredicateType> getPredicates(DomainTypeDefinition typeDefinition) {
+    public Set<DomainPredicateType> getPredicates(DomainTypeDefinition<?> typeDefinition) {
         return domainBuilder.getPredicates(typeDefinition);
     }
 
