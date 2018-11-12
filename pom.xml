@@ -14,6 +14,7 @@
         <module>parent</module>
         <module>checkstyle-rules</module>
         <module>predicate-compiler</module>
+        <module>template</module>
     </modules>
 
     <groupId>com.blazebit</groupId>
