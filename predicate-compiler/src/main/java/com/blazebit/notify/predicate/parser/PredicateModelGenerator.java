@@ -180,10 +180,10 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         if (ctx.sign == null) {
             return atom;
         } else {
-            if (atom.getType().getEnabledOperators().contains(DomainOperator.INVERT)) {
+            if (atom.getType().getEnabledOperators().contains(DomainOperator.UNARY_MINUS)) {
                 return new ArithmeticFactor(atom, ctx.sign.getType() == PredicateParser.OP_MINUS);
             } else {
-                throw new TypeErrorException(String.format("%s not enabled for type %s", DomainOperator.INVERT, atom.getType()));
+                throw new TypeErrorException(String.format("%s not enabled for type %s", DomainOperator.UNARY_MINUS, atom.getType()));
             }
         }
     }

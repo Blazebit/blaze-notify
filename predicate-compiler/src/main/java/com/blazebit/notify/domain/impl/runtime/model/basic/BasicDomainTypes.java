@@ -35,6 +35,6 @@ public final class BasicDomainTypes {
     public static final BasicDomainType DECIMAL = new BasicDomainTypeImpl(BigDecimal.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
     public static final BasicDomainType STRING = new BasicDomainTypeImpl(String.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
     public static final BasicDomainType CALENDAR = new BasicDomainTypeImpl(Calendar.class, EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS), DomainPredicateType.comparable());
-    public static final BasicDomainType BOOLEAN = new BasicDomainTypeImpl(Boolean.class, EnumSet.noneOf(DomainOperator.class), DomainPredicateType.equality());
+    public static final BasicDomainType BOOLEAN = new BasicDomainTypeImpl(Boolean.class, EnumSet.of(DomainOperator.NOT), DomainPredicateType.equality());
 
 }

@@ -31,9 +31,9 @@ public enum DomainOperator {
     MULTIPLICATION,
     DIVISION,
     MODULO,
-    INVERT;
+    NOT;
 
     public static Set<DomainOperator> arithmetic() {
-        return EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS, DomainOperator.MULTIPLICATION, DomainOperator.DIVISION, DomainOperator.MODULO, DomainOperator.UNARY_MINUS, DomainOperator.UNARY_PLUS, DomainOperator.INVERT);
+        return EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS, DomainOperator.MULTIPLICATION, DomainOperator.DIVISION, DomainOperator.MODULO, DomainOperator.UNARY_MINUS, DomainOperator.UNARY_PLUS);
     }
 }
