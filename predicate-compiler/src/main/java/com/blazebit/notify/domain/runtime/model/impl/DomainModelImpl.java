@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.domain.runtime.model.impl;
 
+import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
@@ -30,9 +31,11 @@ public class DomainModelImpl implements DomainModel {
 
     private final Map<String, DomainType> domainTypes;
     private final Map<Class<?>, DomainType> domainTypesByJavaType;
+    private final Map<String, DomainFunction> domainFunctions;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<String, DomainFunction> domainFunctions) {
         this.domainTypes = domainTypes;
+        this.domainFunctions = domainFunctions;
         Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>(domainTypes.size());
         for (DomainType domainType : domainTypes.values()) {
             if (domainType.getJavaType() != null) {
@@ -56,5 +59,10 @@ public class DomainModelImpl implements DomainModel {
     @Override
     public Map<String, DomainType> getTypes() {
         return domainTypes;
+    }
+
+    @Override
+    public DomainFunction getFunction(String name) {
+        return domainFunctions.get(name);
     }
 }

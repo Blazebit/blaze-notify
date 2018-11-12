@@ -16,30 +16,31 @@
 
 package com.blazebit.notify.domain.runtime.model.impl;
 
+import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
+import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.DomainOperator;
 import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class AbstractDomainTypeImpl extends AbstractMetadataHolderImpl implements DomainType {
+public abstract class AbstractDomainTypeImpl implements DomainType {
 
     private final String name;
     private final Class<?> javaType;
     private final Set<DomainOperator> enabledOperators;
     private final Set<DomainPredicateType> enabledPredicates;
 
-    public AbstractDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
-        super(metadata);
-        this.name = name;
-        this.javaType = javaType;
-        this.enabledOperators = enabledOperators;
-        this.enabledPredicates = enabledPredicates;
+    public AbstractDomainTypeImpl(DomainTypeDefinition typeDefinition, MetamodelBuildingContext context) {
+        context.addType(typeDefinition, this);
+        this.name = typeDefinition.getName();
+        this.javaType = typeDefinition.getJavaType();
+        this.enabledOperators = context.getOperators(typeDefinition);
+        this.enabledPredicates = context.getPredicates(typeDefinition);
     }
 
     @Override

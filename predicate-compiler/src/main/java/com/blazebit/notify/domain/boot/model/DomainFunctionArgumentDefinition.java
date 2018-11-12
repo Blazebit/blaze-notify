@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model.impl;
+package com.blazebit.notify.domain.boot.model;
 
-import com.blazebit.notify.domain.runtime.model.MetadataHolder;
-
-import java.util.Map;
+import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class AbstractMetadataHolderImpl implements MetadataHolder {
+public interface DomainFunctionArgumentDefinition extends MetadataDefinitionHolder<DomainFunctionArgumentDefinition> {
 
-    private final Map<Class<?>, Object> metadata;
+    public String getName();
 
-    public AbstractMetadataHolderImpl(Map<Class<?>, Object> metadata) {
-        this.metadata = metadata;
-    }
+    public int getIndex();
 
-    @Override
-    public <T> T getMetadata(Class<T> metadataType) {
-        return (T) metadata.get(metadataType);
-    }
+    public String getTypeName();
+
+    public DomainTypeDefinition getTypeDefinition();
+
+    public DomainFunctionArgument getDomainFunctionArgument();
+
 }

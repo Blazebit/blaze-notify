@@ -14,24 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model;
-
-import java.util.List;
+package com.blazebit.notify.domain.boot.model;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainFunction extends MetadataHolder {
+public interface MetadataDefinition<T> {
 
-    public String getName();
-
-    public int getMinArgumentCount();
-
-    public int getArgumentCount();
-
-    public List<DomainFunctionArgument> getArguments();
-
-    public DomainType getResultType();
-
+    public T build(MetadataDefinitionHolder definitionHolder);
 }

@@ -16,13 +16,14 @@
 
 package com.blazebit.notify.domain.runtime.model.impl;
 
-import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
+import com.blazebit.notify.domain.boot.model.EntityDomainTypeDefinition;
+import com.blazebit.notify.domain.boot.model.impl.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.EntityDomainType;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -31,10 +32,16 @@ import java.util.Set;
 public class EntityDomainTypeImpl extends AbstractDomainTypeImpl implements EntityDomainType {
 
     private final Map<String, EntityDomainTypeAttribute> attributes;
+    private final Map<Class<?>, Object> metadata;
 
-    public EntityDomainTypeImpl(Map<Class<?>, Object> metadata, String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates, Map<String, EntityDomainTypeAttribute> attributes) {
-        super(metadata, name, javaType, enabledOperators, enabledPredicates);
+    public EntityDomainTypeImpl(EntityDomainTypeDefinition typeDefinition, MetamodelBuildingContext context) {
+        super(typeDefinition, context);
+        Map<String, EntityDomainTypeAttribute> attributes = new HashMap<>(typeDefinition.getAttributes().size());
+        for (EntityDomainTypeAttributeDefinition attributeDefinition : typeDefinition.getAttributes().values()) {
+            attributes.put(attributeDefinition.getName(), attributeDefinition.createAttribute(this, context));
+        }
         this.attributes = attributes;
+        this.metadata = context.createMetadata(typeDefinition);
     }
 
     @Override
@@ -45,5 +52,10 @@ public class EntityDomainTypeImpl extends AbstractDomainTypeImpl implements Enti
     @Override
     public Map<String, EntityDomainTypeAttribute> getAttributes() {
         return attributes;
+    }
+
+    @Override
+    public <T> T getMetadata(Class<T> metadataType) {
+        return (T) metadata.get(metadataType);
     }
 }

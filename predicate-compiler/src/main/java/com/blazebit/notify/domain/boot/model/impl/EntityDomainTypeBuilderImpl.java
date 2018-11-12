@@ -25,11 +25,11 @@ import com.blazebit.notify.domain.boot.model.EntityDomainTypeBuilder;
 public class EntityDomainTypeBuilderImpl implements EntityDomainTypeBuilder {
 
     private final DomainBuilderImpl domainBuilder;
-    private final EntityDomainTypeDefinition domainTypeDefinition;
+    private final EntityDomainTypeDefinitionImpl domainTypeDefinition;
 
     public EntityDomainTypeBuilderImpl(DomainBuilderImpl domainBuilder, String name, Class<?> javaType) {
         this.domainBuilder = domainBuilder;
-        this.domainTypeDefinition = new EntityDomainTypeDefinition(name, javaType);
+        this.domainTypeDefinition = new EntityDomainTypeDefinitionImpl(name, javaType);
     }
 
     @Override

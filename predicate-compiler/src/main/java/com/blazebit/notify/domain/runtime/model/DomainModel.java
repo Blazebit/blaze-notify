@@ -30,7 +30,6 @@ public interface DomainModel {
 
     public Map<String, DomainType> getTypes();
 
-    DomainFunction getFunction(String name);
+    public DomainFunction getFunction(String name);
 
-    Map<String, DomainFunction> getFunctions();
 }

@@ -74,6 +74,6 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
 
     @Override
     public DomainBuilder build() {
-        return domainBuilder;
+        return domainBuilder.withDomainFunctionDefinition(domainFunctionDefinition);
     }
 }

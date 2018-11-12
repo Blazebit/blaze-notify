@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model;
+package com.blazebit.notify.domain.boot.model;
 
-import java.util.List;
+import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
+import com.blazebit.notify.domain.runtime.model.DomainType;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainFunction extends MetadataHolder {
+public interface DomainTypeDefinition<X extends DomainTypeDefinition<X>> extends MetadataDefinitionHolder<X> {
 
     public String getName();
 
-    public int getMinArgumentCount();
+    public Class<?> getJavaType();
 
-    public int getArgumentCount();
-
-    public List<DomainFunctionArgument> getArguments();
-
-    public DomainType getResultType();
+    public DomainType getType(MetamodelBuildingContext context);
 
 }

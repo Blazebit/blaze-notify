@@ -16,6 +16,11 @@
 
 package com.blazebit.notify.domain.boot.model.impl;
 
+import com.blazebit.notify.domain.boot.model.EntityDomainTypeDefinition;
+import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.EntityDomainType;
+import com.blazebit.notify.domain.runtime.model.impl.EntityDomainTypeImpl;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,22 +28,25 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class EntityDomainTypeDefinition {
+public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl<EntityDomainTypeDefinition> implements EntityDomainTypeDefinition {
 
     private final String name;
     private final Class<?> javaType;
     private final Map<String, EntityDomainTypeAttributeDefinition> attributes;
+    private EntityDomainType domainType;
 
-    public EntityDomainTypeDefinition(String name, Class<?> javaType) {
+    public EntityDomainTypeDefinitionImpl(String name, Class<?> javaType) {
         this.name = name;
         this.javaType = javaType;
         this.attributes = new HashMap<>();
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public Class<?> getJavaType() {
         return javaType;
     }
@@ -51,7 +59,23 @@ public class EntityDomainTypeDefinition {
         return attributes.get(name);
     }
 
+    @Override
     public Map<String, EntityDomainTypeAttributeDefinition> getAttributes() {
         return attributes;
+    }
+
+    public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
+        this.domainType = null;
+        for (EntityDomainTypeAttributeDefinition attributeDefinition : attributes.values()) {
+            attributeDefinition.bindTypes(domainBuilder, context);
+        }
+    }
+
+    @Override
+    public DomainType getType(MetamodelBuildingContext context) {
+        if (domainType == null) {
+            domainType = new EntityDomainTypeImpl(this, context);
+        }
+        return domainType;
     }
 }

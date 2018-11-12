@@ -31,7 +31,11 @@ public interface DomainBuilder {
 
     public DomainBuilder withOperator(String typeName, DomainOperator operator);
 
+    public DomainBuilder withOperator(String typeName, DomainOperator... operators);
+
     public DomainBuilder withPredicate(String typeName, DomainPredicateType predicate);
+
+    public DomainBuilder withPredicate(String typeName, DomainPredicateType... predicates);
 
     public DomainFunctionBuilder createFunction(String name);
 

@@ -16,30 +16,38 @@
 
 package com.blazebit.notify.domain.runtime.model.impl;
 
-import com.blazebit.notify.domain.boot.model.impl.EntityDomainTypeAttributeDefinition;
+import com.blazebit.notify.domain.boot.model.DomainFunctionArgumentDefinition;
 import com.blazebit.notify.domain.boot.model.impl.MetamodelBuildingContext;
+import com.blazebit.notify.domain.runtime.model.DomainFunction;
+import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainType;
-import com.blazebit.notify.domain.runtime.model.EntityDomainType;
-import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class EntityDomainTypeAttributeImpl implements EntityDomainTypeAttribute {
+public class DomainFunctionArgumentImpl implements DomainFunctionArgument {
 
-    private final EntityDomainType owner;
+    private final DomainFunction owner;
     private final String name;
+    private final int index;
     private final DomainType type;
     private final Map<Class<?>, Object> metadata;
 
-    public EntityDomainTypeAttributeImpl(EntityDomainType owner, EntityDomainTypeAttributeDefinition attributeDefinition, MetamodelBuildingContext context) {
-        this.owner = owner;
-        this.name = attributeDefinition.getName();
-        this.type = context.getType(attributeDefinition.getTypeDefinition());
-        this.metadata = context.createMetadata(attributeDefinition);
+    public DomainFunctionArgumentImpl(DomainFunction function, DomainFunctionArgumentDefinition argumentDefinition, MetamodelBuildingContext context) {
+        this.owner = function;
+        this.name = argumentDefinition.getName();
+        this.index = argumentDefinition.getIndex();
+        this.type = context.getType(argumentDefinition.getTypeDefinition());
+        this.metadata = context.createMetadata(argumentDefinition);
+    }
+
+    @Override
+    public DomainFunction getOwner() {
+        return owner;
     }
 
     @Override
@@ -48,8 +56,8 @@ public class EntityDomainTypeAttributeImpl implements EntityDomainTypeAttribute 
     }
 
     @Override
-    public EntityDomainType getOwner() {
-        return owner;
+    public int getPosition() {
+        return index;
     }
 
     @Override

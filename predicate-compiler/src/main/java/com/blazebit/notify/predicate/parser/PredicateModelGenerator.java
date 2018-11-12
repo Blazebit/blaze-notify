@@ -99,7 +99,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Expression visitInPredicate(PredicateParser.InPredicateContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_expression.accept(this);
+        ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_expression().accept(this);
         List<ArithmeticExpression> inItems = getLiteralList(ArithmeticExpression.class, ctx.in_items);
 
         if (!left.getType().getEnabledPredicates().contains(DomainPredicateType.EQUALITY)) {

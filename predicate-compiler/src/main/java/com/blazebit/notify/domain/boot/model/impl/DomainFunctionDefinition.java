@@ -16,14 +16,19 @@
 
 package com.blazebit.notify.domain.boot.model.impl;
 
+import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
+import com.blazebit.notify.domain.runtime.model.DomainFunction;
+import com.blazebit.notify.domain.runtime.model.impl.DomainFunctionImpl;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class DomainFunctionDefinition {
+public class DomainFunctionDefinition extends MetadataDefinitionHolderImpl<DomainFunctionDefinition> {
 
     private final String name;
     private int minArgumentCount;
@@ -31,6 +36,9 @@ public class DomainFunctionDefinition {
     private List<String> argumentNames = new ArrayList<>();
     private List<String> argumentTypeNames = new ArrayList<>();
     private String resultTypeName;
+    private List<DomainFunctionArgumentDefinitionImpl> argumentDefinitions;
+    private DomainTypeDefinition resultTypeDefinition;
+    private DomainFunction function;
 
     public DomainFunctionDefinition(String name) {
         this.name = name;
@@ -78,5 +86,43 @@ public class DomainFunctionDefinition {
 
     public void setResultTypeName(String resultTypeName) {
         this.resultTypeName = resultTypeName;
+    }
+
+    public List<DomainFunctionArgumentDefinitionImpl> getArgumentDefinitions() {
+        return argumentDefinitions;
+    }
+
+    public DomainTypeDefinition getResultTypeDefinition() {
+        return resultTypeDefinition;
+    }
+
+    public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
+        this.function = null;
+        if (resultTypeName == null) {
+            resultTypeDefinition = null;
+        } else {
+            resultTypeDefinition = domainBuilder.getDomainTypeDefinition(resultTypeName);
+            if (resultTypeDefinition == null) {
+                context.addError("The result type '" + resultTypeName + "' defined for the function " + name + " is unknown!");
+            }
+        }
+        if (argumentTypeNames.size() == 0) {
+            argumentDefinitions = Collections.emptyList();
+        } else {
+            argumentDefinitions = new ArrayList<>(argumentTypeNames.size());
+            for (int i = 0; i < argumentTypeNames.size(); i++) {
+                DomainFunctionArgumentDefinitionImpl domainFunctionArgumentDefinition = new DomainFunctionArgumentDefinitionImpl(this, name, i, argumentTypeNames.get(i));
+                domainFunctionArgumentDefinition.bindTypes(domainBuilder, context);
+                argumentDefinitions.add(domainFunctionArgumentDefinition);
+            }
+        }
+    }
+
+    public DomainFunction getFunction(MetamodelBuildingContext context) {
+        if (function == null) {
+            function = new DomainFunctionImpl(this, context);
+        }
+
+        return function;
     }
 }

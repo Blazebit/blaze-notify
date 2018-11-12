@@ -20,7 +20,9 @@ package com.blazebit.notify.domain.runtime.model;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainFunctionArgument {
+public interface DomainFunctionArgument extends MetadataHolder {
+
+    public DomainFunction getOwner();
 
     public String getName();
 
