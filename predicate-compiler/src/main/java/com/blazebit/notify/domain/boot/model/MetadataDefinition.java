@@ -22,5 +22,7 @@ package com.blazebit.notify.domain.boot.model;
  */
 public interface MetadataDefinition<T> {
 
-    public T build(MetadataDefinitionHolder definitionHolder);
+    public Class<T> getJavaType();
+
+    public T build(MetadataDefinitionHolder<?> definitionHolder);
 }

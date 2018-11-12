@@ -28,7 +28,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class ExistingDomainTypeDefinitionImpl implements DomainTypeDefinition {
+public class ExistingDomainTypeDefinitionImpl implements DomainTypeDefinition<ExistingDomainTypeDefinitionImpl> {
 
     private final DomainType domainType;
 
@@ -37,7 +37,7 @@ public class ExistingDomainTypeDefinitionImpl implements DomainTypeDefinition {
     }
 
     @Override
-    public MetadataDefinitionHolder withMetadataDefinition(Class metadataType, MetadataDefinition metadataDefinition) {
+    public ExistingDomainTypeDefinitionImpl withMetadataDefinition(MetadataDefinition metadataDefinition) {
         // TODO: throw exception?
         return this;
     }

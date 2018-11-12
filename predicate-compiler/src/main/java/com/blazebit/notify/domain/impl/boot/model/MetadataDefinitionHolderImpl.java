@@ -31,8 +31,8 @@ public class MetadataDefinitionHolderImpl<X extends MetadataDefinitionHolder<X>>
     private final Map<Class<?>, MetadataDefinition<?>> metadataDefinitions = new HashMap<>();
 
     @Override
-    public <T> X withMetadataDefinition(Class<T> metadataType, MetadataDefinition<T> metadataDefinition) {
-        metadataDefinitions.put(metadataType, metadataDefinition);
+    public X withMetadataDefinition(MetadataDefinition<?> metadataDefinition) {
+        metadataDefinitions.put(metadataDefinition.getJavaType(), metadataDefinition);
         return (X) this;
     }
 

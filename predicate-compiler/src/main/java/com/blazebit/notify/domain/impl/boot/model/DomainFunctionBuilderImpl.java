@@ -18,8 +18,7 @@ package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;
-
-import java.util.Arrays;
+import com.blazebit.notify.domain.boot.model.MetadataDefinition;
 
 /**
  * @author Christian Beikov
@@ -60,6 +59,26 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
     }
 
     @Override
+    public DomainFunctionBuilder withArgument(String name, String typeName, MetadataDefinition<?>... metadataDefinitions) {
+        DomainFunctionArgumentDefinitionImpl argumentDefinition = domainFunctionDefinition.addArgumentDefinition(name, typeName, null, false);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            argumentDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionArgument(String name, String typeName, MetadataDefinition<?>... metadataDefinitions) {
+        DomainFunctionArgumentDefinitionImpl argumentDefinition = domainFunctionDefinition.addArgumentDefinition(name, typeName, null, true);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            argumentDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        return this;
+    }
+
+    @Override
     public DomainFunctionBuilder withArgumentTypes(String... typeNames) {
         for (String typeName : typeNames) {
             domainFunctionDefinition.addArgumentDefinition(null, typeName, null, false);
@@ -70,6 +89,12 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
     @Override
     public DomainFunctionBuilder withResultType(String typeName) {
         domainFunctionDefinition.setResultTypeName(typeName);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withMetadata(MetadataDefinition<?> metadataDefinition) {
+        domainFunctionDefinition.withMetadataDefinition(metadataDefinition);
         return this;
     }
 

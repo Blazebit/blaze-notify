@@ -99,7 +99,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
         return (List<DomainFunctionArgumentDefinition>) (List<?>) argumentDefinitions;
     }
 
-    public void addArgumentDefinition(String name, String typeName, Class<?> javaType, boolean collection) {
+    public DomainFunctionArgumentDefinitionImpl addArgumentDefinition(String name, String typeName, Class<?> javaType, boolean collection) {
         if (positional == null) {
             if (name == null || name.isEmpty()) {
                 positional = true;
@@ -110,7 +110,9 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
         if (positional && name != null && !name.isEmpty() || !positional && (name == null || name.isEmpty())) {
             throw new IllegalArgumentException("Can't mix positional and named parameters!");
         }
-        argumentDefinitions.add(new DomainFunctionArgumentDefinitionImpl(this, name, argumentDefinitions.size(), typeName, javaType, collection));
+        DomainFunctionArgumentDefinitionImpl argumentDefinition = new DomainFunctionArgumentDefinitionImpl(this, name, argumentDefinitions.size(), typeName, javaType, collection);
+        argumentDefinitions.add(argumentDefinition);
+        return argumentDefinition;
     }
 
     @Override

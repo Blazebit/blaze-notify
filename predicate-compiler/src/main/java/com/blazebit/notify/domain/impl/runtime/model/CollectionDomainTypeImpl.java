@@ -31,7 +31,7 @@ import java.util.Set;
 public class CollectionDomainTypeImpl extends AbstractDomainTypeImpl implements CollectionDomainType {
 
     private static final Set<DomainOperator> ENABLED_OPERATORS = EnumSet.noneOf(DomainOperator.class);
-    private static final Set<DomainPredicateType> ENABLED_PREDICATES = EnumSet.of(DomainPredicateType.EMPTYNESS);
+    private static final Set<DomainPredicateType> ENABLED_PREDICATES = EnumSet.of(DomainPredicateType.EMPTINESS);
     private final DomainType elementType;
     private final Map<Class<?>, Object> metadata;
 

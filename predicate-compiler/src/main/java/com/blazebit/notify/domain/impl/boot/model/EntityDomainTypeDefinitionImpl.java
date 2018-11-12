@@ -29,7 +29,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl<EntityDomainTypeDefinition> implements EntityDomainTypeDefinition {
+public class EntityDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl<EntityDomainTypeDefinition> implements EntityDomainTypeDefinition, DomainTypeDefinitionImplementor<EntityDomainTypeDefinition> {
 
     private final String name;
     private final Class<?> javaType;

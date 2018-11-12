@@ -18,6 +18,8 @@ package com.blazebit.notify.domain.runtime.model;
 
 import com.blazebit.notify.domain.Domain;
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
+import com.blazebit.notify.domain.boot.model.MetadataDefinition;
+import com.blazebit.notify.domain.boot.model.MetadataDefinitionHolder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +30,8 @@ public class DomainBuilderTest {
         // Given
         DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
         domainBuilder.createEntityType("Test")
-                .addAttribute("name", "String")
+                .addAttribute("name", "String", MetadataSample.INSTANCE)
+                .withMetadata(MetadataSample.INSTANCE)
         .build();
 
         // When
@@ -36,6 +39,8 @@ public class DomainBuilderTest {
 
         // Then
         EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getMetadata(MetadataSample.class));
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getAttribute("name").getMetadata(MetadataSample.class));
         Assert.assertEquals("String", entityDomainType.getAttribute("name").getType().getName());
     }
 
@@ -44,7 +49,8 @@ public class DomainBuilderTest {
         // Given
         DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
         domainBuilder.createEntityType("Test")
-                .addCollectionAttribute("names", "String")
+                .addCollectionAttribute("names", "String", MetadataSample.INSTANCE)
+                .withMetadata(MetadataSample.INSTANCE)
                 .build();
 
         // When
@@ -52,7 +58,51 @@ public class DomainBuilderTest {
 
         // Then
         EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getMetadata(MetadataSample.class));
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getAttribute("names").getMetadata(MetadataSample.class));
         Assert.assertEquals("Collection", entityDomainType.getAttribute("names").getType().getName());
         Assert.assertEquals("String", ((CollectionDomainType) entityDomainType.getAttribute("names").getType()).getElementType().getName());
+    }
+
+    @Test
+    public void testBuildEnumModel() {
+        // Given
+        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        domainBuilder.createEnumType("TestKind")
+                .withValue("UnitTest", MetadataSample.INSTANCE)
+                .withValue("IntegrationTest", MetadataSample.INSTANCE)
+                .withMetadata(MetadataSample.INSTANCE)
+                .build();
+        domainBuilder.createEntityType("Test")
+                .addAttribute("kind", "TestKind", MetadataSample.INSTANCE)
+                .withMetadata(MetadataSample.INSTANCE)
+                .build();
+
+        // When
+        DomainModel domainModel = domainBuilder.build();
+
+        // Then
+        EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType("Test");
+        EnumDomainType enumDomainType = (EnumDomainType) domainModel.getType("TestKind");
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getMetadata(MetadataSample.class));
+        Assert.assertEquals(MetadataSample.INSTANCE, entityDomainType.getAttribute("kind").getType().getMetadata(MetadataSample.class));
+        Assert.assertEquals(MetadataSample.INSTANCE, enumDomainType.getEnumValues().get("UnitTest").getMetadata(MetadataSample.class));
+        Assert.assertEquals("TestKind", entityDomainType.getAttribute("kind").getType().getName());
+        Assert.assertEquals(2, ((EnumDomainType) entityDomainType.getAttribute("kind").getType()).getEnumValues().size());
+    }
+
+    private static class MetadataSample implements MetadataDefinition<MetadataSample> {
+
+        public static final MetadataSample INSTANCE = new MetadataSample();
+
+        @Override
+        public Class<MetadataSample> getJavaType() {
+            return MetadataSample.class;
+        }
+
+        @Override
+        public MetadataSample build(MetadataDefinitionHolder<?> definitionHolder) {
+            return this;
+        }
     }
 }

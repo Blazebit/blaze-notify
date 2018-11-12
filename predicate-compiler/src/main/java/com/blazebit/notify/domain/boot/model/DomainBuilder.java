@@ -43,5 +43,9 @@ public interface DomainBuilder {
 
     public EntityDomainTypeBuilder createEntityType(String name, Class<?> javaType);
 
+    public EnumDomainTypeBuilder createEnumType(String name);
+
+    public EnumDomainTypeBuilder createEnumType(String name, Class<? extends Enum<?>> javaType);
+
     public DomainModel build();
 }

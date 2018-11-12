@@ -16,24 +16,14 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public enum DomainPredicateType {
-    NULLNESS,
-    EMPTINESS,
-    RELATIONAL,
-    EQUALITY;
+public interface EnumDomainTypeValue extends MetadataHolder {
 
-    public static Set<DomainPredicateType> comparable() {
-        return EnumSet.of(DomainPredicateType.RELATIONAL, DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
-    }
+    public EnumDomainType getOwner();
 
-    public static Set<DomainPredicateType> equality() {
-        return EnumSet.of(DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
-    }
+    public String getValue();
+
 }

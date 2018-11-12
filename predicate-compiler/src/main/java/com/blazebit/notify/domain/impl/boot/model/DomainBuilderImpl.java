@@ -36,10 +36,10 @@ public class DomainBuilderImpl implements DomainBuilder {
     private Map<String, DomainFunctionDefinitionImpl> domainFunctionDefinitions = new HashMap<>();
     private Map<String, Set<DomainOperator>> enabledOperators = new HashMap<>();
     private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
-    private Map<String, EntityDomainTypeDefinitionImpl> domainTypeDefinitions = new HashMap<>();
-    private Map<Class<?>, EntityDomainTypeDefinitionImpl> domainTypeDefinitionsByJavaType = new HashMap<>();
+    private Map<String, DomainTypeDefinitionImplementor<?>> domainTypeDefinitions = new HashMap<>();
+    private Map<Class<?>, DomainTypeDefinitionImplementor<?>> domainTypeDefinitionsByJavaType = new HashMap<>();
 
-    DomainBuilderImpl withDomainTypeDefinition(EntityDomainTypeDefinitionImpl domainTypeDefinition) {
+    DomainBuilderImpl withDomainTypeDefinition(DomainTypeDefinitionImplementor<?> domainTypeDefinition) {
         domainTypeDefinitions.put(domainTypeDefinition.getName(), domainTypeDefinition);
         if (domainTypeDefinition.getJavaType() != null) {
             domainTypeDefinitionsByJavaType.put(domainTypeDefinition.getJavaType(), domainTypeDefinition);
@@ -166,9 +166,19 @@ public class DomainBuilderImpl implements DomainBuilder {
     }
 
     @Override
+    public EnumDomainTypeBuilderImpl createEnumType(String name) {
+        return new EnumDomainTypeBuilderImpl(this, name, null);
+    }
+
+    @Override
+    public EnumDomainTypeBuilderImpl createEnumType(String name, Class<? extends Enum<?>> javaType) {
+        return new EnumDomainTypeBuilderImpl(this, name, javaType);
+    }
+
+    @Override
     public DomainModel build() {
         MetamodelBuildingContext context = new MetamodelBuildingContext(this);
-        for (EntityDomainTypeDefinitionImpl typeDefinition : domainTypeDefinitions.values()) {
+        for (DomainTypeDefinitionImplementor<?> typeDefinition : domainTypeDefinitions.values()) {
             typeDefinition.bindTypes(this, context);
         }
         for (DomainFunctionDefinitionImpl domainFunctionDefinition : domainFunctionDefinitions.values()) {
@@ -177,7 +187,7 @@ public class DomainBuilderImpl implements DomainBuilder {
 
         Map<String, DomainType> domainTypes = new HashMap<>(this.domainTypes);
         if (!context.hasErrors()) {
-            for (EntityDomainTypeDefinitionImpl typeDefinition : domainTypeDefinitions.values()) {
+            for (DomainTypeDefinition typeDefinition : domainTypeDefinitions.values()) {
                 domainTypes.put(typeDefinition.getName(), context.getType(typeDefinition));
             }
         }

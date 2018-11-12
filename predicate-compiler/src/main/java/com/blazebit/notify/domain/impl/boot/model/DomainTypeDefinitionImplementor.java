@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.runtime.model;
+package com.blazebit.notify.domain.impl.boot.model;
 
-import java.util.EnumSet;
-import java.util.Set;
+import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public enum DomainPredicateType {
-    NULLNESS,
-    EMPTINESS,
-    RELATIONAL,
-    EQUALITY;
+public interface DomainTypeDefinitionImplementor<X extends DomainTypeDefinition<X>> extends DomainTypeDefinition<X> {
 
-    public static Set<DomainPredicateType> comparable() {
-        return EnumSet.of(DomainPredicateType.RELATIONAL, DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
-    }
+    public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context);
 
-    public static Set<DomainPredicateType> equality() {
-        return EnumSet.of(DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
-    }
 }

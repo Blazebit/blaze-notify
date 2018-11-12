@@ -17,6 +17,7 @@
 package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.EntityDomainTypeBuilder;
+import com.blazebit.notify.domain.boot.model.MetadataDefinition;
 
 /**
  * @author Christian Beikov
@@ -51,8 +52,58 @@ public class EntityDomainTypeBuilderImpl implements EntityDomainTypeBuilder {
     }
 
     @Override
-    public EntityDomainTypeBuilderImpl addCollectionAttribute(String attributeName, Class<?> javaType) {
-        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, javaType, true));
+    public EntityDomainTypeBuilderImpl addCollectionAttribute(String attributeName, Class<?> elementJavaType) {
+        domainTypeDefinition.addAttribute(new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, elementJavaType, true));
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilder addAttribute(String attributeName, String elementTypeName, MetadataDefinition<?>... metadataDefinitions) {
+        EntityDomainTypeAttributeDefinitionImpl attributeDefinition = new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, elementTypeName, null, false);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            attributeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        domainTypeDefinition.addAttribute(attributeDefinition);
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilder addAttribute(String attributeName, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions) {
+        EntityDomainTypeAttributeDefinitionImpl attributeDefinition = new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, javaType, false);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            attributeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        domainTypeDefinition.addAttribute(attributeDefinition);
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, String elementTypeName, MetadataDefinition<?>... metadataDefinitions) {
+        EntityDomainTypeAttributeDefinitionImpl attributeDefinition = new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, elementTypeName, null, true);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            attributeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        domainTypeDefinition.addAttribute(attributeDefinition);
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, Class<?> elementJavaType, MetadataDefinition<?>... metadataDefinitions) {
+        EntityDomainTypeAttributeDefinitionImpl attributeDefinition = new EntityDomainTypeAttributeDefinitionImpl(domainTypeDefinition, attributeName, null, elementJavaType, true);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            attributeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        domainTypeDefinition.addAttribute(attributeDefinition);
+        return this;
+    }
+
+    @Override
+    public EntityDomainTypeBuilder withMetadata(MetadataDefinition<?> metadataDefinition) {
+        domainTypeDefinition.withMetadataDefinition(metadataDefinition);
         return this;
     }
 

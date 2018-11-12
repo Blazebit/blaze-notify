@@ -24,11 +24,21 @@ public interface EntityDomainTypeBuilder {
 
     public EntityDomainTypeBuilder addAttribute(String attributeName, String typeName);
 
+    public EntityDomainTypeBuilder addAttribute(String attributeName, String typeName, MetadataDefinition<?>... metadataDefinitions);
+
     public EntityDomainTypeBuilder addAttribute(String attributeName, Class<?> javaType);
+
+    public EntityDomainTypeBuilder addAttribute(String attributeName, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions);
 
     public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, String elementTypeName);
 
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, String elementTypeName, MetadataDefinition<?>... metadataDefinitions);
+
     public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, Class<?> elementJavaType);
+
+    public EntityDomainTypeBuilder addCollectionAttribute(String attributeName, Class<?> elementJavaType, MetadataDefinition<?>... metadataDefinitions);
+
+    public EntityDomainTypeBuilder withMetadata(MetadataDefinition<?> metadataDefinition);
 
     public DomainBuilder build();
 

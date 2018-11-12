@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public interface MetadataDefinitionHolder<X extends MetadataDefinitionHolder<X>> {
 
-    public <T> X withMetadataDefinition(Class<T> metadataType, MetadataDefinition<T> metadataDefinition);
+    public X withMetadataDefinition(MetadataDefinition<?> metadataDefinition);
 
     public Map<Class<?>, MetadataDefinition<?>> getMetadataDefinitions();
 }
