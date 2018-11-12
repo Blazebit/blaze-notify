@@ -42,6 +42,7 @@
                             <goal>antlr4</goal>
                         </goals>
                         <configuration>
+                            <sourceDirectory>src/main/antlr4</sourceDirectory>
                             <includes>
                                 <include>com/blazebit/notify/predicate/parser/PredicateLexer.g4</include>
                                 <include>com/blazebit/notify/predicate/parser/PredicateParser.g4</include>
