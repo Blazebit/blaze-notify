@@ -16,15 +16,54 @@
 
 package com.blazebit.notify.predicate.model;
 
-public abstract class ComparisonPredicate implements Predicate {
-	private final boolean negated;
+import java.util.Objects;
 
-	public ComparisonPredicate(boolean negated) {
-		this.negated = negated;
+public class ComparisonPredicate extends AbstractPredicate {
+	private final TermExpression left;
+	private final TermExpression right;
+	private final ComparisonOperatorType operator;
+
+	public ComparisonPredicate(TermExpression left, TermExpression right, ComparisonOperatorType operator) {
+		this.left = left;
+		this.right = right;
+		this.operator = operator;
 	}
 
-	public boolean isNegated() {
-		return negated;
+	public TermExpression getLeft() {
+		return left;
 	}
-	
+
+	public TermExpression getRight() {
+		return right;
+	}
+
+	public ComparisonOperatorType getOperator() {
+		return operator;
+	}
+
+	@Override
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
+	public <T> T accept(ResultVisitor<T> visitor) {
+		return visitor.visit(this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		ComparisonPredicate that = (ComparisonPredicate) o;
+		return Objects.equals(left, that.left) &&
+				Objects.equals(right, that.right) &&
+				operator == that.operator;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), left, right, operator);
+	}
 }

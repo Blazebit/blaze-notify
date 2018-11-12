@@ -17,28 +17,23 @@
 package com.blazebit.notify.predicate.model;
 
 import java.util.List;
+import java.util.Objects;
 
 
-
-public class ConjunctivePredicate implements Predicate {
+public class ConjunctivePredicate extends AbstractPredicate {
 	private final List<Predicate> conjuncts;
-	private final boolean negated;
-	
+
 	public ConjunctivePredicate(List<Predicate> conjuncts) {
 		this(conjuncts, false);
 	}
 	
 	public ConjunctivePredicate(List<Predicate> conjuncts, boolean negated) {
+		super(negated);
 		this.conjuncts = conjuncts;
-		this.negated = negated;
 	}
 
 	public List<Predicate> getConjuncts() {
 		return conjuncts;
-	}
-
-	public boolean isNegated() {
-		return negated;
 	}
 
 	@Override
@@ -52,31 +47,16 @@ public class ConjunctivePredicate implements Predicate {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((conjuncts == null) ? 0 : conjuncts.hashCode());
-		result = prime * result + (negated ? 1231 : 1237);
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		ConjunctivePredicate that = (ConjunctivePredicate) o;
+		return Objects.equals(conjuncts, that.conjuncts);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ConjunctivePredicate other = (ConjunctivePredicate) obj;
-		if (conjuncts == null) {
-			if (other.conjuncts != null)
-				return false;
-		} else if (!conjuncts.equals(other.conjuncts))
-			return false;
-		if (negated != other.negated)
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), conjuncts);
 	}
-
 }

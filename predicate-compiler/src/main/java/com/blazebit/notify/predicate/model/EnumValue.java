@@ -13,39 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.predicate.model;
 
 import java.util.Objects;
 
-public class Attribute {
-	private final String identifier;
-	private final TermType type;
+public class EnumValue {
+    private final String enumName;
+    private final String enumKey;
 
-	public Attribute(String identifier, TermType type) {
-		this.identifier = identifier;
-		this.type = type;
-	}
+    public EnumValue(String enumName, String enumKey) {
+        this.enumName = enumName;
+        this.enumKey = enumKey;
+    }
 
-	public String getIdentifier() {
-		return identifier;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EnumValue enumValue = (EnumValue) o;
+        return Objects.equals(enumName, enumValue.enumName) &&
+                Objects.equals(enumKey, enumValue.enumKey);
+    }
 
-	public TermType getType() {
-		return type;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		Attribute attribute = (Attribute) o;
-		return Objects.equals(identifier, attribute.identifier) &&
-				type == attribute.type;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(identifier, type);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(enumName, enumKey);
+    }
 }

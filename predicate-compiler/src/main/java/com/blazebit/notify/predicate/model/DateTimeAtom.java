@@ -17,6 +17,7 @@
 package com.blazebit.notify.predicate.model;
 
 import java.util.Calendar;
+import java.util.Objects;
 
 public class DateTimeAtom extends AbstractAtom<Calendar> {
 	private final boolean currentTimestamp;
@@ -39,7 +40,12 @@ public class DateTimeAtom extends AbstractAtom<Calendar> {
 	public boolean isCurrentTimestamp() {
 		return currentTimestamp;
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.DATE_TIME;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -50,4 +56,17 @@ public class DateTimeAtom extends AbstractAtom<Calendar> {
 		return visitor.visit(this);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		DateTimeAtom that = (DateTimeAtom) o;
+		return currentTimestamp == that.currentTimestamp;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), currentTimestamp);
+	}
 }

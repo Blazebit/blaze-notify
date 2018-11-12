@@ -16,16 +16,21 @@
 
 package com.blazebit.notify.predicate.model;
 
-public class EnumAtom extends AbstractAtom<Enum<?>> {
+public class EnumAtom extends AbstractAtom<EnumValue> {
 
-	public EnumAtom(Literal<Enum<?>> literal) {
-		super(literal);
+	public EnumAtom(Literal<EnumValue> value) {
+		super(value);
 	}
 
 	public EnumAtom(Attribute attribute) {
 		super(attribute);
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.ENUM;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -35,5 +40,4 @@ public class EnumAtom extends AbstractAtom<Enum<?>> {
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-	
 }

@@ -50,21 +50,6 @@
                             <visitor>true</visitor>
                         </configuration>
                     </execution>
-					<!-- TODO: Second execution not working due to conflicts with the previous execution -->
-<!--                     <execution> -->
-<!--                     	<id>SPL</id> -->
-<!--                         <phase>generate-sources</phase> -->
-<!--                         <goals> -->
-<!--                             <goal>antlr4</goal> -->
-<!--                         </goals> -->
-<!--                         <configuration> -->
-<!--                         	<includes> -->
-<!--                         		<include>com/sweazer/common/expression/parser/SPL.g4</include> -->
-<!--                         	</includes> -->
-<!--                             <outputDirectory>target/generated/antlr</outputDirectory> -->
-<!--                             <visitor>true</visitor> -->
-<!--                         </configuration> -->
-<!--                     </execution> -->
                 </executions>
             </plugin>
             <plugin>

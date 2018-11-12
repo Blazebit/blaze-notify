@@ -17,5 +17,4 @@
 package com.blazebit.notify.predicate.model;
 
 public interface ArithmeticExpression extends TermExpression {
-
 }

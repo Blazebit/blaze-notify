@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import java.util.Objects;
+
 public class CollectionAtom implements TermExpression {
 	private final Attribute attribute;
 
@@ -26,7 +28,12 @@ public class CollectionAtom implements TermExpression {
 	public Attribute getAttribute() {
 		return attribute;
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.COLLECTION;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -38,28 +45,15 @@ public class CollectionAtom implements TermExpression {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((attribute == null) ? 0 : attribute.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		CollectionAtom that = (CollectionAtom) o;
+		return Objects.equals(attribute, that.attribute);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		CollectionAtom other = (CollectionAtom) obj;
-		if (attribute == null) {
-			if (other.attribute != null)
-				return false;
-		} else if (!attribute.equals(other.attribute))
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(attribute);
 	}
-	
 }

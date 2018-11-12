@@ -16,28 +16,30 @@
 
 package com.blazebit.notify.predicate.parser;
 
-import java.util.BitSet;
-import java.util.function.Function;
-
 import com.blazebit.notify.predicate.model.Predicate;
-import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.LexerNoViableAltException;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.IntervalSet;
 
+import java.util.BitSet;
+
 public class PredicateCompiler {
 
-	private static <T extends Predicate> T parsePredicate(String input) {
+    private static final RuleInvoker predicateRuleInvoker = new RuleInvoker() {
+        @Override
+        public ParserRuleContext invokeRule(PredicateParser parser) {
+            return parser.start();
+        }
+    };
+
+    public static Predicate parsePredicate(String input) {
+        return parse(input, predicateRuleInvoker);
+    }
+
+	static Predicate parse(String input, RuleInvoker ruleInvoker) {
 		SimpleErrorListener errorListener = new SimpleErrorListener();
-    	PredicateLexer lexer = new PredicateLexer(new ANTLRInputStream(input));
+    	PredicateLexer lexer = new PredicateLexer(CharStreams.fromString(input));
         lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -45,11 +47,15 @@ public class PredicateCompiler {
         parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
-        ParserRuleContext ctx = parser.start();
+        ParserRuleContext ctx = ruleInvoker.invokeRule(parser);
 
-        SimplePredicateVisitorImpl visitor = new SimplePredicateVisitorImpl();
-        return (T) visitor.visit(ctx);
+        PredicateVisitorImpl visitor = new PredicateVisitorImpl();
+        return (Predicate) visitor.visit(ctx);
 	}
+
+	public interface RuleInvoker {
+	    ParserRuleContext invokeRule(PredicateParser parser);
+    }
 
     protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
 
@@ -85,7 +91,7 @@ public class PredicateCompiler {
 
         		if (expectedToken.size() > 0) {
         			reason += " One of the following characters is expected ";
-	        		reason += expectedToken.toString(recognizer.getTokenNames());
+	        		reason += expectedToken.toString(PredicateLexer.VOCABULARY);
         		}
         	} else {
         		reason = msg;
@@ -104,6 +110,5 @@ public class PredicateCompiler {
         @Override
         public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
         }
-
     }
 }

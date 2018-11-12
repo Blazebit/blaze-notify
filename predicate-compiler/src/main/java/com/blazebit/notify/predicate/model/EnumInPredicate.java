@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.predicate.model;
 
 import java.util.List;
 
-public class ArithmeticInLiteralPredicate extends InPredicate<ArithmeticExpression, List<ArithmeticFactor>> {
+public class EnumInPredicate extends InPredicate<EnumAtom, List<EnumAtom>> {
 
-	public ArithmeticInLiteralPredicate(ArithmeticExpression left, List<ArithmeticFactor> right, boolean negated) {
+    public EnumInPredicate(EnumAtom left, List<EnumAtom> right, boolean negated) {
 		super(left, right, negated);
 	}
-	
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -32,6 +31,5 @@ public class ArithmeticInLiteralPredicate extends InPredicate<ArithmeticExpressi
 	@Override
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
-	}	
-
+	}
 }

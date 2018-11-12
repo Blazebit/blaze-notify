@@ -39,7 +39,7 @@ DATE_STRING
 
 TIME_STRING
     : DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT DIGIT DIGIT)?;
-    
+
 fragment DIGIT
     : '0'..'9';
 fragment DIGITS
@@ -48,29 +48,24 @@ fragment DIGIT_NOT_ZERO
     : '1'..'9';
 
 STRING_LITERAL
-	: '\'' ~[\']* '\''
-	| '"' ~["]* '"';
+	: QUOTE ~[']* QUOTE
+	| DOUBLE_QUOTE ~["]* DOUBLE_QUOTE;
 
 NUMERIC_LITERAL
     : INTEGER ('.' DIGITS)? EXPONENT_PART?;
-	
-ENUM_LITERAL
-	: ENUM_NAME '.' ENUM_KEY;
-	
-ENUM_COLLECTION_LITERAL
-	: ENUM_NAME '.' 'of' '(' ENUM_KEY (',' ENUM_KEY)* ')';
 
-ENUM_NAME
-	: ENUM_GENDER
-	| ENUM_DEVICE_TYPE;
-	
+ENUM_VALUE_FUNCTION : 'ENUM_VALUE';
+
+ENUM_LITERAL
+	: 'ENUM_VALUE' ENUM_KEY;
+
 fragment ENUM_KEY
 	: [A-Z_]+;
-    
+
 fragment INTEGER
-	: '0' 
+	: '0'
 	| DIGIT_NOT_ZERO DIGITS?;
-    
+
 fragment EXPONENT_PART
    :   [eE] SIGNED_INTEGER
    ;
@@ -106,14 +101,11 @@ RP : ')';
 COMMA: ',';
 DOT: '.';
 
-Identifier
-    : JavaLetter JavaLetterOrDigit*
+IDENTIFIER
+    : IDENTIFIER_PART (DOT IDENTIFIER_PART)*
     ;
 
-// Enums
-
-ENUM_GENDER : 'Gender';
-ENUM_DEVICE_TYPE : 'Device';
+IDENTIFIER_PART : JavaLetter JavaLetterOrDigit*;
 
 WS: [ \n\t\r]+ -> channel(HIDDEN);
 
@@ -143,6 +135,9 @@ fragment W: 'W';//('w'|'W');
 fragment X: 'X';//('x'|'X');
 fragment Y: 'Y';//('y'|'Y');
 fragment Z: 'Z';//('z'|'Z');
+
+fragment QUOTE: '\'';
+fragment DOUBLE_QUOTE: '"';
 
 fragment
 JavaLetter

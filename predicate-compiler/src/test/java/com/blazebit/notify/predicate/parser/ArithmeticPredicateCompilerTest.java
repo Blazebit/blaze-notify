@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.predicate.model;
+package com.blazebit.notify.predicate.parser;
 
-import java.util.List;
+import com.blazebit.notify.predicate.model.Expression;
+import org.junit.Test;
 
-public class StringInLiteralPredicate extends InPredicate<StringAtom, List<StringAtom>> {
+import static org.junit.Assert.assertEquals;
 
-	public StringInLiteralPredicate(StringAtom left, List<StringAtom> right, boolean negated) {
-		super(left, right, negated);
-	}
+public class ArithmeticPredicateCompilerTest extends AbstractPredicateCompilerTest {
 	
-	@Override
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
+	@Test
+	public void comparisonWithLiteralTest() {
+		Expression expr = parseArithmeticExpression("1 + 2");
+		assertEquals(plus(pos(number(1)), pos(number(2))), expr);
 	}
-
-	@Override
-	public <T> T accept(ResultVisitor<T> visitor) {
-		return visitor.visit(this);
-	}
-
 }

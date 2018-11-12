@@ -27,7 +27,12 @@ public class ArithmeticAtom extends AbstractAtom<BigDecimal> implements Arithmet
 	public ArithmeticAtom(Attribute attribute) {
 		super(attribute);
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.NUMERIC;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);

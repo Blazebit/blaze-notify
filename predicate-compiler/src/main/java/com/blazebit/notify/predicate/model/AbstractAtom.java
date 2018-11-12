@@ -16,11 +16,16 @@
 
 package com.blazebit.notify.predicate.model;
 
+import java.util.Objects;
+
 public abstract class AbstractAtom<T> implements TermExpression {
 	private final Attribute attribute;
 	private final Literal<T> literal;
 	
 	public AbstractAtom(Attribute attribute) {
+		if (attribute.getType() != getType()) {
+			throw new IllegalArgumentException("Cannot create atom for type " + getType() + " with attribute of type " + attribute.getType());
+		}
 		this.attribute = attribute;
 		this.literal = null;
 	}
@@ -39,34 +44,16 @@ public abstract class AbstractAtom<T> implements TermExpression {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((attribute == null) ? 0 : attribute.hashCode());
-		result = prime * result + ((literal == null) ? 0 : literal.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		AbstractAtom<?> that = (AbstractAtom<?>) o;
+		return Objects.equals(attribute, that.attribute) &&
+				Objects.equals(literal, that.literal);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		AbstractAtom<?> other = (AbstractAtom<?>) obj;
-		if (attribute == null) {
-			if (other.attribute != null)
-				return false;
-		} else if (!attribute.equals(other.attribute))
-			return false;
-		if (literal == null) {
-			if (other.literal != null)
-				return false;
-		} else if (!literal.equals(other.literal))
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(attribute, literal);
 	}
-
 }

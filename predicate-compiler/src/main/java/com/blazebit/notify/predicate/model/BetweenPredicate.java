@@ -17,7 +17,9 @@
 package com.blazebit.notify.predicate.model;
 
 
-public abstract class BetweenPredicate<T extends TermExpression> extends ComparisonPredicate {
+import java.util.Objects;
+
+public abstract class BetweenPredicate<T extends TermExpression> extends AbstractPredicate {
 	private final T left;
 	private final T upper;
 	private final T lower;
@@ -42,40 +44,18 @@ public abstract class BetweenPredicate<T extends TermExpression> extends Compari
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((left == null) ? 0 : left.hashCode());
-		result = prime * result + ((lower == null) ? 0 : lower.hashCode());
-		result = prime * result + ((upper == null) ? 0 : upper.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		BetweenPredicate<?> that = (BetweenPredicate<?>) o;
+		return Objects.equals(left, that.left) &&
+				Objects.equals(upper, that.upper) &&
+				Objects.equals(lower, that.lower);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		BetweenPredicate<?> other = (BetweenPredicate<?>) obj;
-		if (left == null) {
-			if (other.left != null)
-				return false;
-		} else if (!left.equals(other.left))
-			return false;
-		if (lower == null) {
-			if (other.lower != null)
-				return false;
-		} else if (!lower.equals(other.lower))
-			return false;
-		if (upper == null) {
-			if (other.upper != null)
-				return false;
-		} else if (!upper.equals(other.upper))
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), left, upper, lower);
 	}
-
 }

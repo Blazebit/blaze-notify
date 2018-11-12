@@ -17,17 +17,17 @@
 package com.blazebit.notify.predicate.model;
 
 import java.util.List;
+import java.util.Objects;
 
-public class DisjunctivePredicate implements Predicate {
+public class DisjunctivePredicate extends AbstractPredicate {
 	private final List<Predicate> disjuncts;
-	private final boolean negated;
 
 	public DisjunctivePredicate(List<Predicate> disjuncts) {
 		this(disjuncts, false);
 	}
 	
 	public DisjunctivePredicate(List<Predicate> disjuncts, boolean negated) {
-		this.negated = negated;
+		super(negated);
 		this.disjuncts = disjuncts;
 	}
 
@@ -35,10 +35,6 @@ public class DisjunctivePredicate implements Predicate {
 		return disjuncts;
 	}
 
-	public boolean isNegated() {
-		return negated;
-	}
-	
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -50,31 +46,16 @@ public class DisjunctivePredicate implements Predicate {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((disjuncts == null) ? 0 : disjuncts.hashCode());
-		result = prime * result + (negated ? 1231 : 1237);
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		DisjunctivePredicate that = (DisjunctivePredicate) o;
+		return Objects.equals(disjuncts, that.disjuncts);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DisjunctivePredicate other = (DisjunctivePredicate) obj;
-		if (disjuncts == null) {
-			if (other.disjuncts != null)
-				return false;
-		} else if (!disjuncts.equals(other.disjuncts))
-			return false;
-		if (negated != other.negated)
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), disjuncts);
 	}
-	
 }

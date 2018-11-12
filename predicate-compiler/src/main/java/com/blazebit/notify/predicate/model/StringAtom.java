@@ -25,7 +25,12 @@ public class StringAtom extends AbstractAtom<String> {
 	public StringAtom(Attribute attribute) {
 		super(attribute);
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.STRING;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);

@@ -16,16 +16,10 @@
 
 package com.blazebit.notify.predicate.model;
 
-import java.util.List;
+public class StringInCollectionPredicate extends InPredicate<StringAtom, CollectionAtom> {
 
-public class EnumCollectionAtom extends AbstractAtom<List<Enum<?>>> {
-
-	public EnumCollectionAtom(Literal<List<Enum<?>>> literal) {
-		super(literal);
-	}
-
-	public EnumCollectionAtom(Attribute attribute) {
-		super(attribute);
+	public StringInCollectionPredicate(StringAtom left, CollectionAtom right, boolean negated) {
+		super(left, right, negated);
 	}
 	
 	@Override
@@ -37,5 +31,5 @@ public class EnumCollectionAtom extends AbstractAtom<List<Enum<?>>> {
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-	
+
 }

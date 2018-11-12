@@ -51,9 +51,6 @@ public class Literal<T> {
 	private static final Map<Class<? extends Enum<?>>, String> ENUM_NAMES = new HashMap<Class<? extends Enum<?>>, String>();
 	
 	static {
-//		ENUM_CLASSES.put("Gender", UserGender.class);
-//		ENUM_CLASSES.put("Device", UserDeviceType.class);
-		
 		for (Map.Entry<String, Class<? extends Enum<?>>> entry : ENUM_CLASSES.entrySet()) {
 			ENUM_NAMES.put(entry.getValue(), entry.getKey());
 		}
@@ -68,30 +65,18 @@ public class Literal<T> {
 	public T getValue() {
 		return value;
 	}
-	
+
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((value == null) ? 0 : value.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Literal<?> literal = (Literal<?>) o;
+		return Objects.equals(value, literal.value);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Literal<?> other = (Literal<?>) obj;
-		if (value == null) {
-			if (other.value != null)
-				return false;
-		} else if (!value.equals(other.value))
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(value);
 	}
 
 	public static <T> Literal<T> of(T value) {
@@ -210,5 +195,4 @@ public class Literal<T> {
 			throw new SyntaxErrorException(e);
 		}
 	}
-	
 }

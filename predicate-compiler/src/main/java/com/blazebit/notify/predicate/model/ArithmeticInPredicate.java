@@ -16,25 +16,21 @@
 
 package com.blazebit.notify.predicate.model;
 
-import java.util.Arrays;
 import java.util.List;
 
+public class ArithmeticInPredicate extends InPredicate<ArithmeticExpression, List<ArithmeticFactor>> {
 
-public enum AttributeType {
-	NUMERIC(ComparisonOperatorType.values()),
-	DATE(ComparisonOperatorType.values()),
-	DATE_TIME(ComparisonOperatorType.values()),
-	STRING(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
-	ENUM(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
-	COLLECTION();
+	public ArithmeticInPredicate(ArithmeticExpression left, List<ArithmeticFactor> right, boolean negated) {
+		super(left, right, negated);
+	}
 	
-	private final List<ComparisonOperatorType> allowedOperatorTypes;
-	
-	private AttributeType(ComparisonOperatorType... operatorTypes) {
-		this.allowedOperatorTypes = Arrays.asList(operatorTypes);
+	@Override
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
 	}
 
-	public List<ComparisonOperatorType> getAllowedComparisonOperatorTypes() {
-		return allowedOperatorTypes;
-	}
+	@Override
+	public <T> T accept(ResultVisitor<T> visitor) {
+		return visitor.visit(this);
+	}	
 }

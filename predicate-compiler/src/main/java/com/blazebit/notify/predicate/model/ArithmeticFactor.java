@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.predicate.model;
 
+import java.util.Objects;
+
 public class ArithmeticFactor implements ArithmeticExpression {
 	private final ArithmeticExpression expression;
 	private final boolean invertSignum;
@@ -32,7 +34,12 @@ public class ArithmeticFactor implements ArithmeticExpression {
 	public boolean isInvertSignum() {
 		return invertSignum;
 	}
-	
+
+	@Override
+	public TermType getType() {
+		return TermType.NUMERIC;
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
@@ -44,31 +51,16 @@ public class ArithmeticFactor implements ArithmeticExpression {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-		result = prime * result + (invertSignum ? 1231 : 1237);
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ArithmeticFactor that = (ArithmeticFactor) o;
+		return invertSignum == that.invertSignum &&
+				Objects.equals(expression, that.expression);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ArithmeticFactor other = (ArithmeticFactor) obj;
-		if (expression == null) {
-			if (other.expression != null)
-				return false;
-		} else if (!expression.equals(other.expression))
-			return false;
-		if (invertSignum != other.invertSignum)
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(expression, invertSignum);
 	}
-	
 }

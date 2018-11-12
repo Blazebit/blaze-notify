@@ -31,5 +31,4 @@ public class ArithmeticBetweenPredicate extends BetweenPredicate<ArithmeticExpre
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-
 }

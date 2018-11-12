@@ -16,9 +16,9 @@
 
 package com.blazebit.notify.predicate.model;
 
-public class StringInAttributePredicate extends InPredicate<StringAtom, CollectionAtom> {
+public class EnumInCollectionPredicate extends InPredicate<EnumAtom, CollectionAtom> {
 
-	public StringInAttributePredicate(StringAtom left, CollectionAtom right, boolean negated) {
+	public EnumInCollectionPredicate(EnumAtom left, CollectionAtom right, boolean negated) {
 		super(left, right, negated);
 	}
 	
@@ -31,5 +31,4 @@ public class StringInAttributePredicate extends InPredicate<StringAtom, Collecti
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-
 }

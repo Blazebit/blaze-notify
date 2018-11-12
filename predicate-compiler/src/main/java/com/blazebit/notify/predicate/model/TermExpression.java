@@ -16,6 +16,6 @@
 
 package com.blazebit.notify.predicate.model;
 
-public interface TermExpression extends Predicate {
-	// getType()
+public interface TermExpression extends Expression {
+    TermType getType();
 }

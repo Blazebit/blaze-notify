@@ -16,9 +16,9 @@
 
 package com.blazebit.notify.predicate.model;
 
-public class ArithmeticInAttributePredicate extends InPredicate<ArithmeticExpression, CollectionAtom> {
+public class ArithmeticInCollectionPredicate extends InPredicate<ArithmeticExpression, CollectionAtom> {
 
-	public ArithmeticInAttributePredicate(ArithmeticExpression left, CollectionAtom right, boolean negated) {
+	public ArithmeticInCollectionPredicate(ArithmeticExpression left, CollectionAtom right, boolean negated) {
 		super(left, right, negated);
 	}
 	
@@ -31,5 +31,4 @@ public class ArithmeticInAttributePredicate extends InPredicate<ArithmeticExpres
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-
 }

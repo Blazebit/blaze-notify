@@ -16,16 +16,17 @@
 
 package com.blazebit.notify.predicate.model;
 
-public class IsNullPredicate extends ComparisonPredicate {
-	
-	private final Predicate left;
+import java.util.Objects;
 
-	public IsNullPredicate(Predicate left, boolean negated) {
+public class IsNullPredicate extends AbstractPredicate {
+	private final Expression left;
+
+	public IsNullPredicate(Expression left, boolean negated) {
 		super(negated);
 		this.left = left;
 	}
 	
-	public Predicate getLeft() {
+	public Expression getLeft() {
 		return left;
 	}
 
@@ -38,5 +39,18 @@ public class IsNullPredicate extends ComparisonPredicate {
 	public <T> T accept(ResultVisitor<T> visitor) {
 		return visitor.visit(this);
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		IsNullPredicate that = (IsNullPredicate) o;
+		return Objects.equals(left, that.left);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), left);
+	}
 }

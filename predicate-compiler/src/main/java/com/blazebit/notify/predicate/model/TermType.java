@@ -16,9 +16,24 @@
 
 package com.blazebit.notify.predicate.model;
 
-public interface Predicate extends Expression {
+import java.util.Arrays;
+import java.util.List;
 
-    boolean isNegated();
 
-    void setNegated(boolean negated);
+public enum TermType {
+	NUMERIC(ComparisonOperatorType.values()),
+	DATE_TIME(ComparisonOperatorType.values()),
+	STRING(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
+	ENUM(ComparisonOperatorType.EQUAL, ComparisonOperatorType.NOT_EQUAL),
+	COLLECTION();
+	
+	private final List<ComparisonOperatorType> allowedOperatorTypes;
+	
+	private TermType(ComparisonOperatorType... operatorTypes) {
+		this.allowedOperatorTypes = Arrays.asList(operatorTypes);
+	}
+
+	public List<ComparisonOperatorType> getAllowedComparisonOperatorTypes() {
+		return allowedOperatorTypes;
+	}
 }
