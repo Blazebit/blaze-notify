@@ -46,8 +46,8 @@ public abstract class AbstractConfigurationTest<N extends Notification<T>, T ext
 
     public static Object[][] createCombinations(NotificationJobProcessor jobProcessor) {
         Queue<NotificationMessage> sink;
-        return new Object[][] {
-                { new MemoryChannel(sink = new ArrayBlockingQueue<>(1024), jobProcessor), new ExecutorServiceNotificationJobScheduler(), new SimpleNotificationMessage(), sink }
+        return new Object[][]{
+                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024), jobProcessor), new ExecutorServiceNotificationJobScheduler(), new SimpleNotificationMessage(), sink}
         };
     }
 }

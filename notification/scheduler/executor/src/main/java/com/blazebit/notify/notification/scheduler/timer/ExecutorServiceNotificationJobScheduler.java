@@ -15,7 +15,10 @@
  */
 package com.blazebit.notify.notification.scheduler.timer;
 
-import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.Notification;
+import com.blazebit.notify.notification.NotificationJob;
+import com.blazebit.notify.notification.NotificationJobProcessor;
+import com.blazebit.notify.notification.NotificationJobScheduler;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.*;

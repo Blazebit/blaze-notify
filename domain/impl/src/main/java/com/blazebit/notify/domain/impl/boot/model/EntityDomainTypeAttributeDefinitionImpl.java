@@ -18,9 +18,9 @@ package com.blazebit.notify.domain.impl.boot.model;
 
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.boot.model.EntityDomainTypeAttributeDefinition;
-import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeAttributeImpl;
 import com.blazebit.notify.domain.impl.runtime.model.EntityDomainTypeImpl;
+import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
 /**
  * @author Christian Beikov

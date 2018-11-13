@@ -24,6 +24,8 @@ fi
 
 mvn -version
 
+# For now, we simply skip checkstyle
+PROPERTIES="$PROPERTIES -DskipCheckstyle"
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$BUILD_JDK" != "" ]; then

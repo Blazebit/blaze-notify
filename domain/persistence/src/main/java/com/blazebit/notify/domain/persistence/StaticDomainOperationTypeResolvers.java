@@ -16,9 +16,10 @@
 
 package com.blazebit.notify.domain.persistence;
 
-import com.blazebit.notify.domain.runtime.model.*;
+import com.blazebit.notify.domain.runtime.model.DomainModel;
+import com.blazebit.notify.domain.runtime.model.DomainOperationTypeResolver;
+import com.blazebit.notify.domain.runtime.model.DomainType;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 /**

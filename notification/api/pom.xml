@@ -15,12 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-predicate-compiler</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-template-api</artifactId>
+            <artifactId>blaze-notify-expression-api</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

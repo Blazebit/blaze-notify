@@ -15,8 +15,8 @@
  */
 package com.blazebit.notify.notification;
 
-import com.blazebit.notify.predicate.model.Predicate;
-import com.blazebit.notify.template.api.Template;
+import com.blazebit.notify.expression.Predicate;
+import com.blazebit.notify.notification.template.Template;
 
 public interface NotificationJob<N extends Notification<T>, T extends NotificationMessage> {
 

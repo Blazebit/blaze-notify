@@ -18,7 +18,10 @@ package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.boot.model.CollectionDomainTypeDefinition;
 import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
-import com.blazebit.notify.domain.runtime.model.*;
+import com.blazebit.notify.domain.runtime.model.CollectionDomainType;
+import com.blazebit.notify.domain.runtime.model.DomainOperator;
+import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
+import com.blazebit.notify.domain.runtime.model.DomainType;
 
 import java.util.EnumSet;
 import java.util.Map;

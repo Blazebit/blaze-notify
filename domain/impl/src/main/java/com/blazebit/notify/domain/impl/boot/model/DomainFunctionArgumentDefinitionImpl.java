@@ -19,9 +19,9 @@ package com.blazebit.notify.domain.impl.boot.model;
 import com.blazebit.notify.domain.boot.model.DomainFunctionArgumentDefinition;
 import com.blazebit.notify.domain.boot.model.DomainFunctionDefinition;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
+import com.blazebit.notify.domain.impl.runtime.model.DomainFunctionArgumentImpl;
 import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
-import com.blazebit.notify.domain.impl.runtime.model.DomainFunctionArgumentImpl;
 
 /**
  * @author Christian Beikov

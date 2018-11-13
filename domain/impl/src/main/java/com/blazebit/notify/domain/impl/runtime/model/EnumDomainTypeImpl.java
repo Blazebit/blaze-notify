@@ -22,7 +22,9 @@ import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.EnumDomainType;
 import com.blazebit.notify.domain.runtime.model.EnumDomainTypeValue;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Christian Beikov

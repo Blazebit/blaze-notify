@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.notify.notification;
 
 public interface Channel<N extends Notification<T>, T extends NotificationMessage> {

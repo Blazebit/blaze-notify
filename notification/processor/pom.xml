@@ -11,10 +11,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-notify-notification-processor</artifactId>
+    <packaging>pom</packaging>
 
     <modules>
         <module>hibernate-insert-select</module>
     </modules>
-
 
 </project>

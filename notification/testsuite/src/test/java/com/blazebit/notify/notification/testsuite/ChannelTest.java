@@ -16,8 +16,8 @@
 package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.Channel;
-import com.blazebit.notify.notification.NotificationJobScheduler;
 import com.blazebit.notify.notification.Notification;
+import com.blazebit.notify.notification.NotificationJobScheduler;
 import com.blazebit.notify.notification.NotificationMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;

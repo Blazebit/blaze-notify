@@ -17,8 +17,8 @@
         <module>channel</module>
         <module>processor</module>
         <module>scheduler</module>
+        <module>template</module>
         <module>testsuite</module>
     </modules>
-
 
 </project>
