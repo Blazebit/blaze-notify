@@ -15,9 +15,9 @@
  */
 package com.blazebit.notify.template.freemarker;
 
-import com.blazebit.notify.notification.api.DefaultNotificationMessagePart;
-import com.blazebit.notify.notification.api.NotificationMessagePart;
-import com.blazebit.notify.notification.api.NotificationReceiver;
+import com.blazebit.notify.notification.DefaultNotificationMessagePart;
+import com.blazebit.notify.notification.NotificationMessagePart;
+import com.blazebit.notify.notification.NotificationReceiver;
 import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.exception.TemplateProcessorException;
 import freemarker.template.TemplateException;

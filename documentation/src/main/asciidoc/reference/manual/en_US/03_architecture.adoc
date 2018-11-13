@@ -1,0 +1,10 @@
+== Architecture
+
+This is just a high level view for those that are interested about how {projectname} works.
+
+// NotificationJobs are scheduled via cron/deadline/immediate
+// - template, selector, channel
+// JobScheduler consumes NotificationJobs and invokes NotificationJobProcessor incrementally
+// - instantiated template, receiver
+// NotificationJobProcessor makes sure Notifications are sent to Receiver via Channel with at-least-once sematics
+// - might persist notifications before trying to send them

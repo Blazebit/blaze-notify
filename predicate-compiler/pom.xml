@@ -12,12 +12,16 @@
 
     <artifactId>blaze-notify-predicate-compiler</artifactId>
 
-
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>4.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -26,6 +30,12 @@
 			<artifactId>junit</artifactId>
             <scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -1,0 +1,19 @@
+Blaze Notify - Notification processing toolkit
+==============================================
+:projectname:       Blaze Notify
+:lang:              en
+:authors:           Christian Beikov, Blazebit; Moritz Becker, Curecomp
+:email:             christian@blazebit.com
+:email_2:           moritz.becker@gmx.at
+:revnumber:         {version}
+:copyrighttext:     Copyright (C) 2018 Blazebit
+:new:               image:images/smallnew.png[]
+:core_jdoc:         http://static.javadoc.io/com.blazebit/blaze-notify-notification-api/{stable_version}/index.html?com/blazebit
+:numbered:
+:linkattrs:
+
+include::01_general.adoc[]
+
+include::02_getting_started.adoc[]
+
+include::03_architecture.adoc[]

@@ -19,17 +19,34 @@
     <properties>
         <blaze-notify.codename></blaze-notify.codename>
 
+        <version.blaze-persistence>1.3.0-SNAPSHOT</version.blaze-persistence>
         <version.junit>4.12</version.junit>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
+            <dependency>
+                <groupId>org.apache.openejb</groupId>
+                <artifactId>javaee-api</artifactId>
+                <version>6.0-6</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- Test -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${version.junit}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-bom</artifactId>
+                <version>${version.blaze-persistence}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>

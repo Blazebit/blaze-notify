@@ -14,8 +14,10 @@
         <module>parent</module>
         <module>checkstyle-rules</module>
         <module>predicate-compiler</module>
+        <module>domain</module>
         <module>template</module>
         <module>notification</module>
+        <module>documentation</module>
     </modules>
 
     <groupId>com.blazebit</groupId>
