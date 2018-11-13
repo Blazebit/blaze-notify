@@ -26,6 +26,10 @@ public interface DomainFunctionBuilder {
 
     public DomainFunctionBuilder withExactArgumentCount(int exactArgumentCount);
 
+    public DomainFunctionBuilder withArgument(String name);
+
+    public DomainFunctionBuilder withArgument(String name, MetadataDefinition<?>... metadataDefinitions);
+
     public DomainFunctionBuilder withArgument(String name, String typeName);
 
     public DomainFunctionBuilder withArgument(String name, String typeName, MetadataDefinition<?>... metadataDefinitions);
@@ -33,6 +37,10 @@ public interface DomainFunctionBuilder {
     public DomainFunctionBuilder withArgument(String name, Class<?> javaType);
 
     public DomainFunctionBuilder withArgument(String name, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions);
+
+    public DomainFunctionBuilder withCollectionArgument(String name);
+
+    public DomainFunctionBuilder withCollectionArgument(String name, MetadataDefinition<?>... metadataDefinitions);
 
     public DomainFunctionBuilder withCollectionArgument(String name, String typeName);
 
@@ -49,6 +57,12 @@ public interface DomainFunctionBuilder {
     public DomainFunctionBuilder withResultType(String typeName);
 
     public DomainFunctionBuilder withResultType(Class<?> javaType);
+
+    public DomainFunctionBuilder withCollectionResultType();
+
+    public DomainFunctionBuilder withCollectionResultType(String typeName);
+
+    public DomainFunctionBuilder withCollectionResultType(Class<?> javaType);
 
     public DomainFunctionBuilder withMetadata(MetadataDefinition<?> metadataDefinition);
 

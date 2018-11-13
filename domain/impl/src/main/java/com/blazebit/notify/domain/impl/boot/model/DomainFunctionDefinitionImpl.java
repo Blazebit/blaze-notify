@@ -33,7 +33,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
 
     private final String name;
     private int minArgumentCount;
-    private int argumentCount;
+    private int argumentCount = -1;
     private String resultTypeName;
     private Class<?> resultJavaType;
     private boolean collection;
@@ -67,6 +67,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
 
     public void setArgumentCount(int argumentCount) {
         this.argumentCount = argumentCount;
+        this.minArgumentCount = argumentCount;
     }
 
     public String getResultTypeName() {
@@ -122,7 +123,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
 
     public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
         this.function = null;
-        if (resultTypeName == null) {
+        if (resultTypeName == null && resultJavaType == null) {
             resultTypeDefinition = null;
         } else {
             resultTypeDefinition = domainBuilder.getDomainTypeDefinition(resultTypeName);

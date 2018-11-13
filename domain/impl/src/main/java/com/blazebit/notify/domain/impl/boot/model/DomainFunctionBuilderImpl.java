@@ -47,8 +47,20 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
     }
 
     @Override
+    public DomainFunctionBuilder withArgument(String name) {
+        domainFunctionDefinition.addArgumentDefinition(name, null, null, false);
+        return this;
+    }
+
+    @Override
     public DomainFunctionBuilder withArgument(String name, String typeName) {
         domainFunctionDefinition.addArgumentDefinition(name, typeName, null, false);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionArgument(String name) {
+        domainFunctionDefinition.addArgumentDefinition(name, null, null, true);
         return this;
     }
 
@@ -68,6 +80,11 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
     public DomainFunctionBuilder withCollectionArgument(String name, Class<?> javaType) {
         domainFunctionDefinition.addArgumentDefinition(name, null, javaType, true);
         return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withArgument(String name, MetadataDefinition<?>... metadataDefinitions) {
+        return withArgument(name, (Class<?>) null, metadataDefinitions);
     }
 
     @Override
@@ -98,6 +115,11 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
         }
 
         return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionArgument(String name, MetadataDefinition<?>... metadataDefinitions) {
+        return withCollectionArgument(name, (Class<?>) null, metadataDefinitions);
     }
 
     @Override
@@ -135,6 +157,26 @@ public class DomainFunctionBuilderImpl implements DomainFunctionBuilder {
     @Override
     public DomainFunctionBuilder withResultType(Class<?> javaType) {
         domainFunctionDefinition.setResultJavaType(javaType);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionResultType() {
+        domainFunctionDefinition.setCollection(true);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionResultType(String typeName) {
+        domainFunctionDefinition.setResultTypeName(typeName);
+        domainFunctionDefinition.setCollection(true);
+        return this;
+    }
+
+    @Override
+    public DomainFunctionBuilder withCollectionResultType(Class<?> javaType) {
+        domainFunctionDefinition.setResultJavaType(javaType);
+        domainFunctionDefinition.setCollection(true);
         return this;
     }
 

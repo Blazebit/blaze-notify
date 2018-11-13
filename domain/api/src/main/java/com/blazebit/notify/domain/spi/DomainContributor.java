@@ -14,32 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.impl.runtime.model.basic;
+package com.blazebit.notify.domain.spi;
 
-import com.blazebit.notify.domain.runtime.model.DomainType;
-import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
+import com.blazebit.notify.domain.boot.model.DomainBuilder;
 
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class ResolvedLiteralImpl implements ResolvedLiteral {
+public interface DomainContributor {
 
-    private final DomainType type;
-    private final Object value;
+    public void contribute(DomainBuilder domainBuilder);
 
-    public ResolvedLiteralImpl(DomainType type, Object value) {
-        this.type = type;
-        this.value = value;
-    }
-
-    @Override
-    public DomainType getType() {
-        return type;
-    }
-
-    @Override
-    public Object getValue() {
-        return value;
-    }
 }

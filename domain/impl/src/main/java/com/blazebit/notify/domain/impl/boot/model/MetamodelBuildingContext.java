@@ -57,8 +57,8 @@ public class MetamodelBuildingContext {
 
     public DomainType getType(DomainTypeDefinition<?> typeDefinition) {
         DomainType domainType = buildingTypes.get(typeDefinition);
-        if (domainType == null) {
-            domainType = typeDefinition.getType(this);
+        if (domainType == null && typeDefinition != null) {
+            domainType = ((DomainTypeDefinitionImplementor<?>) typeDefinition).getType(this);
         }
 
         return domainType;

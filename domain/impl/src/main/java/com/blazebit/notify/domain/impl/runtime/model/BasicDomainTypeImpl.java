@@ -16,11 +16,11 @@
 
 package com.blazebit.notify.domain.impl.runtime.model;
 
+import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
+import com.blazebit.notify.domain.impl.boot.model.MetamodelBuildingContext;
 import com.blazebit.notify.domain.runtime.model.BasicDomainType;
-import com.blazebit.notify.domain.runtime.model.DomainOperator;
-import com.blazebit.notify.domain.runtime.model.DomainPredicateType;
 
-import java.util.Set;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -28,12 +28,11 @@ import java.util.Set;
  */
 public class BasicDomainTypeImpl extends AbstractDomainTypeImpl implements BasicDomainType {
 
-    public BasicDomainTypeImpl(String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
-        super(name, javaType, enabledOperators, enabledPredicates);
-    }
+    private final Map<Class<?>, Object> metadata;
 
-    public BasicDomainTypeImpl(Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
-        super(javaType.getSimpleName(), javaType, enabledOperators, enabledPredicates);
+    public BasicDomainTypeImpl(DomainTypeDefinition<?> typeDefinition, MetamodelBuildingContext context) {
+        super(typeDefinition, context);
+        this.metadata = context.createMetadata(typeDefinition);
     }
 
     @Override
@@ -43,6 +42,6 @@ public class BasicDomainTypeImpl extends AbstractDomainTypeImpl implements Basic
 
     @Override
     public <T> T getMetadata(Class<T> metadataType) {
-        return null;
+        return (T) metadata.get(metadataType);
     }
 }

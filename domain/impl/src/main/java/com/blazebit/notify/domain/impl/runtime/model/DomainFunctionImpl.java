@@ -47,9 +47,16 @@ public class DomainFunctionImpl implements DomainFunction {
         this.argumentCount = functionDefinition.getArgumentCount();
         this.resultType = context.getType(functionDefinition.getResultTypeDefinition());
         List<DomainFunctionArgumentDefinitionImpl> argumentTypeDefinitions = (List<DomainFunctionArgumentDefinitionImpl>) (List<?>) functionDefinition.getArgumentDefinitions();
-        List<DomainFunctionArgument> domainFunctionArguments = new ArrayList<>(argumentTypeDefinitions.size());
-        for (int i = 0; i < argumentTypeDefinitions.size(); i++) {
-            domainFunctionArguments.add(argumentTypeDefinitions.get(i).createFunctionArgument(this, context));
+        int size = Math.max(argumentTypeDefinitions.size(), argumentCount);
+        int argumentDefinitionSize = argumentTypeDefinitions.size();
+        List<DomainFunctionArgument> domainFunctionArguments = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            if (i < argumentDefinitionSize) {
+                domainFunctionArguments.add(argumentTypeDefinitions.get(i).createFunctionArgument(this, context));
+            } else {
+                DomainFunctionArgumentDefinitionImpl argumentDefinition = new DomainFunctionArgumentDefinitionImpl(functionDefinition, null, i, null, null, false);
+                domainFunctionArguments.add(argumentDefinition.createFunctionArgument(this, context));
+            }
         }
         this.arguments = domainFunctionArguments;
         this.metadata = context.createMetadata(functionDefinition);

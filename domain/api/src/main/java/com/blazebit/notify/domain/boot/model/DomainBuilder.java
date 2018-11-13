@@ -24,8 +24,6 @@ import com.blazebit.notify.domain.runtime.model.*;
  */
 public interface DomainBuilder {
 
-    public DomainBuilder withDomainType(DomainType entityDomainType);
-
     public DomainBuilder withLiteralTypeResolver(BooleanLiteralTypeResolver typeResolver);
 
     public DomainBuilder withLiteralTypeResolver(NumericLiteralTypeResolver typeResolver);
@@ -33,6 +31,12 @@ public interface DomainBuilder {
     public DomainBuilder withLiteralTypeResolver(StringLiteralTypeResolver typeResolver);
 
     public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver);
+
+    public DomainBuilder withFunctionTypeResolver(String functionName, DomainFunctionTypeResolver functionTypeResolver);
+
+    public DomainBuilder withOperationTypeResolver(String typeName, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver);
+
+    public DomainBuilder withOperationTypeResolver(Class<?> javaType, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver);
 
     public DomainBuilder withOperator(String typeName, DomainOperator operator);
 
@@ -43,6 +47,14 @@ public interface DomainBuilder {
     public DomainBuilder withPredicate(String typeName, DomainPredicateType... predicates);
 
     public DomainFunctionBuilder createFunction(String name);
+
+    public DomainBuilder createBasicType(String name);
+
+    public DomainBuilder createBasicType(String name, Class<?> javaType);
+
+    public DomainBuilder createBasicType(String name, MetadataDefinition<?>... metadataDefinitions);
+
+    public DomainBuilder createBasicType(String name, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions);
 
     public EntityDomainTypeBuilder createEntityType(String name);
 

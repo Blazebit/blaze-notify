@@ -32,6 +32,12 @@ public interface DomainModel {
 
     public DomainFunction getFunction(String name);
 
+    public DomainFunctionTypeResolver getFunctionTypeResolver(String functionName);
+
+    public DomainOperationTypeResolver getOperationTypeResolver(String typeName, DomainOperator operator);
+
+    public DomainOperationTypeResolver getOperationTypeResolver(Class<?> javaType, DomainOperator operator);
+
     public NumericLiteralTypeResolver getNumericLiteralTypeResolver();
 
     public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver();

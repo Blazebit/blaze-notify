@@ -25,10 +25,18 @@ import org.junit.Test;
 
 public class DomainBuilderTest {
 
+    private DomainBuilder createDefaultDomainBuilder() {
+        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        domainBuilder.createBasicType("String", String.class)
+            .withOperator("String", DomainOperator.PLUS)
+            .withPredicate("String", DomainPredicateType.comparable());
+        return domainBuilder;
+    }
+
     @Test
     public void testBuildSimpleModel() {
         // Given
-        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        DomainBuilder domainBuilder = createDefaultDomainBuilder();
         domainBuilder.createEntityType("Test")
                 .addAttribute("name", "String", MetadataSample.INSTANCE)
                 .withMetadata(MetadataSample.INSTANCE)
@@ -47,7 +55,7 @@ public class DomainBuilderTest {
     @Test
     public void testBuildCollectionModel() {
         // Given
-        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        DomainBuilder domainBuilder = createDefaultDomainBuilder();
         domainBuilder.createEntityType("Test")
                 .addCollectionAttribute("names", "String", MetadataSample.INSTANCE)
                 .withMetadata(MetadataSample.INSTANCE)
@@ -67,7 +75,7 @@ public class DomainBuilderTest {
     @Test
     public void testBuildEnumModel() {
         // Given
-        DomainBuilder domainBuilder = Domain.getDefaultProvider().createDefaultBuilder();
+        DomainBuilder domainBuilder = createDefaultDomainBuilder();
         domainBuilder.createEnumType("TestKind")
                 .withValue("UnitTest", MetadataSample.INSTANCE)
                 .withValue("IntegrationTest", MetadataSample.INSTANCE)

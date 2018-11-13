@@ -18,10 +18,10 @@ package com.blazebit.notify.domain.impl.spi;
 
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.impl.boot.model.DomainBuilderImpl;
-import com.blazebit.notify.domain.impl.runtime.model.basic.JavaDomainModel;
 import com.blazebit.notify.domain.spi.DomainBuilderProvider;
+import com.blazebit.notify.domain.spi.DomainContributor;
 
-import java.util.Calendar;
+import java.util.ServiceLoader;
 
 /**
  * @author Christian Beikov
@@ -37,19 +37,9 @@ public class DomainBuilderProviderImpl implements DomainBuilderProvider {
     @Override
     public DomainBuilder createDefaultBuilder() {
         DomainBuilderImpl domainBuilder = new DomainBuilderImpl();
-        domainBuilder.withDomainType(JavaDomainModel.INTEGER);
-        domainBuilder.withDomainType(JavaDomainModel.DECIMAL);
-        domainBuilder.withDomainType(JavaDomainModel.BOOLEAN);
-        domainBuilder.withDomainType(JavaDomainModel.CALENDAR);
-        domainBuilder.withDomainType(JavaDomainModel.STRING);
-        domainBuilder.withLiteralTypeResolver(JavaDomainModel.NUMERIC_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(JavaDomainModel.STRING_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(JavaDomainModel.TEMPORAL_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(JavaDomainModel.BOOLEAN_LITERAL_TYPE_RESOLVER);
-        domainBuilder.createFunction("CURRENT_TIMESTAMP")
-                .withExactArgumentCount(0)
-                .withResultType(Calendar.class)
-                .build();
+        for (DomainContributor domainContributor : ServiceLoader.load(DomainContributor.class)) {
+            domainContributor.contribute(domainBuilder);
+        }
         return domainBuilder;
     }
 }

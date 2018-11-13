@@ -32,7 +32,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class CollectionDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl<CollectionDomainTypeDefinition> implements CollectionDomainTypeDefinition {
+public class CollectionDomainTypeDefinitionImpl extends MetadataDefinitionHolderImpl<CollectionDomainTypeDefinition> implements CollectionDomainTypeDefinition, DomainTypeDefinitionImplementor<CollectionDomainTypeDefinition> {
 
     private final String name;
     private final Class<?> javaType;
@@ -71,6 +71,7 @@ public class CollectionDomainTypeDefinitionImpl extends MetadataDefinitionHolder
         return elementTypeDefinition;
     }
 
+    @Override
     public void bindTypes(DomainBuilderImpl domainBuilder, MetamodelBuildingContext context) {
         this.domainType = null;
         elementTypeDefinition = domainBuilder.getDomainTypeDefinition(elementTypeName);

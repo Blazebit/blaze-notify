@@ -43,13 +43,6 @@ public abstract class AbstractDomainTypeImpl implements DomainType {
         this.enabledPredicates = context.getPredicates(typeDefinition);
     }
 
-    protected AbstractDomainTypeImpl(String name, Class<?> javaType, Set<DomainOperator> enabledOperators, Set<DomainPredicateType> enabledPredicates) {
-        this.name = name;
-        this.javaType = javaType;
-        this.enabledOperators = enabledOperators;
-        this.enabledPredicates = enabledPredicates;
-    }
-
     @Override
     public String getName() {
         return name;

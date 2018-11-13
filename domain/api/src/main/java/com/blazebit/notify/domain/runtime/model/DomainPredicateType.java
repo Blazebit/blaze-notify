@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -29,11 +30,19 @@ public enum DomainPredicateType {
     RELATIONAL,
     EQUALITY;
 
-    public static Set<DomainPredicateType> comparable() {
-        return EnumSet.of(DomainPredicateType.RELATIONAL, DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
+    public static final Set<DomainPredicateType> COMPARABLE;
+    public static final Set<DomainPredicateType> DISTINGUISHABLE;
+
+    static {
+        COMPARABLE = Collections.unmodifiableSet(EnumSet.of(DomainPredicateType.RELATIONAL, DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS));
+        DISTINGUISHABLE = Collections.unmodifiableSet(EnumSet.of(DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS));
     }
 
-    public static Set<DomainPredicateType> equality() {
-        return EnumSet.of(DomainPredicateType.EQUALITY, DomainPredicateType.NULLNESS);
+    public static DomainPredicateType[] comparable() {
+        return COMPARABLE.toArray(new DomainPredicateType[COMPARABLE.size()]);
+    }
+
+    public static DomainPredicateType[] distinguishable() {
+        return DISTINGUISHABLE.toArray(new DomainPredicateType[DISTINGUISHABLE.size()]);
     }
 }

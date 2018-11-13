@@ -18,7 +18,6 @@ package com.blazebit.notify.domain.impl.runtime.model;
 
 import com.blazebit.notify.domain.runtime.model.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,22 +29,21 @@ public class DomainModelImpl implements DomainModel {
     private final Map<String, DomainType> domainTypes;
     private final Map<Class<?>, DomainType> domainTypesByJavaType;
     private final Map<String, DomainFunction> domainFunctions;
+    private final Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers;
+    private final Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers;
+    private final Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType;
     private final NumericLiteralTypeResolver numericLiteralTypeResolver;
     private final BooleanLiteralTypeResolver booleanLiteralTypeResolver;
     private final StringLiteralTypeResolver stringLiteralTypeResolver;
     private final TemporalLiteralTypeResolver temporalLiteralTypeResolver;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<String, DomainFunction> domainFunctions, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver) {
         this.domainTypes = domainTypes;
-        this.domainFunctions = domainFunctions;
-        Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>(domainTypes.size());
-        for (DomainType domainType : domainTypes.values()) {
-            if (domainType.getJavaType() != null) {
-                domainTypesByJavaType.put(domainType.getJavaType(), domainType);
-            }
-        }
-
         this.domainTypesByJavaType = domainTypesByJavaType;
+        this.domainFunctionTypeResolvers = domainFunctionTypeResolvers;
+        this.domainOperationTypeResolvers = domainOperationTypeResolvers;
+        this.domainOperationTypeResolversByJavaType = domainOperationTypeResolversByJavaType;
+        this.domainFunctions = domainFunctions;
         this.numericLiteralTypeResolver = numericLiteralTypeResolver;
         this.booleanLiteralTypeResolver = booleanLiteralTypeResolver;
         this.stringLiteralTypeResolver = stringLiteralTypeResolver;
@@ -69,7 +67,28 @@ public class DomainModelImpl implements DomainModel {
 
     @Override
     public DomainFunction getFunction(String name) {
-        return domainFunctions.get(name);
+        return domainFunctions.get(name.toUpperCase());
+    }
+
+    @Override
+    public DomainFunctionTypeResolver getFunctionTypeResolver(String functionName) {
+        DomainFunctionTypeResolver typeResolver = domainFunctionTypeResolvers.get(functionName.toUpperCase());
+        if (typeResolver == null) {
+            return StaticDomainFunctionTypeResolver.INSTANCE;
+        }
+        return typeResolver;
+    }
+
+    @Override
+    public DomainOperationTypeResolver getOperationTypeResolver(String typeName, DomainOperator operator) {
+        Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolvers.get(typeName);
+        return operationTypeResolverMap == null ? null : operationTypeResolverMap.get(operator);
+    }
+
+    @Override
+    public DomainOperationTypeResolver getOperationTypeResolver(Class<?> javaType, DomainOperator operator) {
+        Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolversByJavaType.get(javaType);
+        return operationTypeResolverMap == null ? null : operationTypeResolverMap.get(operator);
     }
 
     @Override

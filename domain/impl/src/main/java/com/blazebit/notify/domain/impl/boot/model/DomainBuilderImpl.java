@@ -19,8 +19,9 @@ package com.blazebit.notify.domain.impl.boot.model;
 import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
-import com.blazebit.notify.domain.runtime.model.*;
+import com.blazebit.notify.domain.boot.model.MetadataDefinition;
 import com.blazebit.notify.domain.impl.runtime.model.DomainModelImpl;
+import com.blazebit.notify.domain.runtime.model.*;
 
 import java.util.*;
 
@@ -30,14 +31,14 @@ import java.util.*;
  */
 public class DomainBuilderImpl implements DomainBuilder {
 
-    private Map<String, DomainType> domainTypes = new HashMap<>();
-    private Map<String, DomainTypeDefinition<?>> existingDomainTypeDefinitions = new HashMap<>();
-    private Map<Class<?>, DomainTypeDefinition<?>> existingDomainTypeDefinitionsByJavaType = new HashMap<>();
     private Map<String, DomainFunctionDefinitionImpl> domainFunctionDefinitions = new HashMap<>();
     private Map<String, Set<DomainOperator>> enabledOperators = new HashMap<>();
     private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
     private Map<String, DomainTypeDefinitionImplementor<?>> domainTypeDefinitions = new HashMap<>();
     private Map<Class<?>, DomainTypeDefinitionImplementor<?>> domainTypeDefinitionsByJavaType = new HashMap<>();
+    private Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers = new HashMap<>();
+    private Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers = new HashMap<>();
+    private Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType = new HashMap<>();
     private NumericLiteralTypeResolver numericLiteralTypeResolver;
     private BooleanLiteralTypeResolver booleanLiteralTypeResolver;
     private StringLiteralTypeResolver stringLiteralTypeResolver;
@@ -57,21 +58,11 @@ public class DomainBuilderImpl implements DomainBuilder {
     }
 
     public DomainTypeDefinition<?> getDomainTypeDefinition(String typeName) {
-        DomainTypeDefinition<?> domainTypeDefinition = domainTypeDefinitions.get(typeName);
-        if (domainTypeDefinition == null) {
-            return existingDomainTypeDefinitions.get(typeName);
-        }
-
-        return domainTypeDefinition;
+        return domainTypeDefinitions.get(typeName);
     }
 
     public DomainTypeDefinition<?> getDomainTypeDefinition(Class<?> javaType) {
-        DomainTypeDefinition<?> domainTypeDefinition = domainTypeDefinitionsByJavaType.get(javaType);
-        if (domainTypeDefinition == null) {
-            return existingDomainTypeDefinitionsByJavaType.get(javaType);
-        }
-
-        return domainTypeDefinition;
+        return domainTypeDefinitionsByJavaType.get(javaType);
     }
 
     public DomainTypeDefinition<?> getCollectionDomainTypeDefinition(DomainTypeDefinition<?> typeDefinition) {
@@ -79,17 +70,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             return null;
         }
         return new CollectionDomainTypeDefinitionImpl("Collection", Collection.class, typeDefinition);
-    }
-
-    @Override
-    public DomainBuilderImpl withDomainType(DomainType domainType) {
-        domainTypes.put(domainType.getName(), domainType);
-        ExistingDomainTypeDefinitionImpl existingDomainTypeDefinition = new ExistingDomainTypeDefinitionImpl(domainType);
-        existingDomainTypeDefinitions.put(domainType.getName(), existingDomainTypeDefinition);
-        if (domainType.getJavaType() != null) {
-            existingDomainTypeDefinitionsByJavaType.put(domainType.getJavaType(), existingDomainTypeDefinition);
-        }
-        return this;
     }
 
     @Override
@@ -113,6 +93,34 @@ public class DomainBuilderImpl implements DomainBuilder {
     @Override
     public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver) {
         this.temporalLiteralTypeResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withFunctionTypeResolver(String functionName, DomainFunctionTypeResolver functionTypeResolver) {
+        domainFunctionTypeResolvers.put(functionName, functionTypeResolver);
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withOperationTypeResolver(String typeName, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver) {
+        Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolvers.get(typeName);
+        if (operationTypeResolverMap == null) {
+            operationTypeResolverMap = new HashMap<>();
+            domainOperationTypeResolvers.put(typeName, operationTypeResolverMap);
+        }
+        operationTypeResolverMap.put(operator, operationTypeResolver);
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withOperationTypeResolver(Class<?> javaType, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver) {
+        Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolversByJavaType.get(javaType);
+        if (operationTypeResolverMap == null) {
+            operationTypeResolverMap = new HashMap<>();
+            domainOperationTypeResolversByJavaType.put(javaType, operationTypeResolverMap);
+        }
+        operationTypeResolverMap.put(operator, operationTypeResolver);
         return this;
     }
 
@@ -184,6 +192,36 @@ public class DomainBuilderImpl implements DomainBuilder {
     }
 
     @Override
+    public DomainBuilder createBasicType(String name) {
+        return withDomainTypeDefinition(new BasicDomainTypeDefinitionImpl(name, null));
+    }
+
+    @Override
+    public DomainBuilder createBasicType(String name, Class<?> javaType) {
+        return withDomainTypeDefinition(new BasicDomainTypeDefinitionImpl(name, javaType));
+    }
+
+    @Override
+    public DomainBuilder createBasicType(String name, MetadataDefinition<?>... metadataDefinitions) {
+        BasicDomainTypeDefinitionImpl basicDomainTypeDefinition = new BasicDomainTypeDefinitionImpl(name, null);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            basicDomainTypeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        return withDomainTypeDefinition(basicDomainTypeDefinition);
+    }
+
+    @Override
+    public DomainBuilder createBasicType(String name, Class<?> javaType, MetadataDefinition<?>... metadataDefinitions) {
+        BasicDomainTypeDefinitionImpl basicDomainTypeDefinition = new BasicDomainTypeDefinitionImpl(name, javaType);
+        for (MetadataDefinition<?> metadataDefinition : metadataDefinitions) {
+            basicDomainTypeDefinition.withMetadataDefinition(metadataDefinition);
+        }
+
+        return withDomainTypeDefinition(basicDomainTypeDefinition);
+    }
+
+    @Override
     public EntityDomainTypeBuilderImpl createEntityType(String name) {
         return new EntityDomainTypeBuilderImpl(this, name, null);
     }
@@ -213,16 +251,94 @@ public class DomainBuilderImpl implements DomainBuilder {
             domainFunctionDefinition.bindTypes(this, context);
         }
 
-        Map<String, DomainType> domainTypes = new HashMap<>(this.domainTypes);
+        Map<String, DomainType> domainTypes = new HashMap<>(domainTypeDefinitions.size());
+        Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>(domainTypeDefinitions.size());
         if (!context.hasErrors()) {
-            for (DomainTypeDefinition typeDefinition : domainTypeDefinitions.values()) {
-                domainTypes.put(typeDefinition.getName(), context.getType(typeDefinition));
+            for (DomainTypeDefinitionImplementor<?> typeDefinition : domainTypeDefinitions.values()) {
+                DomainType domainType = context.getType(typeDefinition);
+                domainTypes.put(typeDefinition.getName(), domainType);
+                if (typeDefinition.getJavaType() != null) {
+                    domainTypesByJavaType.put(domainType.getJavaType(), domainType);
+                }
             }
         }
         Map<String, DomainFunction> domainFunctions = new HashMap<>(domainFunctionDefinitions.size());
         if (!context.hasErrors()) {
             for (DomainFunctionDefinitionImpl functionDefinition : domainFunctionDefinitions.values()) {
-                domainFunctions.put(functionDefinition.getName(), functionDefinition.getFunction(context));
+                domainFunctions.put(functionDefinition.getName().toUpperCase(), functionDefinition.getFunction(context));
+            }
+        }
+        Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers = new HashMap<>(this.domainFunctionTypeResolvers.size());
+        if (!context.hasErrors()) {
+            for (Map.Entry<String, DomainFunctionTypeResolver> entry : this.domainFunctionTypeResolvers.entrySet()) {
+                String name = entry.getKey().toUpperCase();
+                domainFunctionTypeResolvers.put(name, entry.getValue());
+                if (!domainFunctions.containsKey(name)) {
+                    context.addError("A function type resolver was registered but no function with the name '" + entry.getKey() + "' was found: " + entry.getValue());
+                }
+            }
+        }
+
+        Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers = new HashMap<>(this.domainOperationTypeResolvers.size());
+        Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType = new HashMap<>(this.domainOperationTypeResolversByJavaType.size());
+        if (!context.hasErrors()) {
+            for (Map.Entry<String, Map<DomainOperator, DomainOperationTypeResolver>> entry : this.domainOperationTypeResolvers.entrySet()) {
+                String typeName = entry.getKey();
+                DomainType domainType = domainTypes.get(typeName);
+                if (domainType == null) {
+                    context.addError("An operation type resolver was registered but no type with the name '" + typeName + "' was found: " + entry.getValue());
+                } else {
+                    Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = new HashMap<>(entry.getValue().size());
+                    domainOperationTypeResolvers.put(typeName, operationTypeResolverMap);
+
+                    Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMapByJavaType = domainOperationTypeResolversByJavaType.get(domainType.getJavaType());
+                    if (operationTypeResolverMapByJavaType == null && domainType.getJavaType() != null) {
+                        operationTypeResolverMapByJavaType = new HashMap<>();
+                        domainOperationTypeResolversByJavaType.put(domainType.getJavaType(), operationTypeResolverMapByJavaType);
+                    }
+
+                    for (Map.Entry<DomainOperator, DomainOperationTypeResolver> resolverEntry : entry.getValue().entrySet()) {
+                        if (domainType.getEnabledOperators().contains(resolverEntry.getKey())) {
+                            operationTypeResolverMap.put(resolverEntry.getKey(), resolverEntry.getValue());
+                            if (operationTypeResolverMapByJavaType != null) {
+                                operationTypeResolverMapByJavaType.put(resolverEntry.getKey(), resolverEntry.getValue());
+                            }
+                        } else {
+                            context.addError("An operation type resolver for the type with the name '" + typeName + "' was registered for a non enabled operator '" + resolverEntry.getKey() + "': " + resolverEntry.getValue());
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!context.hasErrors()) {
+            for (Map.Entry<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> entry : this.domainOperationTypeResolversByJavaType.entrySet()) {
+                Class<?> javaType = entry.getKey();
+                DomainType domainType = domainTypesByJavaType.get(javaType);
+                if (domainType == null) {
+                    context.addError("An operation type resolver was registered but no type with the java type '" + javaType + "' was found: " + entry.getValue());
+                } else {
+                    Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolvers.get(domainType.getName());
+                    if (operationTypeResolverMap == null) {
+                        operationTypeResolverMap = new HashMap<>(entry.getValue().size());
+                        domainOperationTypeResolvers.put(domainType.getName(), operationTypeResolverMap);
+                    }
+
+                    Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMapByJavaType = domainOperationTypeResolversByJavaType.get(domainType.getJavaType());
+                    if (operationTypeResolverMapByJavaType == null) {
+                        operationTypeResolverMapByJavaType = new HashMap<>();
+                        domainOperationTypeResolversByJavaType.put(domainType.getJavaType(), operationTypeResolverMapByJavaType);
+                    }
+
+                    for (Map.Entry<DomainOperator, DomainOperationTypeResolver> resolverEntry : entry.getValue().entrySet()) {
+                        if (domainType.getEnabledOperators().contains(resolverEntry.getKey())) {
+                            operationTypeResolverMap.put(resolverEntry.getKey(), resolverEntry.getValue());
+                            operationTypeResolverMapByJavaType.put(resolverEntry.getKey(), resolverEntry.getValue());
+                        } else {
+                            context.addError("An operation type resolver for the type with the java type '" + javaType + "' was registered for a non enabled operator '" + resolverEntry.getKey() + "': " + resolverEntry.getValue());
+                        }
+                    }
+                }
             }
         }
 
@@ -236,6 +352,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return new DomainModelImpl(domainTypes, domainFunctions, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver);
+        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver);
     }
 }
