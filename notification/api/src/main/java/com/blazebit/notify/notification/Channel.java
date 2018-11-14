@@ -20,5 +20,7 @@ public interface Channel<N extends Notification<T>, T extends NotificationMessag
 
     public NotificationJobProcessor<N, T> getJobProcessor();
 
+    public void sendNotification(Notification notification);
+
     public void sendNotification(NotificationReceiver receiver, T message);
 }
