@@ -19,5 +19,5 @@ import java.util.List;
 
 public interface NotificationReceiverResolver<N extends Notification<T>, T extends NotificationMessage> {
 
-    List<NotificationReceiver> resolveNotificationReceivers(NotificationJob<N, T> notificationJob);
+    List<NotificationReceiver> resolveNotificationReceivers(NotificationJob<N, T> job, NotificationJobContext jobContext);
 }

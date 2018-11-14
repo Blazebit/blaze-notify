@@ -16,6 +16,7 @@
 package com.blazebit.notify.notification.processor.hibernate.insertselect;
 
 import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.receiver.resolver.expression.ExpressionNotificationReceiverResolver;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
@@ -44,9 +45,13 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<N extends Not
         insertCriteriaBuilder.orderByAsc(receiverIdPath);
         insertCriteriaBuilder.setMaxResults(context.getProcessCount());
 
-        if (notificationJob.getSelectorPredicate() != null) {
-            // TODO: Apply predicate
-//            notificationJob.getSelectorPredicate()
+        if (notificationJob.getReceiverResolver() != null) {
+            if (notificationJob.getReceiverResolver() instanceof ExpressionNotificationReceiverResolver) {
+                // TODO: Apply predicate
+//            ((ExpressionNotificationReceiverResolver<?, ?>) notificationJob.getReceiverResolver()).getPredicate()
+            } else {
+                throw new IllegalArgumentException("Expected receiver resolver of type " + ExpressionNotificationReceiverResolver.class.getName() + " but got " + notificationJob.getReceiverResolver().getClass().getName());
+            }
         }
 
         bindNotificationAttributes(insertCriteriaBuilder, "receiver", "job");
