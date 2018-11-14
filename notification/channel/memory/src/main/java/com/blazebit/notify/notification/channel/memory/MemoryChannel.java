@@ -49,6 +49,11 @@ public class MemoryChannel implements Channel<Notification<NotificationMessage>,
     }
 
     @Override
+    public void sendNotification(Notification notification) {
+        sendNotification(notification.getReceiver(), notification.getMessage());
+    }
+
+    @Override
     public void sendNotification(NotificationReceiver receiver, NotificationMessage message) {
         queue.add(message);
     }
