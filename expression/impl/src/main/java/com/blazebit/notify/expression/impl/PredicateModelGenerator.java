@@ -30,10 +30,12 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     private final DomainModel domainModel;
     private final LiteralFactory literalFactory;
+    private final ExpressionCompiler.Context compileContext;
 
-    public PredicateModelGenerator(DomainModel domainModel, LiteralFactory literalFactory) {
+    public PredicateModelGenerator(DomainModel domainModel, LiteralFactory literalFactory, ExpressionCompiler.Context compileContext) {
         this.domainModel = domainModel;
         this.literalFactory = literalFactory;
+        this.compileContext = compileContext;
     }
 
     @Override

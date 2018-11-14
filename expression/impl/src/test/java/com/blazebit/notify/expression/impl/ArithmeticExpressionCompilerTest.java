@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ArithmeticPredicateCompilerTest extends AbstractPredicateCompilerTest {
+public class ArithmeticExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     @Test
     public void comparisonWithLiteralTest() {

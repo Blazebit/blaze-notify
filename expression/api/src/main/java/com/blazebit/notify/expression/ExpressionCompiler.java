@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.expression.impl;
 
-public class TypeErrorException extends PredicateCompilerException {
+package com.blazebit.notify.expression;
 
-    private static final long serialVersionUID = 1L;
+import com.blazebit.notify.domain.runtime.model.DomainType;
 
-    public TypeErrorException() {
-        super();
-    }
+import java.util.Map;
 
-    public TypeErrorException(String message, Throwable cause) {
-        super(message, cause);
-    }
+public interface ExpressionCompiler {
 
-    public TypeErrorException(String message) {
-        super(message);
-    }
+    public Context createContext(Map<String, DomainType> rootDomainTypes);
 
-    public TypeErrorException(Throwable cause) {
-        super(cause);
+    public Expression createExpression(String expressionString, Context compileContext);
+
+    public Predicate createPredicate(String expressionString, Context compileContext);
+
+    public interface Context {
+
+        public DomainType getRootDomainType(String alias);
+
     }
 }

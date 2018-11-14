@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.expression.impl;
+package com.blazebit.notify.expression;
 
-public class SyntaxErrorException extends RuntimeException {
+import com.blazebit.notify.domain.runtime.model.DomainType;
 
-    private static final long serialVersionUID = 1L;
+import java.util.Map;
 
-    public SyntaxErrorException() {
-        super();
+public interface ExpressionInterpreter {
+
+    public Context createContext(Map<String, DomainType> rootDomainTypes, Map<String, Object> rootObjects);
+
+    public <T> T evaluate(Expression expression, Context interpreterContext);
+
+    public Boolean evaluate(Predicate expression, Context interpreterContext);
+
+    public interface Context {
+
+        public Object getRoot(String alias);
+
+        public DomainType getRootDomainType(String alias);
+
     }
-
-    public SyntaxErrorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public SyntaxErrorException(String message) {
-        super(message);
-    }
-
-    public SyntaxErrorException(Throwable cause) {
-        super(cause);
-    }
-
 }

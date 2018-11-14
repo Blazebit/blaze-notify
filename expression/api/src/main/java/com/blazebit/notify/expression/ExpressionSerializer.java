@@ -13,25 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.expression.impl;
 
-public class PredicateCompilerException extends RuntimeException {
+package com.blazebit.notify.expression;
 
-    private static final long serialVersionUID = 1L;
+public interface ExpressionSerializer {
 
-    public PredicateCompilerException() {
-        super();
-    }
+    public String serialize(Expression expression);
 
-    public PredicateCompilerException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    public void serializeTo(Expression expression, StringBuilder target);
 
-    public PredicateCompilerException(String message) {
-        super(message);
-    }
-
-    public PredicateCompilerException(Throwable cause) {
-        super(cause);
-    }
 }

@@ -20,21 +20,33 @@ import com.blazebit.notify.expression.*;
 
 import java.util.List;
 
-public class ExpressionSerializer implements Expression.Visitor {
+public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionSerializer {
 
     private StringBuilder sb;
 
-    public ExpressionSerializer() {
+    public ExpressionSerializerImpl() {
         this(new StringBuilder());
     }
 
-    public ExpressionSerializer(StringBuilder sb) {
+    public ExpressionSerializerImpl(StringBuilder sb) {
         this.sb = sb;
     }
 
-    public String serialize(Expression e) {
-        e.accept(this);
+    @Override
+    public String serialize(Expression expression) {
+        expression.accept(this);
         return sb.toString();
+    }
+
+    @Override
+    public void serializeTo(Expression expression, StringBuilder target) {
+        StringBuilder old = sb;
+        sb = target;
+        try {
+            expression.accept(this);
+        } finally {
+            sb = old;
+        }
     }
 
     @Override

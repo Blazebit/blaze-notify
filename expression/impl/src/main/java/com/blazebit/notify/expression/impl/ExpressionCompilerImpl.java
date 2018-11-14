@@ -17,40 +17,63 @@
 package com.blazebit.notify.expression.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainModel;
+import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.expression.Expression;
+import com.blazebit.notify.expression.ExpressionCompiler;
 import com.blazebit.notify.expression.Predicate;
+import com.blazebit.notify.expression.SyntaxErrorException;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.IntervalSet;
 
 import java.util.BitSet;
+import java.util.Map;
 
-public class PredicateCompiler {
+public class ExpressionCompilerImpl implements ExpressionCompiler {
 
-    private final DomainModel domainModel;
-    private final LiteralFactory literalFactory;
-
-    private static final RuleInvoker predicateRuleInvoker = new RuleInvoker() {
+    private static final RuleInvoker<Predicate> PREDICATE_RULE_INVOKER = new RuleInvoker<Predicate>() {
         @Override
         public ParserRuleContext invokeRule(PredicateParser parser) {
             return parser.start();
         }
     };
+    private static final RuleInvoker<Expression> EXPRESSION_RULE_INVOKER = new RuleInvoker<Expression>() {
+        @Override
+        public ParserRuleContext invokeRule(PredicateParser parser) {
+            return parser.arithmetic_expression();
+        }
+    };
 
-    public PredicateCompiler(DomainModel domainModel) {
+    private final DomainModel domainModel;
+    private final LiteralFactory literalFactory;
+
+    public ExpressionCompilerImpl(DomainModel domainModel) {
         this.domainModel = domainModel;
         this.literalFactory = new LiteralFactory(domainModel);
+    }
+
+    @Override
+    public Context createContext(Map<String, DomainType> rootDomainTypes) {
+        return new CompileContext(rootDomainTypes);
+    }
+
+    @Override
+    public Expression createExpression(String expressionString, Context compileContext) {
+        return parse(expressionString, EXPRESSION_RULE_INVOKER, compileContext);
+    }
+
+    @Override
+    public Predicate createPredicate(String expressionString, Context compileContext) {
+        return parse(expressionString, PREDICATE_RULE_INVOKER, compileContext);
     }
 
     public LiteralFactory getLiteralFactory() {
         return literalFactory;
     }
 
-    public Predicate parsePredicate(String input) {
-        return parse(input, predicateRuleInvoker);
-    }
-
-    Predicate parse(String input, RuleInvoker ruleInvoker) {
+    @SuppressWarnings("unchecked")
+    <T extends Expression> T parse(String input, RuleInvoker<T> ruleInvoker, Context compileContext) {
         SimpleErrorListener errorListener = new SimpleErrorListener();
         PredicateLexer lexer = new PredicateLexer(CharStreams.fromString(input));
         lexer.removeErrorListeners();
@@ -62,11 +85,11 @@ public class PredicateCompiler {
 
         ParserRuleContext ctx = ruleInvoker.invokeRule(parser);
 
-        PredicateModelGenerator visitor = new PredicateModelGenerator(domainModel, literalFactory);
-        return (Predicate) visitor.visit(ctx);
+        PredicateModelGenerator visitor = new PredicateModelGenerator(domainModel, literalFactory, compileContext);
+        return (T) visitor.visit(ctx);
     }
 
-    public interface RuleInvoker {
+    public interface RuleInvoker<T extends Expression> {
         ParserRuleContext invokeRule(PredicateParser parser);
     }
 
@@ -122,6 +145,20 @@ public class PredicateCompiler {
 
         @Override
         public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+        }
+    }
+
+    private static class CompileContext implements ExpressionCompiler.Context {
+
+        private final Map<String, DomainType> rootDomainTypes;
+
+        public CompileContext(Map<String, DomainType> rootDomainTypes) {
+            this.rootDomainTypes = rootDomainTypes;
+        }
+
+        @Override
+        public DomainType getRootDomainType(String alias) {
+            return rootDomainTypes.get(alias);
         }
     }
 }

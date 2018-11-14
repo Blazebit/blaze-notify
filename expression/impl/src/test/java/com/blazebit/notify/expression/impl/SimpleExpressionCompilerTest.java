@@ -18,11 +18,12 @@ package com.blazebit.notify.expression.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.expression.Predicate;
+import com.blazebit.notify.expression.SyntaxErrorException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class SimplePredicateCompilerTest extends AbstractPredicateCompilerTest {
+public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     @Test
     public void testAddition() {

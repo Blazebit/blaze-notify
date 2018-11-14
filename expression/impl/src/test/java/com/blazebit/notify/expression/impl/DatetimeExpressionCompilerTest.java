@@ -30,12 +30,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class DatetimePredicateCompilerTest extends AbstractPredicateCompilerTest {
+public class DatetimeExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     private final String expr;
-    private final ExpectedExpressionProducer<DatetimePredicateCompilerTest> expectedExpressionProducer;
+    private final ExpectedExpressionProducer<DatetimeExpressionCompilerTest> expectedExpressionProducer;
 
-    public DatetimePredicateCompilerTest(String expr, ExpectedExpressionProducer<DatetimePredicateCompilerTest> expectedExpressionProducer) {
+    public DatetimeExpressionCompilerTest(String expr, ExpectedExpressionProducer<DatetimeExpressionCompilerTest> expectedExpressionProducer) {
         this.expr = expr;
         this.expectedExpressionProducer = expectedExpressionProducer;
     }
@@ -45,45 +45,45 @@ public class DatetimePredicateCompilerTest extends AbstractPredicateCompilerTest
         Object[][] literals = {
                 {
                         "CURRENT_TIMESTAMP",
-                        new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<DatetimeExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(DatetimeExpressionCompilerTest testInstance) {
                                 return testInstance.now();
                             }
                         }
                 },
                 {
                         "TIMESTAMP('2014-01-01')",
-                        new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<DatetimeExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(DatetimeExpressionCompilerTest testInstance) {
                                 return testInstance.time("2014-01-01");
                             }
                         }
                 },
                 {
                         "TIMESTAMP('2014-01-01 00:00:00')",
-                        new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<DatetimeExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(DatetimeExpressionCompilerTest testInstance) {
                                 return testInstance.time("2014-01-01 00:00:00");
                             }
                         }
                 },
                 {
                         "TIMESTAMP('2014-01-01 00:00:00.000')",
-                        new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<DatetimeExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(DatetimeExpressionCompilerTest testInstance) {
                                 return testInstance.time("2014-01-01 00:00:00.000");
                             }
                         }
                 },
                 {
                         "TIMESTAMP('2014-01-01 01:01:01.100')",
-                        new ExpectedExpressionProducer<DatetimePredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<DatetimeExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(DatetimePredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(DatetimeExpressionCompilerTest testInstance) {
                                 return testInstance.time("2014-01-01 01:01:01.100");
                             }
                         }

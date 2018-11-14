@@ -30,12 +30,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class StringPredicateCompilerTest extends AbstractPredicateCompilerTest {
+public class StringExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     private final String expr;
-    private final ExpectedExpressionProducer<StringPredicateCompilerTest> expectedExpressionProducer;
+    private final ExpectedExpressionProducer<StringExpressionCompilerTest> expectedExpressionProducer;
 
-    public StringPredicateCompilerTest(String expr, ExpectedExpressionProducer<StringPredicateCompilerTest> expectedExpressionProducer) {
+    public StringExpressionCompilerTest(String expr, ExpectedExpressionProducer<StringExpressionCompilerTest> expectedExpressionProducer) {
         this.expr = expr;
         this.expectedExpressionProducer = expectedExpressionProducer;
     }
@@ -45,9 +45,9 @@ public class StringPredicateCompilerTest extends AbstractPredicateCompilerTest {
         Object[][] literals = {
                 {
                         "''",
-                        new ExpectedExpressionProducer<StringPredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<StringExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(StringPredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(StringExpressionCompilerTest testInstance) {
                                 return testInstance.string("");
                             }
                         }
@@ -55,9 +55,9 @@ public class StringPredicateCompilerTest extends AbstractPredicateCompilerTest {
                 },
                 {
                         "'abc'",
-                        new ExpectedExpressionProducer<StringPredicateCompilerTest>() {
+                        new ExpectedExpressionProducer<StringExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(StringPredicateCompilerTest testInstance) {
+                            public Expression getExpectedExpression(StringExpressionCompilerTest testInstance) {
                                 return testInstance.string("abc");
                             }
                         }

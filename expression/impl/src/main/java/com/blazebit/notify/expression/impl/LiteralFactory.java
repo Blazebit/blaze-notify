@@ -18,6 +18,7 @@ package com.blazebit.notify.expression.impl;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.expression.EnumValue;
 import com.blazebit.notify.expression.Literal;
+import com.blazebit.notify.expression.SyntaxErrorException;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;

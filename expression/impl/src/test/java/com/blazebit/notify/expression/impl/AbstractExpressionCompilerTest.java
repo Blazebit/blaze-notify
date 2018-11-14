@@ -17,34 +17,40 @@
 package com.blazebit.notify.expression.impl;
 
 import com.blazebit.notify.domain.runtime.model.DomainModel;
+import com.blazebit.notify.domain.runtime.model.DomainType;
 import com.blazebit.notify.expression.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 
-public abstract class AbstractPredicateCompilerTest {
+public abstract class AbstractExpressionCompilerTest {
 
-    private final PredicateCompiler predicateCompiler;
+    private final ExpressionCompilerImpl expressionCompiler;
 
-    protected AbstractPredicateCompilerTest() {
-        this.predicateCompiler = new PredicateCompiler(getTestDomainModel());
+    protected AbstractExpressionCompilerTest() {
+        this.expressionCompiler = new ExpressionCompilerImpl(getTestDomainModel());
     }
 
     protected abstract DomainModel getTestDomainModel();
 
+    protected ExpressionCompiler.Context getCompileContext() {
+        return expressionCompiler.createContext(Collections.<String, DomainType>emptyMap());
+    }
+
     protected Predicate parsePredicate(String input) {
-        return predicateCompiler.parsePredicate(input);
+        return expressionCompiler.createPredicate(input, getCompileContext());
     }
 
     protected Expression parseArithmeticExpression(String input) {
-        return predicateCompiler.parse(input, new PredicateCompiler.RuleInvoker() {
+        return expressionCompiler.parse(input, new ExpressionCompilerImpl.RuleInvoker() {
             @Override
             public ParserRuleContext invokeRule(PredicateParser parser) {
                 return parser.arithmetic_expression();
             }
-        });
+        }, getCompileContext());
     }
 
     protected static DisjunctivePredicate or(Predicate... disjuncts) {
@@ -56,11 +62,11 @@ public abstract class AbstractPredicateCompilerTest {
     }
 
     protected Atom time(Calendar value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofCalendar(value));
+        return new Atom(expressionCompiler.getLiteralFactory().ofCalendar(value));
     }
 
     protected Atom time(String value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofDateTimeString(value));
+        return new Atom(expressionCompiler.getLiteralFactory().ofDateTimeString(value));
     }
 
     protected static String wrapTimestamp(String dateTimeStr) {
@@ -68,23 +74,23 @@ public abstract class AbstractPredicateCompilerTest {
     }
 
     protected Atom now() {
-        return new Atom(predicateCompiler.getLiteralFactory().currentTimestamp());
+        return new Atom(expressionCompiler.getLiteralFactory().currentTimestamp());
     }
 
     protected Atom string(String value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofString(value));
+        return new Atom(expressionCompiler.getLiteralFactory().ofString(value));
     }
 
     protected Atom number(long value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofBigDecimal(new BigDecimal(value)));
+        return new Atom(expressionCompiler.getLiteralFactory().ofBigDecimal(new BigDecimal(value)));
     }
 
     protected Atom number(BigDecimal value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofBigDecimal(value));
+        return new Atom(expressionCompiler.getLiteralFactory().ofBigDecimal(value));
     }
 
     protected Atom number(String value) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofNumericString(value));
+        return new Atom(expressionCompiler.getLiteralFactory().ofNumericString(value));
     }
 
     protected Atom attr(String identifier) {
@@ -92,7 +98,7 @@ public abstract class AbstractPredicateCompilerTest {
     }
 
     protected Atom enumValue(String enumName, String enumKey) {
-        return new Atom(predicateCompiler.getLiteralFactory().ofEnumValue(new EnumValue(enumName, enumKey)));
+        return new Atom(expressionCompiler.getLiteralFactory().ofEnumValue(new EnumValue(enumName, enumKey)));
     }
 
 //	protected static CollectionAtom collectionAttr(String identifier) {
@@ -151,7 +157,7 @@ public abstract class AbstractPredicateCompilerTest {
         return new InPredicate(value, Arrays.asList(items), false);
     }
 
-    interface ExpectedExpressionProducer<T extends AbstractPredicateCompilerTest> {
+    interface ExpectedExpressionProducer<T extends AbstractExpressionCompilerTest> {
         Expression getExpectedExpression(T testInstance);
     }
 }
