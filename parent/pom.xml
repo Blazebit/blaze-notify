@@ -19,7 +19,7 @@
     <properties>
         <blaze-notify.codename></blaze-notify.codename>
 
-        <version.blaze-persistence>1.3.0-SNAPSHOT</version.blaze-persistence>
+        <version.blaze-persistence>1.3.0-Alpha3</version.blaze-persistence>
         <version.junit>4.12</version.junit>
     </properties>
 
