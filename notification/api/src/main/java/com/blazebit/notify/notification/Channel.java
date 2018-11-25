@@ -16,11 +16,9 @@
 
 package com.blazebit.notify.notification;
 
-public interface Channel<N extends Notification<T>, T extends NotificationMessage> {
+public interface Channel<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends AutoCloseable {
 
-    public NotificationJobProcessor<N, T> getJobProcessor();
+    void sendNotificationMessage(R receiver, T message);
 
-    public void sendNotification(Notification notification);
-
-    public void sendNotification(NotificationReceiver receiver, T message);
+    void init();
 }

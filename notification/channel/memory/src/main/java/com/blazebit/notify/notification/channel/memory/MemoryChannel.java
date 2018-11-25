@@ -20,41 +20,37 @@ import com.blazebit.notify.notification.*;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class MemoryChannel implements Channel<Notification<NotificationMessage>, NotificationMessage> {
+public class MemoryChannel<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements Channel<R, N, T> {
 
     private static final int DEFAULT_CAPACITY = 1024;
-    private final Queue<NotificationMessage> queue;
-    private final NotificationJobProcessor<? extends Notification<NotificationMessage>, ? extends NotificationMessage> jobProcessor;
+    private final Queue<T> queue;
 
-    public MemoryChannel(NotificationJobProcessor<? extends Notification<NotificationMessage>, ? extends NotificationMessage> jobProcessor) {
-        this(DEFAULT_CAPACITY, jobProcessor);
+    public MemoryChannel() {
+        this(DEFAULT_CAPACITY);
     }
 
-    public MemoryChannel(int capacity, NotificationJobProcessor<? extends Notification<NotificationMessage>, ? extends NotificationMessage> jobProcessor) {
-        this(new ArrayBlockingQueue<NotificationMessage>(capacity), jobProcessor);
+    public MemoryChannel(int capacity) {
+        this(new ArrayBlockingQueue<T>(capacity));
     }
 
-    public MemoryChannel(Queue<NotificationMessage> queue, NotificationJobProcessor<? extends Notification<NotificationMessage>, ? extends NotificationMessage> jobProcessor) {
+    public MemoryChannel(Queue<T> queue) {
         this.queue = queue;
-        this.jobProcessor = jobProcessor;
     }
 
-    public Queue<NotificationMessage> getQueue() {
+    public Queue<T> getQueue() {
         return queue;
     }
 
     @Override
-    public NotificationJobProcessor<Notification<NotificationMessage>, NotificationMessage> getJobProcessor() {
-        return (NotificationJobProcessor<Notification<NotificationMessage>, NotificationMessage>) jobProcessor;
-    }
-
-    @Override
-    public void sendNotification(Notification notification) {
-        sendNotification(notification.getReceiver(), notification.getMessage());
-    }
-
-    @Override
-    public void sendNotification(NotificationReceiver receiver, NotificationMessage message) {
+    public void sendNotificationMessage(R receiver, T message) {
         queue.add(message);
+    }
+
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public void close() {
     }
 }

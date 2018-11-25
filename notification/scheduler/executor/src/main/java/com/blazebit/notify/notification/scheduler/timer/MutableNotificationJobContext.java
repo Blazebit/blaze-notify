@@ -21,18 +21,18 @@ import com.blazebit.notify.notification.NotificationJobContext;
 public class MutableNotificationJobContext implements NotificationJobContext {
 
     private final int processCount;
-    private Notification<?> lastProcessed;
+    private Notification<?, ?, ?> lastProcessed;
 
     public MutableNotificationJobContext(int processCount) {
         this.processCount = processCount;
     }
 
     @Override
-    public Notification<?> getLastProcessed() {
+    public Notification<?, ?, ?> getLastProcessed() {
         return lastProcessed;
     }
 
-    public void setLastProcessed(Notification<?> lastProcessed) {
+    public void setLastProcessed(Notification<?, ?, ?> lastProcessed) {
         this.lastProcessed = lastProcessed;
     }
 
@@ -40,5 +40,4 @@ public class MutableNotificationJobContext implements NotificationJobContext {
     public int getProcessCount() {
         return processCount;
     }
-
 }

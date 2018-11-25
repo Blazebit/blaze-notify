@@ -17,6 +17,5 @@ package com.blazebit.notify.notification;
 
 public interface Schedule {
 
-    public long nextEpochSchedule();
-
+    long nextEpochSchedule();
 }

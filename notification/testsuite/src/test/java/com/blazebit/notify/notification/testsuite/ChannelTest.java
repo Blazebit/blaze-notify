@@ -15,10 +15,7 @@
  */
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.Channel;
-import com.blazebit.notify.notification.Notification;
-import com.blazebit.notify.notification.NotificationJobScheduler;
-import com.blazebit.notify.notification.NotificationMessage;
+import com.blazebit.notify.notification.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,15 +25,15 @@ import java.util.Queue;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class ChannelTest<N extends Notification<T>, T extends NotificationMessage> extends AbstractConfigurationTest<N, T> {
+public class ChannelTest<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
 
-    public ChannelTest(Channel<N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink) {
-        super(channel, jobScheduler, defaultMessage, sink);
+    public ChannelTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
+        super(channel, jobScheduler, defaultMessage, sink, jobProcessor);
     }
 
     @Test
     public void simpleTest() {
-        channel.sendNotification(null, defaultMessage);
+        channel.sendNotificationMessage(null, defaultMessage);
         assertEquals(1, sink.size());
     }
 

@@ -19,6 +19,7 @@ import com.blazebit.notify.notification.Notification;
 import com.blazebit.notify.notification.NotificationJob;
 import com.blazebit.notify.notification.NotificationJobProcessor;
 import com.blazebit.notify.notification.NotificationJobScheduler;
+import com.blazebit.notify.notification.event.NotificationEventListener;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.*;
@@ -31,6 +32,7 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
     private final PriorityBlockingQueue<JobScheduleEntry> jobQueue;
     private final ScheduledExecutorService executorService;
     private final AtomicReference<ScheduleEntry> nextScheduleEntry = new AtomicReference<>(new ScheduleEntry(Long.MAX_VALUE, null));
+    private final NotificationEventListener eventListener;
     private volatile boolean closed;
 
     public ExecutorServiceNotificationJobScheduler() {
@@ -38,17 +40,18 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
     }
 
     public ExecutorServiceNotificationJobScheduler(ScheduledExecutorService executorService) {
-        this(executorService, DEFAULT_PROCESS_COUNT);
+        this(executorService, null, DEFAULT_PROCESS_COUNT);
     }
 
-    public ExecutorServiceNotificationJobScheduler(ScheduledExecutorService executorService, int processCount) {
+    public ExecutorServiceNotificationJobScheduler(ScheduledExecutorService executorService, NotificationEventListener eventListener, int processCount) {
         this.processCount = processCount;
         this.jobQueue = new PriorityBlockingQueue<>(11);
         this.executorService = executorService;
+        this.eventListener = eventListener;
     }
 
     @Override
-    public boolean add(NotificationJob<?, ?> job) {
+    public boolean add(NotificationJob<?, ?, ?> job) {
         return queue(new JobScheduleEntry(job));
     }
 
@@ -143,12 +146,13 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
     }
 
     public void schedule(JobScheduleEntry scheduleEntry) {
-        NotificationJobProcessor jobProcessor = scheduleEntry.job.getChannel().getJobProcessor();
+        NotificationJobProcessor jobProcessor = scheduleEntry.job.getJobProcessor();
         MutableNotificationJobContext jobContext = new MutableNotificationJobContext(processCount);
-        Notification<?> lastProcessedNotification;
+        Notification<?, ?, ?> lastProcessedNotification;
         do {
             lastProcessedNotification = jobProcessor.process(scheduleEntry.job, jobContext);
             jobContext.setLastProcessed(lastProcessedNotification);
+            eventListener.onNotificationsCreated();
         } while (lastProcessedNotification != null);
     }
 
@@ -164,10 +168,10 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
 
     private static class JobScheduleEntry implements Comparable<JobScheduleEntry> {
 
-        private final NotificationJob<?, ?> job;
+        private final NotificationJob<?, ?, ?> job;
         private final long schedule;
 
-        public JobScheduleEntry(NotificationJob<?, ?> job) {
+        public JobScheduleEntry(NotificationJob<?, ?, ?> job) {
             this.job = job;
             this.schedule = job.getSchedule().nextEpochSchedule();
         }

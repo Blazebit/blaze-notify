@@ -15,6 +15,7 @@
 
     <modules>
         <module>memory</module>
+        <module>smtp</module>
     </modules>
 
 </project>

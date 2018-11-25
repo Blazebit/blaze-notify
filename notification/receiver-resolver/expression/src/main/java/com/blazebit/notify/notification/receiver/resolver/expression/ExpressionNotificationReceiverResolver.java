@@ -21,7 +21,7 @@ import com.blazebit.notify.notification.*;
 
 import java.util.List;
 
-public class ExpressionNotificationReceiverResolver<N extends Notification<T>, T extends NotificationMessage> implements NotificationReceiverResolver<N, T> {
+public class ExpressionNotificationReceiverResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationReceiverResolver<R, N, T> {
 
     private final ExpressionServiceFactory expressionServiceFactory;
     private final Predicate predicate;
@@ -32,7 +32,7 @@ public class ExpressionNotificationReceiverResolver<N extends Notification<T>, T
     }
 
     @Override
-    public List<NotificationReceiver> resolveNotificationReceivers(NotificationJob<N, T> hob, NotificationJobContext jobContext) {
+    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobContext jobContext) {
         // TODO
         // expressionServiceFactory.createInterpreter().evaluate(this.predicate, null);
         return null;

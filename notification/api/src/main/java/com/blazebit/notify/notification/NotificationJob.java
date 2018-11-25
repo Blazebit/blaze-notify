@@ -15,18 +15,17 @@
  */
 package com.blazebit.notify.notification;
 
-import com.blazebit.notify.notification.template.Template;
+public interface NotificationJob<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
-public interface NotificationJob<N extends Notification<T>, T extends NotificationMessage> {
+    Channel<R, N, T> getChannel();
 
-    public Channel<N, T> getChannel();
+    NotificationJobProcessor<R, N, T> getJobProcessor();
 
-    public Template getTemplate();
+    NotificationMessageResolver<R, T> getMessageResolver();
 
-    public Schedule getSchedule();
+    Schedule getSchedule();
 
-    public Schedule getNotificationSchedule();
+    Schedule getNotificationSchedule();
 
-    public NotificationReceiverResolver<N, T> getReceiverResolver();
-
+    NotificationReceiverResolver<R, N, T> getReceiverResolver();
 }

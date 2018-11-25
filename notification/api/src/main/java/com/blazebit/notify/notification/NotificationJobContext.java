@@ -17,8 +17,7 @@ package com.blazebit.notify.notification;
 
 public interface NotificationJobContext {
 
-    public Notification<?> getLastProcessed();
+    Notification<?, ?, ?> getLastProcessed();
 
-    public int getProcessCount();
-
+    int getProcessCount();
 }

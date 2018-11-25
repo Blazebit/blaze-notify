@@ -17,7 +17,7 @@ package com.blazebit.notify.notification;
 
 import java.util.List;
 
-public interface NotificationReceiverResolver<N extends Notification<T>, T extends NotificationMessage> {
+public interface NotificationReceiverResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
-    List<NotificationReceiver> resolveNotificationReceivers(NotificationJob<N, T> job, NotificationJobContext jobContext);
+    List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobContext jobContext);
 }

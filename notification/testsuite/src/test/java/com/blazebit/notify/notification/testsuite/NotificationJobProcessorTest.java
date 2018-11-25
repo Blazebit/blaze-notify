@@ -25,10 +25,10 @@ import java.util.Queue;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class NotificationJobProcessorTest<N extends Notification<T>, T extends NotificationMessage> extends AbstractConfigurationTest<N, T> {
+public class NotificationJobProcessorTest<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
 
-    public NotificationJobProcessorTest(Channel<N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink) {
-        super(channel, jobScheduler, defaultMessage, sink);
+    public NotificationJobProcessorTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
+        super(channel, jobScheduler, defaultMessage, sink, jobProcessor);
     }
 
     @Parameterized.Parameters
@@ -36,8 +36,8 @@ public class NotificationJobProcessorTest<N extends Notification<T>, T extends N
         return createCombinations(new NotificationJobProcessor() {
             @Override
             public Notification process(NotificationJob notificationJob, NotificationJobContext context) {
-                notificationJob.getChannel().sendNotification(null, new SimpleNotificationMessage());
-                notificationJob.getChannel().sendNotification(null, new SimpleNotificationMessage());
+                notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
+                notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
                 return null;
             }
         });
@@ -45,7 +45,7 @@ public class NotificationJobProcessorTest<N extends Notification<T>, T extends N
 
     @Test
     public void simpleTest() {
-        jobScheduler.add(new SimpleNotificationJob((Channel<SimpleNotification<SimpleNotificationMessage>, SimpleNotificationMessage>) channel, new SimpleSchedule(), new SimpleSchedule()));
+        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null /* TODO receiverResolver */));
         jobScheduler.stop();
         assertEquals(2, sink.size());
     }

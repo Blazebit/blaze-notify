@@ -17,9 +17,9 @@
         <module>expression</module>
         <module>notification</module>
         <module>documentation</module>
+        <module>template</module>
     </modules>
 
-    <groupId>com.blazebit</groupId>
     <artifactId>blaze-notify</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
@@ -134,8 +134,8 @@
                     </mapping>
                     <aggregate>true</aggregate>
                     <includes>
-                        <include>**/src/**/*.java</include>
-                        <include>**/src/**/*.xml</include>
+                        <include>**/src/main/**/*.java</include>
+                        <include>**/src/main/**/*.xml</include>
                     </includes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>

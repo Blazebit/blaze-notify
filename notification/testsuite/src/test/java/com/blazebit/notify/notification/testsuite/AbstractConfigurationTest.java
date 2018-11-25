@@ -25,18 +25,20 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 @RunWith(Parameterized.class)
-public abstract class AbstractConfigurationTest<N extends Notification<T>, T extends NotificationMessage> {
+public abstract class AbstractConfigurationTest<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
-    protected Channel<N, T> channel;
+    protected Channel<R, N, T> channel;
     protected NotificationJobScheduler jobScheduler;
     protected T defaultMessage;
     protected Queue<NotificationMessage> sink;
+    protected NotificationJobProcessor<R, N, T> jobProcessor;
 
-    public AbstractConfigurationTest(Channel<N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink) {
+    public AbstractConfigurationTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
         this.channel = channel;
         this.jobScheduler = jobScheduler;
         this.defaultMessage = defaultMessage;
         this.sink = sink;
+        this.jobProcessor = jobProcessor;
     }
 
     @Parameterized.Parameters
@@ -47,7 +49,7 @@ public abstract class AbstractConfigurationTest<N extends Notification<T>, T ext
     public static Object[][] createCombinations(NotificationJobProcessor jobProcessor) {
         Queue<NotificationMessage> sink;
         return new Object[][]{
-                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024), jobProcessor), new ExecutorServiceNotificationJobScheduler(), new SimpleNotificationMessage(), sink}
+                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new ExecutorServiceNotificationJobScheduler(), new SimpleNotificationMessage(), sink, jobProcessor}
         };
     }
 }

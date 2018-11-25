@@ -15,14 +15,13 @@
  */
 package com.blazebit.notify.notification;
 
-public interface Notification<T extends NotificationMessage> {
+public interface Notification<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
-    public T getMessage();
+    NotificationJob<R, N, T> getNotificationJob();
 
-    public Channel<Notification<T>, T> getChannel();
+    Channel<R, N, T> getChannel();
 
-    public NotificationReceiver getReceiver();
+    R getReceiver();
 
-    public long getEpochDeadline();
-
+    long getEpochDeadline();
 }

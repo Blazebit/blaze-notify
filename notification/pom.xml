@@ -17,9 +17,9 @@
         <module>channel</module>
         <module>processor</module>
         <module>scheduler</module>
-        <module>template</module>
         <module>testsuite</module>
         <module>receiver-resolver</module>
+        <module>message-resolver</module>
     </modules>
 
 </project>

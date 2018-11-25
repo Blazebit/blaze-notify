@@ -23,7 +23,7 @@ import com.blazebit.persistence.ReturningResult;
 
 import javax.persistence.EntityManager;
 
-public abstract class AbstractInsertSelectNotificationJobProcessor<N extends Notification<T>, T extends NotificationMessage> implements NotificationJobProcessor<N, T> {
+public abstract class AbstractInsertSelectNotificationJobProcessor<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationJobProcessor<R, N, T> {
 
     private final CriteriaBuilderFactory cbf;
     private final EntityManager em;
@@ -34,7 +34,7 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<N extends Not
     }
 
     @Override
-    public N process(NotificationJob<N, T> notificationJob, NotificationJobContext context) {
+    public N process(NotificationJob<R, N, T> notificationJob, NotificationJobContext context) {
         InsertCriteriaBuilder<?> insertCriteriaBuilder = cbf.insert(em, getNotificationEntityClass())
                 .from(getNotificationReceiverEntityClass(), "receiver")
                 .from(getNotificationJobEntityClass(), "job");
@@ -72,7 +72,7 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<N extends Not
 
     protected abstract String getNotificationReceiverIdPath();
 
-    protected abstract Long getJobId(NotificationJob<N, T> job);
+    protected abstract Long getJobId(NotificationJob<R, N, T> job);
 
     protected abstract Long getReceiverId(NotificationReceiver receiver);
 

@@ -19,9 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 public interface NotificationJobScheduler {
 
-    public boolean add(NotificationJob<?, ?> job);
+    boolean add(NotificationJob<?, ?, ?> job);
 
-    public void stop();
+    void stop();
 
-    public void stop(long timeout, TimeUnit unit);
+    void stop(long timeout, TimeUnit unit);
 }
