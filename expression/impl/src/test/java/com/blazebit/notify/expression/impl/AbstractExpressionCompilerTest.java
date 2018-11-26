@@ -119,39 +119,39 @@ public abstract class AbstractExpressionCompilerTest {
         return new ConjunctivePredicate(booleanDomainType(), Arrays.asList(conjuncts));
     }
 
-    protected Atom time(Calendar value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofCalendar(value));
+    protected Literal time(Calendar value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofCalendar(value));
     }
 
-    protected Atom time(String value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofDateTimeString(value));
+    protected Literal time(String value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofDateTimeString(value));
     }
 
-    protected Atom interval(String value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofTemporalIntervalString(value));
+    protected Literal interval(String value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofTemporalIntervalString(value));
     }
 
     protected static String wrapTimestamp(String dateTimeStr) {
         return "TIMESTAMP('" + dateTimeStr + "')";
     }
 
-    protected Atom string(String value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofString(value));
+    protected Literal string(String value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofString(value));
     }
 
-    protected Atom number(long value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofBigDecimal(new BigDecimal(value)));
+    protected Literal number(long value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofBigDecimal(new BigDecimal(value)));
     }
 
-    protected Atom number(BigDecimal value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofBigDecimal(value));
+    protected Literal number(BigDecimal value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofBigDecimal(value));
     }
 
-    protected Atom number(String value) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofNumericString(value));
+    protected Literal number(String value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofNumericString(value));
     }
 
-    protected Atom attr(String entity, String... attributes) {
+    protected Path attr(String entity, String... attributes) {
         EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType(entity);
         DomainType type = entityDomainType;
         List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(attributes.length);
@@ -174,11 +174,11 @@ public abstract class AbstractExpressionCompilerTest {
                 }
             }
         }
-        return new Atom(new Path(entity, pathAttributes, type));
+        return new Path(entity, pathAttributes, type);
     }
 
-    protected Atom enumValue(String enumName, String enumKey) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofEnumValue((EnumDomainType) domainModel.getType(enumName), enumKey));
+    protected Literal enumValue(String enumName, String enumKey) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofEnumValue((EnumDomainType) domainModel.getType(enumName), enumKey));
     }
 
 //	protected static CollectionAtom collectionAttr(String identifier) {
@@ -237,7 +237,7 @@ public abstract class AbstractExpressionCompilerTest {
         return new InPredicate(booleanDomainType(), value, Arrays.asList(items), false);
     }
 
-    protected Atom functionInvocation(String functionName, Expression... argumentArray) {
+    protected FunctionInvocation functionInvocation(String functionName, Expression... argumentArray) {
         DomainFunction domainFunction = domainModel.getFunction(functionName);
         Map<DomainFunctionArgument, DomainType> argumentTypes = new HashMap<>();
         Map<DomainFunctionArgument, Expression> arguments = new LinkedHashMap<>();
@@ -246,7 +246,7 @@ public abstract class AbstractExpressionCompilerTest {
             arguments.put(domainFunction.getArguments().get(i), argumentArray[i]);
         }
         DomainType functionType = domainModel.getFunctionTypeResolver(functionName).resolveType(domainModel, domainFunction, argumentTypes);
-        return new Atom(new FunctionInvocation(functionName, arguments, functionType));
+        return new FunctionInvocation(functionName, arguments, functionType);
     }
 
     private DomainType booleanDomainType() {

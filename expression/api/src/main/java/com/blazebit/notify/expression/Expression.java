@@ -32,13 +32,15 @@ public interface Expression {
 
         void visit(DisjunctivePredicate e);
 
-        void visit(Atom e);
-
         void visit(ComparisonPredicate e);
 
         void visit(IsNullPredicate e);
 
         void visit(Path e);
+
+        void visit(FunctionInvocation e);
+
+        void visit(Literal e);
     }
 
     interface ResultVisitor<T> {
@@ -54,13 +56,15 @@ public interface Expression {
 
         T visit(DisjunctivePredicate e);
 
-        T visit(Atom e);
-
         T visit(ComparisonPredicate e);
 
         T visit(IsNullPredicate e);
 
         T visit(Path e);
+
+        T visit(FunctionInvocation e);
+
+        T visit(Literal e);
     }
 
     DomainType getType();

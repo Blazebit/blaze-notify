@@ -94,13 +94,13 @@ atom
     ;
 
 enum_literal_or_path
-    : alias=identifier (DOT attributeNames+=identifier) (DOT attributeNames+=identifier)* #EnumLiteralOrPath
+    : pathRoot=identifier (DOT pathElements+=identifier)+
     ;
 
 entity_literal_or_function_invocation
     : name=identifier                                                                                                                                                                                   #RootPathOrNoArgFunctionInvocation
-    | name=identifier LP (args+=conditional_expression|arithmetic_expression) (COMMA (args+=conditional_expression|arithmetic_expression))* RP                                                          #IndexedFunctionInvocation
-    | name=identifier LP (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression) (COMMA (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression))* RP  #NamedInvocation
+    | name=identifier LP ((args+=conditional_expression|arithmetic_expression) COMMA)* RP                                                                                                               #IndexedFunctionInvocation
+    | name=identifier LP (argNames+=identifier OP_EQ args+=conditional_expression|arithmetic_expression) (COMMA (argNames+=identifier OP_EQ args+=conditional_expression|arithmetic_expression))* RP    #NamedInvocation
     ;
 
 datetime_literal

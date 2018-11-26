@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class FunctionInvocation {
+public class FunctionInvocation implements ArithmeticExpression {
     private final String functionName;
     private final Map<DomainFunctionArgument, Expression> arguments;
     private final DomainType type;
@@ -41,8 +41,19 @@ public class FunctionInvocation {
         return arguments;
     }
 
+    @Override
     public DomainType getType() {
         return type;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

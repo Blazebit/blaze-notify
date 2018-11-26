@@ -193,7 +193,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Expression visitArithmeticInItem(PredicateParser.ArithmeticInItemContext ctx) {
-        Atom atom = (Atom) ctx.atom().accept(this);
+        ArithmeticExpression atom = (ArithmeticExpression) ctx.atom().accept(this);
 
         if (ctx.sign == null) {
             return new ArithmeticFactor(atom, false);
@@ -213,22 +213,22 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Expression visitTimestampLiteral(PredicateParser.TimestampLiteralContext ctx) {
-        return new Atom(literalFactory.ofDateTimeString(ctx.content.getText()));
+        return new Literal(literalFactory.ofDateTimeString(ctx.content.getText()));
     }
 
     @Override
     public Expression visitTemporalIntervalLiteral(PredicateParser.TemporalIntervalLiteralContext ctx) {
-        return new Atom(literalFactory.ofTemporalIntervalString(ctx.content.getText()));
+        return new Literal(literalFactory.ofTemporalIntervalString(ctx.content.getText()));
     }
 
     @Override
     public Expression visitStringLiteral(PredicateParser.StringLiteralContext ctx) {
-        return new Atom(literalFactory.ofQuotedString(ctx.STRING_LITERAL().getText()));
+        return new Literal(literalFactory.ofQuotedString(ctx.STRING_LITERAL().getText()));
     }
 
     @Override
     public Expression visitNumericLiteral(PredicateParser.NumericLiteralContext ctx) {
-        return new Atom(literalFactory.ofNumericString(ctx.NUMERIC_LITERAL().getText()));
+        return new Literal(literalFactory.ofNumericString(ctx.NUMERIC_LITERAL().getText()));
     }
 
     @Override
@@ -241,55 +241,43 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             collectionDomainType = domainModel.getCollectionType(literalList.get(0).getType());
         }
 
-        return new Atom(literalFactory.ofCollectionValues(collectionDomainType, literalList));
+        return new Literal(literalFactory.ofCollectionValues(collectionDomainType, literalList));
     }
 
     @Override
-    public Expression visitEnumLiteralOrPath(PredicateParser.EnumLiteralOrPathContext ctx) {
-        String alias = ctx.alias.getText();
+    public Expression visitEnum_literal_or_path(PredicateParser.Enum_literal_or_pathContext ctx) {
+        String alias = ctx.pathRoot.getText();
         DomainType type = compileContext.getRootDomainType(alias);
         if (type == null) {
-            if (ctx.attributeNames.size() == 1) {
-                DomainType possibleEnumType = domainModel.getType(alias);
-                if (possibleEnumType instanceof EnumDomainType) {
-                    return new Atom(literalFactory.ofEnumValue((EnumDomainType) possibleEnumType, ctx.attributeNames.get(0).getText()));
+            if (ctx.pathElements.size() == 1) {
+                type = domainModel.getType(alias);
+                if (type instanceof EnumDomainType) {
+                    return new Literal(literalFactory.ofEnumValue((EnumDomainType) type, ctx.pathElements.get(0).getText()));
                 }
             }
-            throw unknownEntityType(alias);
+            throw unknownType(alias);
         } else {
-            List<PredicateParser.IdentifierContext> attributeNames = ctx.attributeNames;
-            if (attributeNames.size() == 0) {
-                return new Atom(new Path(alias, Path.empty(), type));
-            }
-            EntityDomainType entityType;
-            if (type instanceof EntityDomainType) {
-                entityType = (EntityDomainType) type;
-            } else if (type instanceof CollectionDomainType) {
-                entityType = (EntityDomainType) ((CollectionDomainType) type).getElementType();
-            } else {
-                throw noEntityDomainType(alias);
-            }
-            List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(attributeNames.size());
-            for (int i = 0; ; ) {
-                String attributeName = attributeNames.get(i).getText();
-                EntityDomainTypeAttribute attribute = entityType.getAttribute(attributeName);
-                pathAttributes.add(attribute);
-                type = attribute.getType();
-                i++;
-                if (i == attributeNames.size()) {
-                    break;
-                } else {
-                    if (type instanceof EntityDomainType) {
-                        entityType = (EntityDomainType) type;
-                    } else if (type instanceof CollectionDomainType) {
-                        entityType = (EntityDomainType) ((CollectionDomainType) type).getElementType();
+            List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(ctx.pathElements.size());
+            for (int pathElemIdx = 0; pathElemIdx < ctx.pathElements.size(); pathElemIdx++) {
+                String pathElement = ctx.pathElements.get(pathElemIdx).getText();
+                if (type instanceof CollectionDomainType) {
+                    type = ((CollectionDomainType) type).getElementType();
+                }
+                if (type instanceof EntityDomainType) {
+                    EntityDomainType entityType = ((EntityDomainType) type);
+                    EntityDomainTypeAttribute attribute = entityType.getAttribute(pathElement);
+                    pathAttributes.add(attribute);
+                    if (attribute == null) {
+                        throw unknownEntityAttribute(entityType, pathElement);
                     } else {
-                        throw noEntityDomainType(attributeName);
+                        type = attribute.getType();
                     }
+                } else {
+                    throw unsupportedType(type.toString());
                 }
             }
 
-            return new Atom(new Path(alias, pathAttributes, type));
+            return new Path(alias, pathAttributes, type);
         }
     }
 
@@ -302,11 +290,11 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             if (domainType == null) {
                 throw unknownFunction(aliasOrFunctionName);
             }
-            return new Atom(new Path(aliasOrFunctionName, Path.empty(), domainType));
+            return new Path(aliasOrFunctionName, Path.empty(), domainType);
         } else {
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(aliasOrFunctionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, Collections.<DomainFunctionArgument, DomainType>emptyMap());
-            return new Atom(new FunctionInvocation(aliasOrFunctionName, Collections.<DomainFunctionArgument, Expression>emptyMap(), functionType));
+            return new FunctionInvocation(aliasOrFunctionName, Collections.<DomainFunctionArgument, Expression>emptyMap(), functionType);
         }
     }
 
@@ -334,7 +322,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             }
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(functionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
-            return new Atom(new FunctionInvocation(functionName, arguments, functionType));
+            return new FunctionInvocation(functionName, arguments, functionType);
         }
     }
 
@@ -353,7 +341,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
                     EntityDomainTypeAttribute attribute = entityDomainType.getAttribute(argNames.get(i).getText());
                     arguments.put(attribute, literalList.get(i));
                 }
-                return new Atom(literalFactory.ofEntityAttributeValues(entityDomainType, arguments));
+                return new Literal(literalFactory.ofEntityAttributeValues(entityDomainType, arguments));
             } else {
                 throw unknownFunction(entityOrFunctionName);
             }
@@ -376,7 +364,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             }
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(entityOrFunctionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
-            return new Atom(new FunctionInvocation(entityOrFunctionName, arguments, functionType));
+            return new FunctionInvocation(entityOrFunctionName, arguments, functionType);
         }
     }
 //    @Override
@@ -419,16 +407,20 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         return new TypeErrorException(String.format("%s %s %s", t1, predicateType, t2));
     }
 
-    private DomainModelException unknownEntityType(String identifier) {
-        return new DomainModelException(String.format("Undefined entity '%s'", identifier));
+    private DomainModelException unknownType(String typeName) {
+        return new DomainModelException(String.format("Undefined type '%s'", typeName));
+    }
+
+    private DomainModelException unknownEntityAttribute(EntityDomainType entityDomainType, String attributeName) {
+        return new DomainModelException(String.format("Attribute %s undefined for entity %s", attributeName, entityDomainType));
     }
 
     private DomainModelException unknownFunction(String identifier) {
         return new DomainModelException(String.format("Undefined function '%s'", identifier));
     }
 
-    private TypeErrorException noEntityDomainType(String identifier) {
-        return new TypeErrorException(String.format("Resolved type for identifier %s is no instance of %s", identifier, EntityDomainType.class));
+    private TypeErrorException unsupportedType(String typeName) {
+        return new TypeErrorException(String.format("Resolved type for identifier %s is not supported", typeName));
     }
 
     private TypeErrorException cannotResolveOperationType(DomainOperator operator, List<DomainType> operandTypes) {

@@ -50,12 +50,17 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
     }
 
     @Override
-    public void visit(Path e) {
+    public void visit(FunctionInvocation e) {
 
     }
 
     @Override
-    public void visit(Atom e) {
+    public void visit(Literal e) {
+
+    }
+
+    @Override
+    public void visit(Path e) {
 
     }
 

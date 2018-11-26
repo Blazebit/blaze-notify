@@ -17,41 +17,43 @@
 package com.blazebit.notify.expression;
 
 import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
 
 import java.util.Objects;
 
-public class Literal<T> {
+public class Literal implements ArithmeticExpression {
 
-    private final T value;
-    private final DomainType type;
+    private final ResolvedLiteral resolvedLiteral;
 
-    private Literal(T value, DomainType type) {
-        this.value = value;
-        this.type = type;
+    public Literal(ResolvedLiteral resolvedLiteral) {
+        this.resolvedLiteral = resolvedLiteral;
     }
 
-    public T getValue() {
-        return value;
-    }
-
+    @Override
     public DomainType getType() {
-        return type;
+        return resolvedLiteral.getType();
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Literal<?> literal = (Literal<?>) o;
-        return Objects.equals(value, literal.value);
+        Literal literal = (Literal) o;
+        return Objects.equals(resolvedLiteral, literal.resolvedLiteral);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
-    }
-
-    public static <T> Literal<T> of(T value, DomainType type) {
-        return new Literal<T>(value, type);
+        return Objects.hash(resolvedLiteral);
     }
 }

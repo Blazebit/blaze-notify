@@ -21,9 +21,8 @@ import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-public class Path {
+public class Path implements ArithmeticExpression {
     private final String alias;
     private final List<EntityDomainTypeAttribute> attributes;
     private final DomainType type;
@@ -46,8 +45,19 @@ public class Path {
         return attributes;
     }
 
+    @Override
     public DomainType getType() {
         return type;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
