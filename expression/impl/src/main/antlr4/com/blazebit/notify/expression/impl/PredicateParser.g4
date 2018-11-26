@@ -42,7 +42,7 @@ comparison_expression
     : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		                                        #ComparisonPredicate
     | left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression                                        #BetweenPredicate
     | arithmetic_expression 	(not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP         #InPredicate
-	| arithmetic_expression 	(not=NOT)? IN 			attribute			                                                                #InCollectionPredicate
+	| arithmetic_expression 	(not=NOT)? IN 			path			                                                                #InCollectionPredicate
     | left=arithmetic_expression		kind=(IS_NULL | IS_NOT_NULL)                                                                        #IsNullPredicate
     ;
 
@@ -84,8 +84,8 @@ arithmetic_primary
     ;
 
 atom
-    : attribute
-    | function_invocation
+    : path
+    | entity_literal_or_function_invocation
     | datetime_literal
     | temporal_interval_literal
     | numeric_literal
@@ -93,13 +93,14 @@ atom
     | enum_literal
     ;
 
-attribute
-    : entityName=identifier DOT attributeName=identifier
+path
+    : alias=identifier (DOT attributeNames+=identifier)+
     ;
 
-function_invocation
-    : functionName=identifier                                                                        #NoargFunctionInvocation
-    | functionName=identifier LP ((args+=conditional_expression|arithmetic_expression) COMMA)* RP    #FunctionInvocation
+entity_literal_or_function_invocation
+    : name=identifier                                                                                                                                                                                   #RootPathOrNoArgFunctionInvocation
+    | name=identifier LP (args+=conditional_expression|arithmetic_expression) (COMMA (args+=conditional_expression|arithmetic_expression))* RP                                                          #IndexedFunctionInvocation
+    | name=identifier LP (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression) (COMMA (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression))* RP  #NamedInvocation
     ;
 
 /****************************************************************

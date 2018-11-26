@@ -41,11 +41,12 @@ public class DomainBuilderImpl implements DomainBuilder {
     private Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType = new HashMap<>();
     private Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers = new HashMap<>();
     private Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType = new HashMap<>();
-    private NumericLiteralTypeResolver numericLiteralTypeResolver;
-    private BooleanLiteralTypeResolver booleanLiteralTypeResolver;
-    private StringLiteralTypeResolver stringLiteralTypeResolver;
-    private TemporalLiteralTypeResolver temporalLiteralTypeResolver;
-    private EnumLiteralTypeResolver enumLiteralTypeResolver;
+    private NumericLiteralResolver numericLiteralResolver;
+    private BooleanLiteralResolver booleanLiteralResolver;
+    private StringLiteralResolver stringLiteralResolver;
+    private TemporalLiteralResolver temporalLiteralResolver;
+    private EnumLiteralResolver enumLiteralResolver;
+    private EntityLiteralResolver entityLiteralResolver;
 
     DomainBuilderImpl withDomainTypeDefinition(DomainTypeDefinitionImplementor<?> domainTypeDefinition) {
         domainTypeDefinitions.put(domainTypeDefinition.getName(), domainTypeDefinition);
@@ -76,32 +77,38 @@ public class DomainBuilderImpl implements DomainBuilder {
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(BooleanLiteralTypeResolver typeResolver) {
-        this.booleanLiteralTypeResolver = typeResolver;
+    public DomainBuilder withLiteralTypeResolver(BooleanLiteralResolver typeResolver) {
+        this.booleanLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(NumericLiteralTypeResolver typeResolver) {
-        this.numericLiteralTypeResolver = typeResolver;
+    public DomainBuilder withLiteralTypeResolver(NumericLiteralResolver typeResolver) {
+        this.numericLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(StringLiteralTypeResolver typeResolver) {
-        this.stringLiteralTypeResolver = typeResolver;
+    public DomainBuilder withLiteralTypeResolver(StringLiteralResolver typeResolver) {
+        this.stringLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver) {
-        this.temporalLiteralTypeResolver = typeResolver;
+    public DomainBuilder withLiteralTypeResolver(TemporalLiteralResolver typeResolver) {
+        this.temporalLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(EnumLiteralTypeResolver typeResolver) {
-        this.enumLiteralTypeResolver = typeResolver;
+    public DomainBuilder withLiteralTypeResolver(EnumLiteralResolver typeResolver) {
+        this.enumLiteralResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(EntityLiteralResolver typeResolver) {
+        this.entityLiteralResolver = typeResolver;
         return this;
     }
 
@@ -473,6 +480,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, domainPredicateTypeResolvers, domainPredicateTypeResolversByJavaType, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver, enumLiteralTypeResolver);
+        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, domainPredicateTypeResolvers, domainPredicateTypeResolversByJavaType, numericLiteralResolver, booleanLiteralResolver, stringLiteralResolver, temporalLiteralResolver, enumLiteralResolver, entityLiteralResolver);
     }
 }

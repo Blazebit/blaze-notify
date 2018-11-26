@@ -24,15 +24,17 @@ import com.blazebit.notify.domain.runtime.model.*;
  */
 public interface DomainBuilder {
 
-    public DomainBuilder withLiteralTypeResolver(BooleanLiteralTypeResolver typeResolver);
+    public DomainBuilder withLiteralTypeResolver(BooleanLiteralResolver typeResolver);
 
-    public DomainBuilder withLiteralTypeResolver(NumericLiteralTypeResolver typeResolver);
+    public DomainBuilder withLiteralTypeResolver(NumericLiteralResolver typeResolver);
 
-    public DomainBuilder withLiteralTypeResolver(StringLiteralTypeResolver typeResolver);
+    public DomainBuilder withLiteralTypeResolver(StringLiteralResolver typeResolver);
 
-    public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver);
+    public DomainBuilder withLiteralTypeResolver(TemporalLiteralResolver typeResolver);
 
-    public DomainBuilder withLiteralTypeResolver(EnumLiteralTypeResolver typeResolver);
+    public DomainBuilder withLiteralTypeResolver(EnumLiteralResolver typeResolver);
+
+    public DomainBuilder withLiteralTypeResolver(EntityLiteralResolver typeResolver);
 
     public DomainBuilder withFunctionTypeResolver(String functionName, DomainFunctionTypeResolver functionTypeResolver);
 

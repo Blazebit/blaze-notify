@@ -34,13 +34,14 @@ public class DomainModelImpl implements DomainModel {
     private final Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType;
     private final Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers;
     private final Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType;
-    private final NumericLiteralTypeResolver numericLiteralTypeResolver;
-    private final BooleanLiteralTypeResolver booleanLiteralTypeResolver;
-    private final StringLiteralTypeResolver stringLiteralTypeResolver;
-    private final TemporalLiteralTypeResolver temporalLiteralTypeResolver;
-    private final EnumLiteralTypeResolver enumLiteralTypeResolver;
+    private final NumericLiteralResolver numericLiteralResolver;
+    private final BooleanLiteralResolver booleanLiteralResolver;
+    private final StringLiteralResolver stringLiteralResolver;
+    private final TemporalLiteralResolver temporalLiteralResolver;
+    private final EnumLiteralResolver enumLiteralResolver;
+    private final EntityLiteralResolver entityLiteralResolver;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers, Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver, EnumLiteralTypeResolver enumLiteralTypeResolver) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers, Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType, NumericLiteralResolver numericLiteralResolver, BooleanLiteralResolver booleanLiteralResolver, StringLiteralResolver stringLiteralResolver, TemporalLiteralResolver temporalLiteralResolver, EnumLiteralResolver enumLiteralResolver, EntityLiteralResolver entityLiteralResolver) {
         this.domainTypes = domainTypes;
         this.domainTypesByJavaType = domainTypesByJavaType;
         this.domainFunctions = domainFunctions;
@@ -49,11 +50,12 @@ public class DomainModelImpl implements DomainModel {
         this.domainOperationTypeResolversByJavaType = domainOperationTypeResolversByJavaType;
         this.domainPredicateTypeResolvers = domainPredicateTypeResolvers;
         this.domainPredicateTypeResolversByJavaType = domainPredicateTypeResolversByJavaType;
-        this.numericLiteralTypeResolver = numericLiteralTypeResolver;
-        this.booleanLiteralTypeResolver = booleanLiteralTypeResolver;
-        this.stringLiteralTypeResolver = stringLiteralTypeResolver;
-        this.temporalLiteralTypeResolver = temporalLiteralTypeResolver;
-        this.enumLiteralTypeResolver = enumLiteralTypeResolver;
+        this.numericLiteralResolver = numericLiteralResolver;
+        this.booleanLiteralResolver = booleanLiteralResolver;
+        this.stringLiteralResolver = stringLiteralResolver;
+        this.temporalLiteralResolver = temporalLiteralResolver;
+        this.enumLiteralResolver = enumLiteralResolver;
+        this.entityLiteralResolver = entityLiteralResolver;
     }
 
     @Override
@@ -110,27 +112,32 @@ public class DomainModelImpl implements DomainModel {
     }
 
     @Override
-    public NumericLiteralTypeResolver getNumericLiteralTypeResolver() {
-        return numericLiteralTypeResolver;
+    public NumericLiteralResolver getNumericLiteralResolver() {
+        return numericLiteralResolver;
     }
 
     @Override
-    public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver() {
-        return booleanLiteralTypeResolver;
+    public BooleanLiteralResolver getBooleanLiteralResolver() {
+        return booleanLiteralResolver;
     }
 
     @Override
-    public StringLiteralTypeResolver getStringLiteralTypeResolver() {
-        return stringLiteralTypeResolver;
+    public StringLiteralResolver getStringLiteralResolver() {
+        return stringLiteralResolver;
     }
 
     @Override
-    public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver() {
-        return temporalLiteralTypeResolver;
+    public TemporalLiteralResolver getTemporalLiteralResolver() {
+        return temporalLiteralResolver;
     }
 
     @Override
-    public EnumLiteralTypeResolver getEnumLiteralTypeResolver() {
-        return enumLiteralTypeResolver;
+    public EnumLiteralResolver getEnumLiteralResolver() {
+        return enumLiteralResolver;
+    }
+
+    @Override
+    public EntityLiteralResolver getEntityLiteralResolver() {
+        return entityLiteralResolver;
     }
 }

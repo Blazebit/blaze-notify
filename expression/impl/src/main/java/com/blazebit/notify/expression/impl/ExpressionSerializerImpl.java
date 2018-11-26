@@ -50,7 +50,7 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
     }
 
     @Override
-    public void visit(Attribute e) {
+    public void visit(Path e) {
 
     }
 
@@ -99,7 +99,7 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
             sb.append(" NOT");
         }
         sb.append(" IN ");
-        if (e.getInItems().size() == 1 && e.getInItems().get(0) instanceof Attribute) {
+        if (e.getInItems().size() == 1 && e.getInItems().get(0) instanceof Path) {
             e.getInItems().get(0).accept(this);
         } else {
             sb.append('(');

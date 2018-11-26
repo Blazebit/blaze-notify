@@ -29,19 +29,19 @@ import java.util.*;
  */
 public class PersistenceDomainContributor implements DomainContributor {
 
-    private static final BooleanLiteralTypeResolver BOOLEAN_LITERAL_TYPE_RESOLVER = new BooleanLiteralTypeResolver() {
+    private static final BooleanLiteralResolver BOOLEAN_LITERAL_TYPE_RESOLVER = new BooleanLiteralResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value) {
             return new DefaultResolvedLiteral(domainModel.getType(Boolean.class), value);
         }
     };
-    private static final NumericLiteralTypeResolver NUMERIC_LITERAL_TYPE_RESOLVER = new NumericLiteralTypeResolver() {
+    private static final NumericLiteralResolver NUMERIC_LITERAL_TYPE_RESOLVER = new NumericLiteralResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
             return new DefaultResolvedLiteral(domainModel.getType(BigDecimal.class), value);
         }
     };
-    private static final TemporalLiteralTypeResolver TEMPORAL_LITERAL_TYPE_RESOLVER = new TemporalLiteralTypeResolver() {
+    private static final TemporalLiteralResolver TEMPORAL_LITERAL_TYPE_RESOLVER = new TemporalLiteralResolver() {
         @Override
         public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
             return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
@@ -52,7 +52,7 @@ public class PersistenceDomainContributor implements DomainContributor {
             return new DefaultResolvedLiteral(domainModel.getType(TemporalInterval.class), value);
         }
     };
-    private static final StringLiteralTypeResolver STRING_LITERAL_TYPE_RESOLVER = new StringLiteralTypeResolver() {
+    private static final StringLiteralResolver STRING_LITERAL_TYPE_RESOLVER = new StringLiteralResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, String value) {
             return new DefaultResolvedLiteral(domainModel.getType(String.class), value);

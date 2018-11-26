@@ -23,9 +23,7 @@ import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Christian Beikov
@@ -37,7 +35,8 @@ public class DomainFunctionImpl implements DomainFunction {
     private final int minArgumentCount;
     private final int argumentCount;
     private final DomainType resultType;
-    private final List<DomainFunctionArgument> arguments;
+    private final List<DomainFunctionArgument> argumentList;
+    private final Map<String, DomainFunctionArgument> argumentMap;
     private final Map<Class<?>, Object> metadata;
 
     @SuppressWarnings("unchecked")
@@ -50,15 +49,21 @@ public class DomainFunctionImpl implements DomainFunction {
         int size = Math.max(argumentTypeDefinitions.size(), argumentCount);
         int argumentDefinitionSize = argumentTypeDefinitions.size();
         List<DomainFunctionArgument> domainFunctionArguments = new ArrayList<>(size);
+        Map<String, DomainFunctionArgument> domainFunctionArgumentMap = new LinkedHashMap<>(size);
         for (int i = 0; i < size; i++) {
             if (i < argumentDefinitionSize) {
-                domainFunctionArguments.add(argumentTypeDefinitions.get(i).createFunctionArgument(this, context));
+                DomainFunctionArgument functionArgument = argumentTypeDefinitions.get(i).createFunctionArgument(this, context);
+                domainFunctionArguments.add(functionArgument);
+                if (functionArgument.getName() != null) {
+                    domainFunctionArgumentMap.put(functionArgument.getName(), functionArgument);
+                }
             } else {
                 DomainFunctionArgumentDefinitionImpl argumentDefinition = new DomainFunctionArgumentDefinitionImpl(functionDefinition, null, i, null, null, false);
                 domainFunctionArguments.add(argumentDefinition.createFunctionArgument(this, context));
             }
         }
-        this.arguments = domainFunctionArguments;
+        this.argumentList = Collections.unmodifiableList(domainFunctionArguments);
+        this.argumentMap = Collections.unmodifiableMap(domainFunctionArgumentMap);
         this.metadata = context.createMetadata(functionDefinition);
     }
 
@@ -79,7 +84,17 @@ public class DomainFunctionImpl implements DomainFunction {
 
     @Override
     public List<DomainFunctionArgument> getArguments() {
-        return arguments;
+        return argumentList;
+    }
+
+    @Override
+    public DomainFunctionArgument getArgument(String argumentName) {
+        return argumentMap.get(argumentName);
+    }
+
+    @Override
+    public DomainFunctionArgument getArgument(int argumentIndex) {
+        return argumentList.get(argumentIndex);
     }
 
     @Override

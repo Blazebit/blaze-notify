@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.Calendar;
+import java.util.Collection;
 
-public class DefaultTemporalLiteralTypeResolver implements TemporalLiteralTypeResolver {
-    @Override
-    public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
-        return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
-    }
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public interface CollectionLiteralTypeResolver {
 
-    @Override
-    public ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value) {
-        return new DefaultResolvedLiteral(domainModel.getType(TemporalInterval.class), value);
-    }
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, CollectionDomainType collectionDomainType, Collection<ResolvedLiteral> values);
 }

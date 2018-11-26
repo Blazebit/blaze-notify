@@ -15,9 +15,16 @@
  */
 package com.blazebit.notify.domain.runtime.model;
 
-public class DefaultStringLiteralTypeResolver implements StringLiteralTypeResolver {
+import java.util.Calendar;
+
+public class DefaultTemporalLiteralResolver implements TemporalLiteralResolver {
     @Override
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, String value) {
-        return new DefaultResolvedLiteral(domainModel.getType(String.class), value);
+    public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
+        return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
+    }
+
+    @Override
+    public ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value) {
+        return new DefaultResolvedLiteral(domainModel.getType(TemporalInterval.class), value);
     }
 }

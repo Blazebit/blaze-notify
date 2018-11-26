@@ -16,16 +16,14 @@
 package com.blazebit.notify.expression.impl;
 
 import com.blazebit.notify.domain.runtime.model.*;
-import com.blazebit.notify.expression.DomainModelException;
-import com.blazebit.notify.expression.EnumValue;
-import com.blazebit.notify.expression.SyntaxErrorException;
-import com.blazebit.notify.expression.TypeErrorException;
+import com.blazebit.notify.expression.*;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Map;
 
 public class LiteralFactory {
 
@@ -56,19 +54,21 @@ public class LiteralFactory {
     private static final String TEMPORAL_INTERVAL_SECONDS_FIELD = "seconds";
 
     private final DomainModel domainModel;
-    private final NumericLiteralTypeResolver numericLiteralTypeResolver;
-    private final BooleanLiteralTypeResolver booleanLiteralTypeResolver;
-    private final StringLiteralTypeResolver stringLiteralTypeResolver;
-    private final TemporalLiteralTypeResolver temporalLiteralTypeResolver;
-    private final EnumLiteralTypeResolver enumLiteralTypeResolver;
+    private final NumericLiteralResolver numericLiteralResolver;
+    private final BooleanLiteralResolver booleanLiteralResolver;
+    private final StringLiteralResolver stringLiteralResolver;
+    private final TemporalLiteralResolver temporalLiteralResolver;
+    private final EnumLiteralResolver enumLiteralResolver;
+    private final EntityLiteralResolver entityLiteralResolver;
 
     public LiteralFactory(DomainModel domainModel) {
         this.domainModel = domainModel;
-        this.numericLiteralTypeResolver = domainModel.getNumericLiteralTypeResolver();
-        this.booleanLiteralTypeResolver = domainModel.getBooleanLiteralTypeResolver();
-        this.stringLiteralTypeResolver = domainModel.getStringLiteralTypeResolver();
-        this.temporalLiteralTypeResolver = domainModel.getTemporalLiteralTypeResolver();
-        this.enumLiteralTypeResolver = domainModel.getEnumLiteralTypeResolver();
+        this.numericLiteralResolver = domainModel.getNumericLiteralResolver();
+        this.booleanLiteralResolver = domainModel.getBooleanLiteralResolver();
+        this.stringLiteralResolver = domainModel.getStringLiteralResolver();
+        this.temporalLiteralResolver = domainModel.getTemporalLiteralResolver();
+        this.enumLiteralResolver = domainModel.getEnumLiteralResolver();
+        this.entityLiteralResolver = domainModel.getEntityLiteralResolver();
     }
 
     public ResolvedLiteral ofEnumValue(EnumValue enumValue) {
@@ -77,13 +77,20 @@ public class LiteralFactory {
             throw new DomainModelException(String.format("Undefined enum type '%s'", enumValue.getEnumName()));
         } else if (domainType.getKind() == DomainType.DomainTypeKind.ENUM) {
             EnumDomainTypeValue domainEnumValue = ((EnumDomainType) domainType).getEnumValues().get(enumValue.getEnumKey());
-            if (enumLiteralTypeResolver == null) {
+            if (enumLiteralResolver == null) {
                 throw new DomainModelException("No literal type resolver for enum literals defined");
             }
-            return enumLiteralTypeResolver.resolveLiteral(domainModel, domainEnumValue);
+            return enumLiteralResolver.resolveLiteral(domainModel, domainEnumValue);
         } else {
             throw new TypeErrorException("Expected domain type of kind " + DomainType.DomainTypeKind.ENUM + " for type name " + enumValue.getEnumName());
         }
+    }
+
+    public ResolvedLiteral ofEntityAttributeValues(EntityDomainType entityDomainType, Map<EntityDomainTypeAttribute, Expression> attributeValues) {
+        if (entityLiteralResolver == null) {
+            throw new DomainModelException("No literal type resolver for enum literals defined");
+        }
+        return entityLiteralResolver.resolveLiteral(domainModel, entityDomainType, attributeValues);
     }
 
     public ResolvedLiteral ofTemporalIntervalString(String intervalString) {
@@ -109,10 +116,10 @@ public class LiteralFactory {
         }
 
         TemporalInterval interval = new TemporalInterval(years, months, days, hours, minutes, seconds);
-        if (temporalLiteralTypeResolver == null) {
+        if (temporalLiteralResolver == null) {
             throw new DomainModelException("No literal type resolver for temporal interval literals defined");
         }
-        return temporalLiteralTypeResolver.resolveIntervalLiteral(domainModel, interval);
+        return temporalLiteralResolver.resolveIntervalLiteral(domainModel, interval);
     }
 
     public ResolvedLiteral ofQuotedString(String quotedString) {
@@ -124,10 +131,10 @@ public class LiteralFactory {
     }
 
     public ResolvedLiteral ofString(String string) {
-        if (stringLiteralTypeResolver == null) {
+        if (stringLiteralResolver == null) {
             throw new DomainModelException("No literal type resolver for string literals defined");
         }
-        return stringLiteralTypeResolver.resolveLiteral(domainModel, string);
+        return stringLiteralResolver.resolveLiteral(domainModel, string);
     }
 
     public ResolvedLiteral ofDateTimeString(String dateTimeString) {
@@ -153,10 +160,10 @@ public class LiteralFactory {
     }
 
     public ResolvedLiteral ofCalendar(Calendar calendar) {
-        if (temporalLiteralTypeResolver == null) {
+        if (temporalLiteralResolver == null) {
             throw new DomainModelException("No literal type resolver for temporal literals defined");
         }
-        return temporalLiteralTypeResolver.resolveTimestampLiteral(domainModel, calendar);
+        return temporalLiteralResolver.resolveTimestampLiteral(domainModel, calendar);
     }
 
     public ResolvedLiteral ofNumericString(String numericString) {
@@ -168,16 +175,16 @@ public class LiteralFactory {
     }
 
     public ResolvedLiteral ofBigDecimal(BigDecimal bigDecimal) {
-        if (numericLiteralTypeResolver == null) {
+        if (numericLiteralResolver == null) {
             throw new DomainModelException("No literal type resolver for numeric literals defined");
         }
-        return numericLiteralTypeResolver.resolveLiteral(domainModel, bigDecimal);
+        return numericLiteralResolver.resolveLiteral(domainModel, bigDecimal);
     }
 
     public ResolvedLiteral ofBoolean(Boolean value) {
-        if (booleanLiteralTypeResolver == null) {
+        if (booleanLiteralResolver == null) {
             throw new DomainModelException("No literal type resolver for boolean literals defined");
         }
-        return booleanLiteralTypeResolver.resolveLiteral(domainModel, value);
+        return booleanLiteralResolver.resolveLiteral(domainModel, value);
     }
 }

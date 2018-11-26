@@ -38,7 +38,7 @@ public interface Expression {
 
         void visit(IsNullPredicate e);
 
-        void visit(Attribute e);
+        void visit(Path e);
     }
 
     interface ResultVisitor<T> {
@@ -60,7 +60,7 @@ public interface Expression {
 
         T visit(IsNullPredicate e);
 
-        T visit(Attribute e);
+        T visit(Path e);
     }
 
     DomainType getType();

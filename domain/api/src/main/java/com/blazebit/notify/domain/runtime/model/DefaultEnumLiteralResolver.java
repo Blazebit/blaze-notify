@@ -15,9 +15,12 @@
  */
 package com.blazebit.notify.domain.runtime.model;
 
-public class DefaultNumericLiteralTypeResolver implements NumericLiteralTypeResolver {
+public class DefaultEnumLiteralResolver implements EnumLiteralResolver {
     @Override
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
-        return new DefaultResolvedLiteral(domainModel.getType(value.getClass()), value);
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, EnumDomainTypeValue value) {
+        Class<? extends Enum> javaEnumType = value.getOwner().getJavaType();
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Enum<?> javaEnumValue = Enum.valueOf(javaEnumType, value.getValue());
+        return new DefaultResolvedLiteral(value.getOwner(), javaEnumValue);
     }
 }

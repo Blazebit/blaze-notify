@@ -15,17 +15,19 @@
  */
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class FunctionInvocation {
     private final String functionName;
-    private final List<Expression> arguments;
+    private final Map<DomainFunctionArgument, Expression> arguments;
     private final DomainType type;
 
-    public FunctionInvocation(String functionName, List<Expression> arguments, DomainType type) {
+    public FunctionInvocation(String functionName, Map<DomainFunctionArgument, Expression> arguments, DomainType type) {
         this.functionName = functionName;
         this.arguments = arguments;
         this.type = type;
@@ -35,7 +37,7 @@ public class FunctionInvocation {
         return functionName;
     }
 
-    public List<Expression> getArguments() {
+    public Map<DomainFunctionArgument, Expression> getArguments() {
         return arguments;
     }
 

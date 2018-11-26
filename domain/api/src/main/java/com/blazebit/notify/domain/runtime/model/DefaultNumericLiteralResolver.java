@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.domain.runtime.model;
 
-/**
- * @author Christian Beikov
- * @since 1.0.0
- */
-public interface BooleanLiteralTypeResolver {
-
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value);
-
+public class DefaultNumericLiteralResolver implements NumericLiteralResolver {
+    @Override
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
+        return new DefaultResolvedLiteral(domainModel.getType(value.getClass()), value);
+    }
 }

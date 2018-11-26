@@ -59,10 +59,10 @@ public abstract class AbstractExpressionCompilerTest {
                     .withValue(Gender.MALE.name())
                 .build()
                 .withPredicate("gender", DomainPredicateType.distinguishable())
-                .withLiteralTypeResolver(new DefaultNumericLiteralTypeResolver())
-                .withLiteralTypeResolver(new DefaultStringLiteralTypeResolver())
-                .withLiteralTypeResolver(new DefaultTemporalLiteralTypeResolver())
-                .withLiteralTypeResolver(new DefaultEnumLiteralTypeResolver())
+                .withLiteralTypeResolver(new DefaultNumericLiteralResolver())
+                .withLiteralTypeResolver(new DefaultStringLiteralResolver())
+                .withLiteralTypeResolver(new DefaultTemporalLiteralResolver())
+                .withLiteralTypeResolver(new DefaultEnumLiteralResolver())
                 .createEntityType("user")
                     .addAttribute("id", Long.class)
                     .addAttribute("email", String.class)
@@ -95,7 +95,7 @@ public abstract class AbstractExpressionCompilerTest {
     }
 
     protected ExpressionCompiler.Context getCompileContext() {
-        return expressionCompiler.createContext(Collections.<String, DomainType>emptyMap());
+        return expressionCompiler.createContext(Collections.singletonMap("user", domainModel.getType("user")));
     }
 
     protected Predicate parsePredicate(String input) {
@@ -151,9 +151,28 @@ public abstract class AbstractExpressionCompilerTest {
         return new Atom(expressionCompiler.getLiteralFactory().ofNumericString(value));
     }
 
-    protected Atom attr(String entity, String attribute) {
-        DomainType type = ((EntityDomainType) domainModel.getType(entity)).getAttribute(attribute).getType();
-        return new Atom(new Attribute(entity, attribute, type));
+    protected Atom attr(String entity, String... attributes) {
+        EntityDomainType entityDomainType = (EntityDomainType) domainModel.getType(entity);
+        DomainType type = entityDomainType;
+        List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(attributes.length);
+        if (attributes.length != 0) {
+            for (int i = 0; ; ) {
+                EntityDomainTypeAttribute attribute = entityDomainType.getAttribute(attributes[i]);
+                type = attribute.getType();
+                pathAttributes.add(attribute);
+                i++;
+                if (i == attributes.length) {
+                    break;
+                } else {
+                    if (type instanceof EntityDomainType) {
+                        entityDomainType = (EntityDomainType) type;
+                    } else {
+                        throw new IllegalArgumentException("De-referencing non-entity type attribute: " + attribute);
+                    }
+                }
+            }
+        }
+        return new Atom(new Path(entity, pathAttributes, type));
     }
 
     protected Atom enumValue(String enumName, String enumKey) {
@@ -161,7 +180,7 @@ public abstract class AbstractExpressionCompilerTest {
     }
 
 //	protected static CollectionAtom collectionAttr(String identifier) {
-//		return new CollectionAtom(new Attribute(identifier, TermType.COLLECTION));
+//		return new CollectionAtom(new Path(identifier, TermType.COLLECTION));
 //	}
 
     protected ComparisonPredicate neq(ArithmeticExpression left, ArithmeticExpression right) {
@@ -216,14 +235,16 @@ public abstract class AbstractExpressionCompilerTest {
         return new InPredicate(booleanDomainType(), value, Arrays.asList(items), false);
     }
 
-    protected Atom functionInvocation(String functionName, Expression... arguments) {
+    protected Atom functionInvocation(String functionName, Expression... argumentArray) {
         DomainFunction domainFunction = domainModel.getFunction(functionName);
         Map<DomainFunctionArgument, DomainType> argumentTypes = new HashMap<>();
-        for (int i = 0; i < arguments.length; i++) {
-            argumentTypes.put(domainFunction.getArguments().get(i), arguments[i].getType());
+        Map<DomainFunctionArgument, Expression> arguments = new LinkedHashMap<>();
+        for (int i = 0; i < argumentArray.length; i++) {
+            argumentTypes.put(domainFunction.getArguments().get(i), argumentArray[i].getType());
+            arguments.put(domainFunction.getArguments().get(i), argumentArray[i]);
         }
         DomainType functionType = domainModel.getFunctionTypeResolver(functionName).resolveType(domainModel, domainFunction, argumentTypes);
-        return new Atom(new FunctionInvocation(functionName, Arrays.asList(arguments), functionType));
+        return new Atom(new FunctionInvocation(functionName, arguments, functionType));
     }
 
     private DomainType booleanDomainType() {

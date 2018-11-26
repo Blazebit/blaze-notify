@@ -42,13 +42,15 @@ public interface DomainModel {
 
     public DomainPredicateTypeResolver getPredicateTypeResolver(Class<?> javaType, DomainPredicateType predicateType);
 
-    public NumericLiteralTypeResolver getNumericLiteralTypeResolver();
+    public NumericLiteralResolver getNumericLiteralResolver();
 
-    public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver();
+    public BooleanLiteralResolver getBooleanLiteralResolver();
 
-    public StringLiteralTypeResolver getStringLiteralTypeResolver();
+    public StringLiteralResolver getStringLiteralResolver();
 
-    public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver();
+    public TemporalLiteralResolver getTemporalLiteralResolver();
 
-    public EnumLiteralTypeResolver getEnumLiteralTypeResolver();
+    public EnumLiteralResolver getEnumLiteralResolver();
+
+    public EntityLiteralResolver getEntityLiteralResolver();
 }

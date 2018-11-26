@@ -16,15 +16,12 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.Calendar;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface TemporalLiteralTypeResolver {
+public interface BooleanLiteralResolver {
 
-    ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value);
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value);
 
-    ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value);
 }

@@ -22,30 +22,30 @@ import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
 import java.util.Objects;
 
 public class Atom implements ArithmeticExpression {
-    private final Attribute attribute;
+    private final Path path;
     private final FunctionInvocation functionInvocation;
     private final ResolvedLiteral literal;
 
-    public Atom(Attribute attribute) {
-        this.attribute = attribute;
+    public Atom(Path path) {
+        this.path = path;
         this.functionInvocation = null;
         this.literal = null;
     }
 
     public Atom(FunctionInvocation functionInvocation) {
-        this.attribute = null;
+        this.path = null;
         this.functionInvocation = functionInvocation;
         this.literal = null;
     }
 
     public Atom(ResolvedLiteral literal) {
-        this.attribute = null;
+        this.path = null;
         this.functionInvocation = null;
         this.literal = literal;
     }
 
-    public Attribute getAttribute() {
-        return attribute;
+    public Path getPath() {
+        return path;
     }
 
     public FunctionInvocation getFunctionInvocation() {
@@ -58,7 +58,7 @@ public class Atom implements ArithmeticExpression {
 
     @Override
     public DomainType getType() {
-        return attribute == null ? (literal == null ? functionInvocation.getType() : literal.getType()) : attribute.getType();
+        return path == null ? (literal == null ? functionInvocation.getType() : literal.getType()) : path.getType();
     }
 
     @Override
@@ -76,13 +76,13 @@ public class Atom implements ArithmeticExpression {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Atom atom = (Atom) o;
-        return Objects.equals(attribute, atom.attribute) &&
+        return Objects.equals(path, atom.path) &&
                 Objects.equals(functionInvocation, atom.functionInvocation) &&
                 Objects.equals(literal, atom.literal);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(attribute, functionInvocation, literal);
+        return Objects.hash(path, functionInvocation, literal);
     }
 }

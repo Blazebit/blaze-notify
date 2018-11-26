@@ -239,42 +239,108 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Expression visitAttribute(PredicateParser.AttributeContext ctx) {
-        String entityName = ctx.entityName.getText();
-        String attributeName = ctx.attributeName.getText();
-        DomainType type = domainModel.getType(entityName);
+    public Expression visitPath(PredicateParser.PathContext ctx) {
+        String alias = ctx.alias.getText();
+        DomainType type = compileContext.getRootDomainType(alias);
         if (type == null) {
-            throw unknownEntityType(entityName);
+            throw unknownEntityType(alias);
         } else if (type instanceof EntityDomainType) {
             EntityDomainType entityType = (EntityDomainType) type;
-            EntityDomainTypeAttribute attribute = entityType.getAttribute(attributeName);
-            return new Atom(new Attribute(entityName, attributeName, attribute.getType()));
+            List<PredicateParser.IdentifierContext> attributeNames = ctx.attributeNames;
+            List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(attributeNames.size());
+            if (attributeNames.size() != 0) {
+                for (int i = 0; ; ) {
+                    String attributeName = attributeNames.get(i).getText();
+                    EntityDomainTypeAttribute attribute = entityType.getAttribute(attributeName);
+                    pathAttributes.add(attribute);
+                    type = attribute.getType();
+                    i++;
+                    if (i == attributeNames.size()) {
+                        break;
+                    } else {
+                        if (type instanceof EntityDomainType) {
+                            entityType = (EntityDomainType) type;
+                        } else {
+                            noEntityDomainType(attributeName);
+                        }
+                    }
+                }
+            }
+
+            return new Atom(new Path(alias, pathAttributes, type));
         } else {
-            throw noEntityDomainType(entityName);
+            return new Atom(new Path(alias, Path.empty(), type));
         }
     }
 
     @Override
-    public Expression visitNoargFunctionInvocation(PredicateParser.NoargFunctionInvocationContext ctx) {
-        String functionName = ctx.functionName.getText();
-        DomainFunction function = domainModel.getFunction(ctx.identifier().getText());
+    public Expression visitRootPathOrNoArgFunctionInvocation(PredicateParser.RootPathOrNoArgFunctionInvocationContext ctx) {
+        String aliasOrFunctionName = ctx.name.getText();
+        DomainFunction function = domainModel.getFunction(aliasOrFunctionName);
         if (function == null) {
-            throw unknownFunction(functionName);
+            DomainType domainType = compileContext.getRootDomainType(aliasOrFunctionName);
+            if (domainType == null) {
+                throw unknownFunction(aliasOrFunctionName);
+            }
+            return new Atom(new Path(aliasOrFunctionName, Path.empty(), domainType));
         } else {
-            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(functionName);
+            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(aliasOrFunctionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, Collections.<DomainFunctionArgument, DomainType>emptyMap());
-            return new Atom(new FunctionInvocation(functionName, Collections.<Expression>emptyList(), functionType));
+            return new Atom(new FunctionInvocation(aliasOrFunctionName, Collections.<DomainFunctionArgument, Expression>emptyMap(), functionType));
         }
     }
 
     @Override
-    public Expression visitFunctionInvocation(PredicateParser.FunctionInvocationContext ctx) {
-        String functionName = ctx.functionName.getText();
+    public Expression visitIndexedFunctionInvocation(PredicateParser.IndexedFunctionInvocationContext ctx) {
+        String functionName = ctx.name.getText();
         DomainFunction function = domainModel.getFunction(functionName);
         if (function == null) {
             throw unknownFunction(functionName);
         } else {
-            List<Expression> arguments = getLiteralList(Expression.class, ctx.args);
+            List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+            if (literalList.size() > function.getArgumentCount()) {
+                throw new DomainModelException(String.format("Function '%s' expects at most %d arguments but found %d",
+                        function.getName(),
+                        function.getArgumentCount(),
+                        literalList.size()
+                ));
+            }
+            Map<DomainFunctionArgument, Expression> arguments = new LinkedHashMap<>(literalList.size());
+            Map<DomainFunctionArgument, DomainType> argumentTypes = new HashMap<>(literalList.size());
+            for (int i = 0; i < literalList.size(); i++) {
+                DomainFunctionArgument domainFunctionArgument = function.getArguments().get(i);
+                argumentTypes.put(domainFunctionArgument, literalList.get(i).getType());
+                arguments.put(domainFunctionArgument, literalList.get(i));
+            }
+            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(functionName);
+            DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
+            return new Atom(new FunctionInvocation(functionName, arguments, functionType));
+        }
+    }
+
+    @Override
+    public Expression visitNamedInvocation(PredicateParser.NamedInvocationContext ctx) {
+        String entityOrFunctionName = ctx.name.getText();
+        DomainFunction function = domainModel.getFunction(entityOrFunctionName);
+        if (function == null) {
+            DomainType type = domainModel.getType(entityOrFunctionName);
+            if (type instanceof EntityDomainType) {
+                EntityDomainType entityDomainType = (EntityDomainType) type;
+                List<PredicateParser.IdentifierContext> argNames = ctx.argNames;
+                List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+                Map<EntityDomainTypeAttribute, Expression> arguments = new LinkedHashMap<>(literalList.size());
+                for (int i = 0; i < literalList.size(); i++) {
+                    EntityDomainTypeAttribute attribute = entityDomainType.getAttribute(argNames.get(i).getText());
+                    arguments.put(attribute, literalList.get(i));
+                }
+                return new Atom(literalFactory.ofEntityAttributeValues(entityDomainType, arguments));
+            } else {
+                throw unknownFunction(entityOrFunctionName);
+            }
+        } else {
+            List<PredicateParser.IdentifierContext> argNames = ctx.argNames;
+            List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+            Map<DomainFunctionArgument, Expression> arguments = new LinkedHashMap<>(literalList.size());
             if (arguments.size() > function.getArgumentCount()) {
                 throw new DomainModelException(String.format("Function '%s' expects at most %d arguments but found %d",
                         function.getName(),
@@ -283,19 +349,19 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
                 ));
             }
             Map<DomainFunctionArgument, DomainType> argumentTypes = new HashMap<>(arguments.size());
-            for (int i = 0; i < arguments.size(); i++) {
-                DomainFunctionArgument domainFunctionArgument = function.getArguments().get(i);
-                argumentTypes.put(domainFunctionArgument, arguments.get(i).getType());
+            for (int i = 0; i < literalList.size(); i++) {
+                DomainFunctionArgument domainFunctionArgument = function.getArgument(argNames.get(i).getText());
+                argumentTypes.put(domainFunctionArgument, literalList.get(i).getType());
+                arguments.put(domainFunctionArgument, literalList.get(i));
             }
-            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(functionName);
+            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(entityOrFunctionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
-            return new Atom(new FunctionInvocation(functionName, arguments, functionType));
+            return new Atom(new FunctionInvocation(entityOrFunctionName, arguments, functionType));
         }
     }
-
-    //    @Override
+//    @Override
 //    public Expression visitCollectionAttribute(PredicateParser.CollectionAttributeContext ctx) {
-//        return new CollectionAtom(new Attribute(ctx.identifier().getText(), TermType.COLLECTION));
+//        return new CollectionAtom(new Path(ctx.identifier().getText(), TermType.COLLECTION));
 //    }
 
     @SuppressWarnings("unchecked")

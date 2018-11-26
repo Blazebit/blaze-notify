@@ -13,28 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.List;
-
-/**
- * @author Christian Beikov
- * @since 1.0.0
- */
-public interface DomainFunction extends MetadataHolder {
-
-    public String getName();
-
-    public int getMinArgumentCount();
-
-    public int getArgumentCount();
-
-    public List<DomainFunctionArgument> getArguments();
-
-    public DomainFunctionArgument getArgument(String argumentName);
-
-    public DomainFunctionArgument getArgument(int argumentIndex);
-
-    public DomainType getResultType();
+public class DefaultStringLiteralResolver implements StringLiteralResolver {
+    @Override
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, String value) {
+        return new DefaultResolvedLiteral(domainModel.getType(String.class), value);
+    }
 }

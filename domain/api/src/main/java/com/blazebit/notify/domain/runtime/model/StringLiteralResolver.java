@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.notify.domain.runtime.model;
 
-public class DefaultEnumLiteralTypeResolver implements EnumLiteralTypeResolver {
-    @Override
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, EnumDomainTypeValue value) {
-        Class<? extends Enum> javaEnumType = value.getOwner().getJavaType();
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Enum<?> javaEnumValue = Enum.valueOf(javaEnumType, value.getValue());
-        return new DefaultResolvedLiteral(value.getOwner(), javaEnumValue);
-    }
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public interface StringLiteralResolver {
+
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, String value);
 }

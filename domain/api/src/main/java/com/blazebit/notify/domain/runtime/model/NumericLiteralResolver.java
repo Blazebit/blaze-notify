@@ -16,25 +16,11 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.List;
-
 /**
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface DomainFunction extends MetadataHolder {
+public interface NumericLiteralResolver {
 
-    public String getName();
-
-    public int getMinArgumentCount();
-
-    public int getArgumentCount();
-
-    public List<DomainFunctionArgument> getArguments();
-
-    public DomainFunctionArgument getArgument(String argumentName);
-
-    public DomainFunctionArgument getArgument(int argumentIndex);
-
-    public DomainType getResultType();
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value);
 }
