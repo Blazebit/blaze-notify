@@ -32,19 +32,23 @@ public class DomainModelImpl implements DomainModel {
     private final Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers;
     private final Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers;
     private final Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType;
+    private final Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers;
+    private final Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType;
     private final NumericLiteralTypeResolver numericLiteralTypeResolver;
     private final BooleanLiteralTypeResolver booleanLiteralTypeResolver;
     private final StringLiteralTypeResolver stringLiteralTypeResolver;
     private final TemporalLiteralTypeResolver temporalLiteralTypeResolver;
     private final EnumLiteralTypeResolver enumLiteralTypeResolver;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver, EnumLiteralTypeResolver enumLiteralTypeResolver) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers, Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType, NumericLiteralTypeResolver numericLiteralTypeResolver, BooleanLiteralTypeResolver booleanLiteralTypeResolver, StringLiteralTypeResolver stringLiteralTypeResolver, TemporalLiteralTypeResolver temporalLiteralTypeResolver, EnumLiteralTypeResolver enumLiteralTypeResolver) {
         this.domainTypes = domainTypes;
         this.domainTypesByJavaType = domainTypesByJavaType;
+        this.domainFunctions = domainFunctions;
         this.domainFunctionTypeResolvers = domainFunctionTypeResolvers;
         this.domainOperationTypeResolvers = domainOperationTypeResolvers;
         this.domainOperationTypeResolversByJavaType = domainOperationTypeResolversByJavaType;
-        this.domainFunctions = domainFunctions;
+        this.domainPredicateTypeResolvers = domainPredicateTypeResolvers;
+        this.domainPredicateTypeResolversByJavaType = domainPredicateTypeResolversByJavaType;
         this.numericLiteralTypeResolver = numericLiteralTypeResolver;
         this.booleanLiteralTypeResolver = booleanLiteralTypeResolver;
         this.stringLiteralTypeResolver = stringLiteralTypeResolver;
@@ -91,6 +95,18 @@ public class DomainModelImpl implements DomainModel {
     public DomainOperationTypeResolver getOperationTypeResolver(Class<?> javaType, DomainOperator operator) {
         Map<DomainOperator, DomainOperationTypeResolver> operationTypeResolverMap = domainOperationTypeResolversByJavaType.get(javaType);
         return operationTypeResolverMap == null ? null : operationTypeResolverMap.get(operator);
+    }
+
+    @Override
+    public DomainPredicateTypeResolver getPredicateTypeResolver(String typeName, DomainPredicateType predicateType) {
+        Map<DomainPredicateType, DomainPredicateTypeResolver> predicateTypeResolverMap = domainPredicateTypeResolvers.get(typeName);
+        return predicateTypeResolverMap == null ? null : predicateTypeResolverMap.get(predicateType);
+    }
+
+    @Override
+    public DomainPredicateTypeResolver getPredicateTypeResolver(Class<?> javaType, DomainPredicateType predicateType) {
+        Map<DomainPredicateType, DomainPredicateTypeResolver> predicateTypeResolverMap = domainPredicateTypeResolversByJavaType.get(javaType);
+        return predicateTypeResolverMap == null ? null : predicateTypeResolverMap.get(predicateType);
     }
 
     @Override

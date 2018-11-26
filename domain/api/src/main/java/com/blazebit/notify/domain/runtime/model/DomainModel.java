@@ -38,6 +38,10 @@ public interface DomainModel {
 
     public DomainOperationTypeResolver getOperationTypeResolver(Class<?> javaType, DomainOperator operator);
 
+    public DomainPredicateTypeResolver getPredicateTypeResolver(String typeName, DomainPredicateType predicateType);
+
+    public DomainPredicateTypeResolver getPredicateTypeResolver(Class<?> javaType, DomainPredicateType predicateType);
+
     public NumericLiteralTypeResolver getNumericLiteralTypeResolver();
 
     public BooleanLiteralTypeResolver getBooleanLiteralTypeResolver();

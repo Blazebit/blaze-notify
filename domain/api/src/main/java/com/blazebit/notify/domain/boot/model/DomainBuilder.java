@@ -40,6 +40,10 @@ public interface DomainBuilder {
 
     public DomainBuilder withOperationTypeResolver(Class<?> javaType, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver);
 
+    public DomainBuilder withPredicateTypeResolver(String typeName, DomainPredicateType operator, DomainPredicateTypeResolver predicateTypeResolver);
+
+    public DomainBuilder withPredicateTypeResolver(Class<?> javaType, DomainPredicateType operator, DomainPredicateTypeResolver predicateTypeResolver);
+
     public DomainBuilder withOperator(String typeName, DomainOperator operator);
 
     public DomainBuilder withOperator(String typeName, DomainOperator... operators);
