@@ -16,52 +16,56 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 public interface Expression {
-    public static interface Visitor {
-        public void visit(ArithmeticFactor e);
+    interface Visitor {
+        void visit(ArithmeticFactor e);
 
-        public void visit(BetweenPredicate e);
+        void visit(BetweenPredicate e);
 
-        public void visit(InPredicate e);
+        void visit(InPredicate e);
 
-        public void visit(ChainingArithmeticExpression e);
+        void visit(ChainingArithmeticExpression e);
 
-        public void visit(ConjunctivePredicate e);
+        void visit(ConjunctivePredicate e);
 
-        public void visit(DisjunctivePredicate e);
+        void visit(DisjunctivePredicate e);
 
-        public void visit(Atom e);
+        void visit(Atom e);
 
-        public void visit(ComparisonPredicate e);
+        void visit(ComparisonPredicate e);
 
-        public void visit(IsNullPredicate e);
+        void visit(IsNullPredicate e);
 
-        public void visit(Attribute e);
+        void visit(Attribute e);
     }
 
-    public static interface ResultVisitor<T> {
-        public T visit(ArithmeticFactor e);
+    interface ResultVisitor<T> {
+        T visit(ArithmeticFactor e);
 
-        public T visit(BetweenPredicate e);
+        T visit(BetweenPredicate e);
 
-        public T visit(InPredicate e);
+        T visit(InPredicate e);
 
-        public T visit(ChainingArithmeticExpression e);
+        T visit(ChainingArithmeticExpression e);
 
-        public T visit(ConjunctivePredicate e);
+        T visit(ConjunctivePredicate e);
 
-        public T visit(DisjunctivePredicate e);
+        T visit(DisjunctivePredicate e);
 
-        public T visit(Atom e);
+        T visit(Atom e);
 
-        public T visit(ComparisonPredicate e);
+        T visit(ComparisonPredicate e);
 
-        public T visit(IsNullPredicate e);
+        T visit(IsNullPredicate e);
 
-        public T visit(Attribute e);
+        T visit(Attribute e);
     }
 
-    public void accept(Visitor visitor);
+    DomainType getType();
 
-    public <T> T accept(ResultVisitor<T> visitor);
+    void accept(Visitor visitor);
+
+    <T> T accept(ResultVisitor<T> visitor);
 }

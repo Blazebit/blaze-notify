@@ -46,4 +46,5 @@ public interface DomainModel {
 
     public TemporalLiteralTypeResolver getTemporalLiteralTypeResolver();
 
+    public EnumLiteralTypeResolver getEnumLiteralTypeResolver();
 }

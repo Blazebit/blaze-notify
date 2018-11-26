@@ -21,16 +21,22 @@ import com.blazebit.notify.domain.runtime.model.DomainType;
 import java.util.Objects;
 
 public class Attribute {
-    private final String identifier;
+    private final String entity;
+    private final String attribute;
     private final DomainType type;
 
-    public Attribute(String identifier, DomainType type) {
-        this.identifier = identifier;
+    public Attribute(String entity, String attribute, DomainType type) {
+        this.entity = entity;
+        this.attribute = attribute;
         this.type = type;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public String getEntity() {
+        return entity;
+    }
+
+    public String getAttribute() {
+        return attribute;
     }
 
     public DomainType getType() {
@@ -41,13 +47,14 @@ public class Attribute {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Attribute attribute = (Attribute) o;
-        return Objects.equals(identifier, attribute.identifier) &&
-                type == attribute.type;
+        Attribute attribute1 = (Attribute) o;
+        return Objects.equals(entity, attribute1.entity) &&
+                Objects.equals(attribute, attribute1.attribute) &&
+                Objects.equals(type, attribute1.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, type);
+        return Objects.hash(entity, attribute, type);
     }
 }

@@ -13,37 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.expression;
 
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
+import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractPredicate implements Predicate {
+public class FunctionInvocation {
+    private final String functionName;
+    private final List<Expression> arguments;
     private final DomainType type;
-    private boolean negated;
 
-    public AbstractPredicate(DomainType type) {
+    public FunctionInvocation(String functionName, List<Expression> arguments, DomainType type) {
+        this.functionName = functionName;
+        this.arguments = arguments;
         this.type = type;
     }
 
-    public AbstractPredicate(DomainType type, boolean negated) {
-        this.type = type;
-        this.negated = negated;
+    public String getFunctionName() {
+        return functionName;
     }
 
-    @Override
-    public boolean isNegated() {
-        return this.negated;
+    public List<Expression> getArguments() {
+        return arguments;
     }
 
-    @Override
-    public void setNegated(boolean negated) {
-        this.negated = negated;
-    }
-
-    @Override
     public DomainType getType() {
         return type;
     }
@@ -52,13 +47,14 @@ public abstract class AbstractPredicate implements Predicate {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AbstractPredicate that = (AbstractPredicate) o;
-        return negated == that.negated &&
+        FunctionInvocation that = (FunctionInvocation) o;
+        return functionName.equals(that.functionName) &&
+                arguments.equals(that.arguments) &&
                 type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, negated);
+        return Objects.hash(functionName, arguments, type);
     }
 }

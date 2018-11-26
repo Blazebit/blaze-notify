@@ -24,6 +24,7 @@ import java.util.Calendar;
  */
 public interface TemporalLiteralTypeResolver {
 
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Calendar value);
+    ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value);
 
+    ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value);
 }

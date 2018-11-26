@@ -17,20 +17,30 @@
 package com.blazebit.notify.expression;
 
 import com.blazebit.notify.domain.runtime.model.DomainType;
+import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
 
 import java.util.Objects;
 
 public class Atom implements ArithmeticExpression {
     private final Attribute attribute;
-    private final Literal literal;
+    private final FunctionInvocation functionInvocation;
+    private final ResolvedLiteral literal;
 
     public Atom(Attribute attribute) {
         this.attribute = attribute;
+        this.functionInvocation = null;
         this.literal = null;
     }
 
-    public Atom(Literal literal) {
+    public Atom(FunctionInvocation functionInvocation) {
         this.attribute = null;
+        this.functionInvocation = functionInvocation;
+        this.literal = null;
+    }
+
+    public Atom(ResolvedLiteral literal) {
+        this.attribute = null;
+        this.functionInvocation = null;
         this.literal = literal;
     }
 
@@ -38,13 +48,17 @@ public class Atom implements ArithmeticExpression {
         return attribute;
     }
 
-    public Literal getLiteral() {
+    public FunctionInvocation getFunctionInvocation() {
+        return functionInvocation;
+    }
+
+    public ResolvedLiteral getLiteral() {
         return literal;
     }
 
     @Override
     public DomainType getType() {
-        return attribute == null ? literal.getType() : attribute.getType();
+        return attribute == null ? (literal == null ? functionInvocation.getType() : literal.getType()) : attribute.getType();
     }
 
     @Override
@@ -61,13 +75,14 @@ public class Atom implements ArithmeticExpression {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Atom that = (Atom) o;
-        return Objects.equals(attribute, that.attribute) &&
-                Objects.equals(literal, that.literal);
+        Atom atom = (Atom) o;
+        return Objects.equals(attribute, atom.attribute) &&
+                Objects.equals(functionInvocation, atom.functionInvocation) &&
+                Objects.equals(literal, atom.literal);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(attribute, literal);
+        return Objects.hash(attribute, functionInvocation, literal);
     }
 }

@@ -13,34 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.notify.expression;
-
-import com.blazebit.notify.domain.runtime.model.DomainType;
+package com.blazebit.notify.domain.runtime.model;
 
 import java.util.Objects;
 
-public abstract class AbstractPredicate implements Predicate {
+public class DefaultResolvedLiteral implements ResolvedLiteral {
     private final DomainType type;
-    private boolean negated;
+    private final Object value;
 
-    public AbstractPredicate(DomainType type) {
+    public DefaultResolvedLiteral(DomainType type, Object value) {
         this.type = type;
-    }
-
-    public AbstractPredicate(DomainType type, boolean negated) {
-        this.type = type;
-        this.negated = negated;
-    }
-
-    @Override
-    public boolean isNegated() {
-        return this.negated;
-    }
-
-    @Override
-    public void setNegated(boolean negated) {
-        this.negated = negated;
+        this.value = value;
     }
 
     @Override
@@ -49,16 +32,21 @@ public abstract class AbstractPredicate implements Predicate {
     }
 
     @Override
+    public Object getValue() {
+        return value;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AbstractPredicate that = (AbstractPredicate) o;
-        return negated == that.negated &&
-                type.equals(that.type);
+        DefaultResolvedLiteral that = (DefaultResolvedLiteral) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, negated);
+        return Objects.hash(type, value);
     }
 }

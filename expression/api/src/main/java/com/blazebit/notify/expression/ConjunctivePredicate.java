@@ -16,6 +16,8 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -23,12 +25,12 @@ import java.util.Objects;
 public class ConjunctivePredicate extends AbstractPredicate {
     private final List<Predicate> conjuncts;
 
-    public ConjunctivePredicate(List<Predicate> conjuncts) {
-        this(conjuncts, false);
+    public ConjunctivePredicate(DomainType type, List<Predicate> conjuncts) {
+        this(type, conjuncts, false);
     }
 
-    public ConjunctivePredicate(List<Predicate> conjuncts, boolean negated) {
-        super(negated);
+    public ConjunctivePredicate(DomainType type, List<Predicate> conjuncts, boolean negated) {
+        super(type, negated);
         this.conjuncts = conjuncts;
     }
 

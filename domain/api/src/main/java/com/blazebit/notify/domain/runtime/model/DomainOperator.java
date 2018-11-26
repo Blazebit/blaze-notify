@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.domain.runtime.model;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -33,7 +34,13 @@ public enum DomainOperator {
     MODULO,
     NOT;
 
-    public static Set<DomainOperator> arithmetic() {
-        return EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS, DomainOperator.MULTIPLICATION, DomainOperator.DIVISION, DomainOperator.MODULO, DomainOperator.UNARY_MINUS, DomainOperator.UNARY_PLUS);
+    public static final Set<DomainOperator> ARITHMETIC;
+
+    static {
+        ARITHMETIC = Collections.unmodifiableSet(EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS, DomainOperator.MULTIPLICATION, DomainOperator.DIVISION, DomainOperator.MODULO, DomainOperator.UNARY_MINUS, DomainOperator.UNARY_PLUS));
+    }
+
+    public static DomainOperator[] arithmetic() {
+        return ARITHMETIC.toArray(new DomainOperator[0]);
     }
 }

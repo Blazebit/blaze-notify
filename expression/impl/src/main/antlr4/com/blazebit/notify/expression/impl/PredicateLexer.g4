@@ -16,36 +16,45 @@
 lexer grammar PredicateLexer;
 
 BETWEEN: B E T W E E N;
-AND : A N D;
-OR : O R;
-NOT : N O T | '!';
+AND: A N D;
+OR: O R;
+NOT: N O T | '!';
 IN: I N;
 MEMBER_OF: M E M B E R ' ' O F;
 IS_NULL: I S ' ' N U L L;
 IS_NOT_NULL: I S ' ' N O T ' ' N U L L;
+INTERVAL: I N T E R V A L;
+fragment YEARS: Y E A R S;
+fragment MONTHS: M O N T H S;
+fragment DAYS: D A Y S;
+fragment HOURS: H O U R S;
+fragment MINUTES: M I N U T E S;
+fragment SECONDS: S E C O N D S;
 
-CURRENT_TIMESTAMP : C U R R E N T '_' TIMESTAMP;
-
-// Literal
-
-TIMESTAMP_LITERAL
-    : TIMESTAMP '(' '\'' DATE_STRING (' ' TIME_STRING)? '\'' ')';
-
-fragment TIMESTAMP
+TIMESTAMP
     : T I M E S T A M P;
 
-DATE_STRING
+TIMESTAMP_LITERAL_CONTENT
+    : DATE_STRING (' ' TIME_STRING)?;
+
+fragment DATE_STRING
     : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
-TIME_STRING
+fragment TIME_STRING
     : DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT DIGIT DIGIT)?;
 
-fragment DIGIT
-    : '0'..'9';
-fragment DIGITS
-    : DIGIT+;
-fragment DIGIT_NOT_ZERO
-    : '1'..'9';
+fragment DIGIT: '0'..'9';
+fragment DIGITS: DIGIT+;
+fragment DIGIT_NOT_ZERO: '1'..'9';
+
+TEMPORAL_INTERVAL_LITERAL_CONTENT
+    : INTEGER WS YEARS (WS INTEGER WS MONTHS)? (WS INTEGER WS DAYS)? (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
+    | INTEGER WS MONTHS (WS INTEGER WS DAYS)? (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
+    | INTEGER WS DAYS (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
+    | INTEGER WS HOURS (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
+    | INTEGER WS MINUTES (WS INTEGER WS SECONDS)?
+    | INTEGER WS SECONDS
+    ;
 
 STRING_LITERAL
 	: QUOTE ~[']* QUOTE
@@ -67,45 +76,31 @@ fragment INTEGER
 	| DIGIT_NOT_ZERO DIGITS?;
 
 fragment EXPONENT_PART
-   :   [eE] SIGNED_INTEGER
-   ;
+    : [eE] SIGNED_INTEGER
+    ;
 
 fragment SIGNED_INTEGER
-   :   [+-]? DIGITS
-   ;
+    : [+-]? DIGITS
+    ;
 
-// Functions
+OP_LT: '<';
+OP_LE: '<=';
+OP_GT: '>';
+OP_GE: '>=';
+OP_EQ: '=';
+OP_NEQ1: '!=';
+OP_NEQ2: '<>';
+OP_PLUS: '+';
+OP_MINUS: '-';
+OP_MUL: '*';
+OP_DIV: '/';
 
-SIN : S I N;
-COS : C O S;
-TAN : T A N;
-EXP : E X P;
-LOG : L O G;
-POW : P O W;
-SQRT : S Q R T;
-
-OP_LT : '<';
-OP_LE : '<=';
-OP_GT : '>';
-OP_GE : '>=';
-OP_EQ : '=';
-OP_NEQ1 : '!=';
-OP_NEQ2 : '<>';
-OP_PLUS : '+';
-OP_MINUS : '-';
-OP_MUL : '*';
-OP_DIV : '/';
-
-LP : '(';
-RP : ')';
+LP: '(';
+RP: ')';
 COMMA: ',';
 DOT: '.';
 
-IDENTIFIER
-    : IDENTIFIER_PART (DOT IDENTIFIER_PART)*
-    ;
-
-IDENTIFIER_PART : JavaLetter JavaLetterOrDigit*;
+IDENTIFIER: JavaLetter JavaLetterOrDigit*;
 
 WS: [ \n\t\r]+ -> channel(HIDDEN);
 
@@ -139,24 +134,22 @@ fragment Z: 'Z';//('z'|'Z');
 fragment QUOTE: '\'';
 fragment DOUBLE_QUOTE: '"';
 
-fragment
-JavaLetter
-: [a-zA-Z$_] // these are the "java letters" below 0xFF
-| // covers all characters above 0xFF which are not a surrogate
-~[\u0000-\u00FF\uD800-\uDBFF]
-{Character.isJavaIdentifierStart(_input.LA(-1))}?
-| // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-[\uD800-\uDBFF] [\uDC00-\uDFFF]
-{Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
-;
+fragment JavaLetter
+    : [a-zA-Z$_] // these are the "java letters" below 0xFF
+    | // covers all characters above 0xFF which are not a surrogate
+    ~[\u0000-\u00FF\uD800-\uDBFF]
+    {Character.isJavaIdentifierStart(_input.LA(-1))}?
+    | // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+    [\uD800-\uDBFF] [\uDC00-\uDFFF]
+    {Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+    ;
 
-fragment
-JavaLetterOrDigit
-: [a-zA-Z0-9$_] // these are the "java letters or digits" below 0xFF
-| // covers all characters above 0xFF which are not a surrogate
-~[\u0000-\u00FF\uD800-\uDBFF]
-{Character.isJavaIdentifierPart(_input.LA(-1))}?
-| // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-[\uD800-\uDBFF] [\uDC00-\uDFFF]
-{Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
-;
+fragment JavaLetterOrDigit
+    : [a-zA-Z0-9$_] // these are the "java letters or digits" below 0xFF
+    | // covers all characters above 0xFF which are not a surrogate
+    ~[\u0000-\u00FF\uD800-\uDBFF]
+    {Character.isJavaIdentifierPart(_input.LA(-1))}?
+    | // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+    [\uD800-\uDBFF] [\uDC00-\uDFFF]
+    {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+    ;

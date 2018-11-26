@@ -16,20 +16,22 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.List;
 import java.util.Objects;
 
 public class InPredicate extends AbstractPredicate {
-    private final TermExpression left;
+    private final ArithmeticExpression left;
     private final List<ArithmeticExpression> inItems;
 
-    public InPredicate(TermExpression left, List<ArithmeticExpression> inItems, boolean negated) {
-        super(negated);
+    public InPredicate(DomainType type, ArithmeticExpression left, List<ArithmeticExpression> inItems, boolean negated) {
+        super(type, negated);
         this.left = left;
         this.inItems = inItems;
     }
 
-    public TermExpression getLeft() {
+    public ArithmeticExpression getLeft() {
         return left;
     }
 

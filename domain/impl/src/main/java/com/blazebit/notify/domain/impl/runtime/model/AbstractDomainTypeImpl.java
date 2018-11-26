@@ -62,4 +62,9 @@ public abstract class AbstractDomainTypeImpl implements DomainType {
     public Set<DomainPredicateType> getEnabledPredicates() {
         return enabledPredicates;
     }
+
+    @Override
+    public String toString() {
+        return (name == null ? "n/a" : name) + " [" + javaType + "]";
+    }
 }

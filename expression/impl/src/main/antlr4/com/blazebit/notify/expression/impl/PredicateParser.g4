@@ -85,25 +85,34 @@ arithmetic_primary
 
 atom
     : attribute
+    | function_invocation
     | datetime_literal
+    | temporal_interval_literal
     | numeric_literal
     | string_literal
     | enum_literal
     ;
 
 attribute
-    : identifier    #DomainAttribute
+    : entityName=identifier DOT attributeName=identifier
     ;
+
+function_invocation
+    : functionName=identifier                                                                        #NoargFunctionInvocation
+    | functionName=identifier LP ((args+=conditional_expression|arithmetic_expression) COMMA)* RP    #FunctionInvocation
+    ;
+
 /****************************************************************
  * Date & Time
  ****************************************************************/
 
-
-
 datetime_literal
-	: TIMESTAMP_LITERAL     #TimestampLiteral
-    | CURRENT_TIMESTAMP     #CurrentTimestamp
+	: TIMESTAMP LP content=TIMESTAMP_LITERAL_CONTENT RP    #TimestampLiteral
 	;
+
+temporal_interval_literal
+    : INTERVAL content=TEMPORAL_INTERVAL_LITERAL_CONTENT #TemporalIntervalLiteral
+    ;
 
 /****************************************************************
  * String

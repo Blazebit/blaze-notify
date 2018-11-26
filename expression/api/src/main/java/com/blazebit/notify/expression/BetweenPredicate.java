@@ -17,29 +17,31 @@
 package com.blazebit.notify.expression;
 
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class BetweenPredicate extends AbstractPredicate {
-    private final TermExpression left;
-    private final TermExpression upper;
-    private final TermExpression lower;
+    private final ArithmeticExpression left;
+    private final ArithmeticExpression upper;
+    private final ArithmeticExpression lower;
 
-    public BetweenPredicate(TermExpression left, TermExpression upper, TermExpression lower) {
-        super(false);
+    public BetweenPredicate(DomainType type, ArithmeticExpression left, ArithmeticExpression upper, ArithmeticExpression lower) {
+        super(type);
         this.left = left;
         this.upper = upper;
         this.lower = lower;
     }
 
-    public TermExpression getLeft() {
+    public ArithmeticExpression getLeft() {
         return left;
     }
 
-    public TermExpression getUpper() {
+    public ArithmeticExpression getUpper() {
         return upper;
     }
 
-    public TermExpression getLower() {
+    public ArithmeticExpression getLower() {
         return lower;
     }
 

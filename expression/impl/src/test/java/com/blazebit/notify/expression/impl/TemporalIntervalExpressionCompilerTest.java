@@ -29,12 +29,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class StringExpressionCompilerTest extends AbstractExpressionCompilerTest {
+public class TemporalIntervalExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     private final String expr;
-    private final ExpectedExpressionProducer<StringExpressionCompilerTest> expectedExpressionProducer;
+    private final ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest> expectedExpressionProducer;
 
-    public StringExpressionCompilerTest(String expr, ExpectedExpressionProducer<StringExpressionCompilerTest> expectedExpressionProducer) {
+    public TemporalIntervalExpressionCompilerTest(String expr, ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest> expectedExpressionProducer) {
         this.expr = expr;
         this.expectedExpressionProducer = expectedExpressionProducer;
     }
@@ -43,21 +43,20 @@ public class StringExpressionCompilerTest extends AbstractExpressionCompilerTest
     public static Collection<Object[]> getTestData() {
         Object[][] testCases = {
                 {
-                        "''",
-                        new ExpectedExpressionProducer<StringExpressionCompilerTest>() {
+                        "INTERVAL 1 YEARS",
+                        new ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(StringExpressionCompilerTest testInstance) {
-                                return pos(testInstance.string(""));
+                            public Expression getExpectedExpression(TemporalIntervalExpressionCompilerTest testInstance) {
+                                return pos(testInstance.interval("1 YEARS"));
                             }
                         }
-
                 },
                 {
-                        "'abc'",
-                        new ExpectedExpressionProducer<StringExpressionCompilerTest>() {
+                        "INTERVAL 1 YEARS 2 MONTHS 3 DAYS 2 HOURS 32 MINUTES 1 SECONDS",
+                        new ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest>() {
                             @Override
-                            public Expression getExpectedExpression(StringExpressionCompilerTest testInstance) {
-                                return pos(testInstance.string("abc"));
+                            public Expression getExpectedExpression(TemporalIntervalExpressionCompilerTest testInstance) {
+                                return pos(testInstance.interval("1 YEARS 2 MONTHS 3 DAYS 2 HOURS 32 MINUTES 1 SECONDS"));
                             }
                         }
                 }

@@ -43,6 +43,7 @@ public class DomainBuilderImpl implements DomainBuilder {
     private BooleanLiteralTypeResolver booleanLiteralTypeResolver;
     private StringLiteralTypeResolver stringLiteralTypeResolver;
     private TemporalLiteralTypeResolver temporalLiteralTypeResolver;
+    private EnumLiteralTypeResolver enumLiteralTypeResolver;
 
     DomainBuilderImpl withDomainTypeDefinition(DomainTypeDefinitionImplementor<?> domainTypeDefinition) {
         domainTypeDefinitions.put(domainTypeDefinition.getName(), domainTypeDefinition);
@@ -93,6 +94,12 @@ public class DomainBuilderImpl implements DomainBuilder {
     @Override
     public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver) {
         this.temporalLiteralTypeResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withLiteralTypeResolver(EnumLiteralTypeResolver typeResolver) {
+        this.enumLiteralTypeResolver = typeResolver;
         return this;
     }
 
@@ -352,6 +359,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver);
+        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, numericLiteralTypeResolver, booleanLiteralTypeResolver, stringLiteralTypeResolver, temporalLiteralTypeResolver, enumLiteralTypeResolver);
     }
 }

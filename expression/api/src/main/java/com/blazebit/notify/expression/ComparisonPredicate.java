@@ -16,24 +16,27 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class ComparisonPredicate extends AbstractPredicate {
-    private final TermExpression left;
-    private final TermExpression right;
+    private final ArithmeticExpression left;
+    private final ArithmeticExpression right;
     private final ComparisonOperator operator;
 
-    public ComparisonPredicate(TermExpression left, TermExpression right, ComparisonOperator operator) {
+    public ComparisonPredicate(DomainType type, ArithmeticExpression left, ArithmeticExpression right, ComparisonOperator operator) {
+        super(type);
         this.left = left;
         this.right = right;
         this.operator = operator;
     }
 
-    public TermExpression getLeft() {
+    public ArithmeticExpression getLeft() {
         return left;
     }
 
-    public TermExpression getRight() {
+    public ArithmeticExpression getRight() {
         return right;
     }
 

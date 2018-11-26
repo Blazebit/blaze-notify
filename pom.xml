@@ -137,6 +137,9 @@
                         <include>**/src/main/**/*.java</include>
                         <include>**/src/main/**/*.xml</include>
                     </includes>
+                    <excludes>
+                        <exclude>**/src/main/java/com/blazebit/notify/notification/schedule/cron/CronExpression.java</exclude>
+                    </excludes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>
                         <latestYearOfContribution>${currentYearDynamic}</latestYearOfContribution>

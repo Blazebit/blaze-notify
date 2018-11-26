@@ -13,33 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.domain.runtime.model;
 
-package com.blazebit.notify.domain.persistence;
-
-import com.blazebit.notify.domain.runtime.model.DomainType;
-import com.blazebit.notify.domain.runtime.model.ResolvedLiteral;
-
-/**
- * @author Christian Beikov
- * @since 1.0.0
- */
-public class ResolvedLiteralImpl implements ResolvedLiteral {
-
-    private final DomainType type;
-    private final Object value;
-
-    public ResolvedLiteralImpl(DomainType type, Object value) {
-        this.type = type;
-        this.value = value;
-    }
-
+public class DefaultEnumLiteralTypeResolver implements EnumLiteralTypeResolver {
     @Override
-    public DomainType getType() {
-        return type;
-    }
-
-    @Override
-    public Object getValue() {
-        return value;
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, EnumDomainTypeValue value) {
+        Class<? extends Enum> javaEnumType = value.getOwner().getJavaType();
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Enum<?> javaEnumValue = Enum.valueOf(javaEnumType, value.getValue());
+        return new DefaultResolvedLiteral(value.getOwner(), javaEnumValue);
     }
 }

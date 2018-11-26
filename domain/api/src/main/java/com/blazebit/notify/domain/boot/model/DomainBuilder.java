@@ -32,6 +32,8 @@ public interface DomainBuilder {
 
     public DomainBuilder withLiteralTypeResolver(TemporalLiteralTypeResolver typeResolver);
 
+    public DomainBuilder withLiteralTypeResolver(EnumLiteralTypeResolver typeResolver);
+
     public DomainBuilder withFunctionTypeResolver(String functionName, DomainFunctionTypeResolver functionTypeResolver);
 
     public DomainBuilder withOperationTypeResolver(String typeName, DomainOperator operator, DomainOperationTypeResolver operationTypeResolver);

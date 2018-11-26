@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.domain.runtime.model;
 
-package com.blazebit.notify.expression;
+import java.util.Calendar;
 
-import com.blazebit.notify.domain.runtime.model.DomainType;
+public class DefaultTemporalLiteralTypeResolver implements TemporalLiteralTypeResolver {
+    @Override
+    public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
+        return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
+    }
 
-public interface TermExpression extends Expression {
-    DomainType getType();
+    @Override
+    public ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value) {
+        return new DefaultResolvedLiteral(domainModel.getType(TemporalInterval.class), value);
+    }
 }

@@ -16,13 +16,15 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.Objects;
 
 public class IsNullPredicate extends AbstractPredicate {
     private final Expression left;
 
-    public IsNullPredicate(Expression left, boolean negated) {
-        super(negated);
+    public IsNullPredicate(DomainType type, Expression left, boolean negated) {
+        super(type, negated);
         this.left = left;
     }
 

@@ -39,10 +39,10 @@ public enum DomainPredicateType {
     }
 
     public static DomainPredicateType[] comparable() {
-        return COMPARABLE.toArray(new DomainPredicateType[COMPARABLE.size()]);
+        return COMPARABLE.toArray(new DomainPredicateType[0]);
     }
 
     public static DomainPredicateType[] distinguishable() {
-        return DISTINGUISHABLE.toArray(new DomainPredicateType[DISTINGUISHABLE.size()]);
+        return DISTINGUISHABLE.toArray(new DomainPredicateType[0]);
     }
 }

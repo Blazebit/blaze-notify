@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.domain.runtime.model;
 
-package com.blazebit.notify.expression.impl;
+public interface EnumLiteralTypeResolver {
 
-import com.blazebit.notify.expression.Expression;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
-public class ArithmeticExpressionCompilerTest extends AbstractExpressionCompilerTest {
-
-    @Test
-    public void comparisonWithLiteralTest() {
-        Expression expr = parseArithmeticExpression("1 + 2");
-        assertEquals(plus(pos(number(1)), pos(number(2))), expr);
-    }
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, EnumDomainTypeValue value);
 }

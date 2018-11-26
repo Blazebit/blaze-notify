@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.domain.persistence;
+package com.blazebit.notify.domain.runtime.model;
 
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.domain.runtime.model.DomainOperationTypeResolver;

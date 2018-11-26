@@ -16,5 +16,5 @@
 
 package com.blazebit.notify.expression;
 
-public interface ArithmeticExpression extends TermExpression {
+public interface ArithmeticExpression extends Expression {
 }

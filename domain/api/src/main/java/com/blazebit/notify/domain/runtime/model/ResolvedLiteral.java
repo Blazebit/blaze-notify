@@ -22,7 +22,7 @@ package com.blazebit.notify.domain.runtime.model;
  */
 public interface ResolvedLiteral {
 
-    public DomainType getType();
+    DomainType getType();
 
-    public Object getValue();
+    Object getValue();
 }

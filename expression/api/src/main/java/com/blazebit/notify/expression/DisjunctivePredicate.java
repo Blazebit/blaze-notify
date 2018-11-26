@@ -16,18 +16,20 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainType;
+
 import java.util.List;
 import java.util.Objects;
 
 public class DisjunctivePredicate extends AbstractPredicate {
     private final List<Predicate> disjuncts;
 
-    public DisjunctivePredicate(List<Predicate> disjuncts) {
-        this(disjuncts, false);
+    public DisjunctivePredicate(DomainType type, List<Predicate> disjuncts) {
+        this(type, disjuncts, false);
     }
 
-    public DisjunctivePredicate(List<Predicate> disjuncts, boolean negated) {
-        super(negated);
+    public DisjunctivePredicate(DomainType type, List<Predicate> disjuncts, boolean negated) {
+        super(type, negated);
         this.disjuncts = disjuncts;
     }
 

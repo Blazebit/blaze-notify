@@ -20,6 +20,7 @@
         <module>testsuite</module>
         <module>receiver-resolver</module>
         <module>message-resolver</module>
+        <module>schedule-cron</module>
     </modules>
 
 </project>

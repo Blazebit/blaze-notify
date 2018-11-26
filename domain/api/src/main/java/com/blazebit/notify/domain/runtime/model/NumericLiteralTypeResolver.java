@@ -22,6 +22,5 @@ package com.blazebit.notify.domain.runtime.model;
  */
 public interface NumericLiteralTypeResolver {
 
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value);
-
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value);
 }

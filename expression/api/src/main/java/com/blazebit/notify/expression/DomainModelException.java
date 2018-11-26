@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.expression;
 
-package com.blazebit.notify.expression.impl;
+public class DomainModelException extends ExpressionParseException {
+    public DomainModelException() {
+    }
 
-import com.blazebit.notify.expression.Expression;
-import org.junit.Test;
+    public DomainModelException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-import static org.junit.Assert.assertEquals;
+    public DomainModelException(String message) {
+        super(message);
+    }
 
-public class ArithmeticExpressionCompilerTest extends AbstractExpressionCompilerTest {
-
-    @Test
-    public void comparisonWithLiteralTest() {
-        Expression expr = parseArithmeticExpression("1 + 2");
-        assertEquals(plus(pos(number(1)), pos(number(2))), expr);
+    public DomainModelException(Throwable cause) {
+        super(cause);
     }
 }

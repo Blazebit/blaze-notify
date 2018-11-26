@@ -32,35 +32,40 @@ public class PersistenceDomainContributor implements DomainContributor {
     private static final BooleanLiteralTypeResolver BOOLEAN_LITERAL_TYPE_RESOLVER = new BooleanLiteralTypeResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value) {
-            return new ResolvedLiteralImpl(domainModel.getType(Boolean.class), value);
+            return new DefaultResolvedLiteral(domainModel.getType(Boolean.class), value);
         }
     };
     private static final NumericLiteralTypeResolver NUMERIC_LITERAL_TYPE_RESOLVER = new NumericLiteralTypeResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
-            return new ResolvedLiteralImpl(domainModel.getType(BigDecimal.class), value);
+            return new DefaultResolvedLiteral(domainModel.getType(BigDecimal.class), value);
         }
     };
     private static final TemporalLiteralTypeResolver TEMPORAL_LITERAL_TYPE_RESOLVER = new TemporalLiteralTypeResolver() {
         @Override
-        public ResolvedLiteral resolveLiteral(DomainModel domainModel, Calendar value) {
-            return new ResolvedLiteralImpl(domainModel.getType(Calendar.class), value);
+        public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
+            return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
+        }
+
+        @Override
+        public ResolvedLiteral resolveIntervalLiteral(DomainModel domainModel, TemporalInterval value) {
+            return new DefaultResolvedLiteral(domainModel.getType(TemporalInterval.class), value);
         }
     };
     private static final StringLiteralTypeResolver STRING_LITERAL_TYPE_RESOLVER = new StringLiteralTypeResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, String value) {
-            return new ResolvedLiteralImpl(domainModel.getType(String.class), value);
+            return new DefaultResolvedLiteral(domainModel.getType(String.class), value);
         }
     };
 
     @Override
     public void contribute(DomainBuilder domainBuilder) {
-        createBasicType(domainBuilder, Integer.class, DomainOperator.arithmetic(), DomainPredicateType.COMPARABLE);
-        createBasicType(domainBuilder, BigDecimal.class, DomainOperator.arithmetic(), DomainPredicateType.COMPARABLE);
-        createBasicType(domainBuilder, String.class, EnumSet.of(DomainOperator.PLUS), DomainPredicateType.COMPARABLE);
-        createBasicType(domainBuilder, Calendar.class, EnumSet.of(DomainOperator.PLUS, DomainOperator.MINUS), DomainPredicateType.COMPARABLE);
-        createBasicType(domainBuilder, Boolean.class, EnumSet.of(DomainOperator.NOT), DomainPredicateType.DISTINGUISHABLE);
+        createBasicType(domainBuilder, Integer.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
+        createBasicType(domainBuilder, BigDecimal.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
+        createBasicType(domainBuilder, String.class, new DomainOperator[]{ DomainOperator.PLUS }, DomainPredicateType.comparable());
+        createBasicType(domainBuilder, Calendar.class, new DomainOperator[]{ DomainOperator.PLUS, DomainOperator.MINUS }, DomainPredicateType.comparable());
+        createBasicType(domainBuilder, Boolean.class, new DomainOperator[]{ DomainOperator.NOT }, DomainPredicateType.distinguishable());
         domainBuilder.withLiteralTypeResolver(NUMERIC_LITERAL_TYPE_RESOLVER);
         domainBuilder.withLiteralTypeResolver(STRING_LITERAL_TYPE_RESOLVER);
         domainBuilder.withLiteralTypeResolver(TEMPORAL_LITERAL_TYPE_RESOLVER);
@@ -188,14 +193,10 @@ public class PersistenceDomainContributor implements DomainContributor {
         });
     }
 
-    private static void createBasicType(DomainBuilder domainBuilder, Class<?> type, Set<DomainOperator> operators, Set<DomainPredicateType> predicates) {
+    private static void createBasicType(DomainBuilder domainBuilder, Class<?> type, DomainOperator[] operators, DomainPredicateType[] predicates) {
         String typeName = type.getSimpleName();
         domainBuilder.createBasicType(typeName, type);
-        for (DomainOperator operator : operators) {
-            domainBuilder.withOperator(typeName, operator);
-        }
-        for (DomainPredicateType predicate : predicates) {
-            domainBuilder.withPredicate(typeName, predicate);
-        }
+        domainBuilder.withOperator(typeName, operators);
+        domainBuilder.withPredicate(typeName, predicates);
     }
 }
