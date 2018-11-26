@@ -63,10 +63,7 @@ STRING_LITERAL
 NUMERIC_LITERAL
     : INTEGER ('.' DIGITS)? EXPONENT_PART?;
 
-ENUM_VALUE_FUNCTION : 'ENUM_VALUE';
-
-ENUM_LITERAL
-	: 'ENUM_VALUE' ENUM_KEY;
+ENUM_VALUE_FUNCTION : E N U M '_' V A L U E;
 
 fragment ENUM_KEY
 	: [A-Z_]+;
@@ -104,32 +101,32 @@ IDENTIFIER: JavaLetter JavaLetterOrDigit*;
 
 WS: [ \n\t\r]+ -> channel(HIDDEN);
 
-fragment A: 'A';//('a'|'A');
-fragment B: 'B';//('b'|'B');
-fragment C: 'C';//('c'|'C');
-fragment D: 'D';//('d'|'D');
-fragment E: 'E';//('e'|'E');
-fragment F: 'F';//('f'|'F');
-fragment G: 'G';//('g'|'G');
-fragment H: 'H';//('h'|'H');
-fragment I: 'I';//('i'|'I');
-fragment J: 'J';//('j'|'J');
-fragment K: 'K';//('k'|'K');
-fragment L: 'L';//('l'|'L');
-fragment M: 'M';//('m'|'M');
-fragment N: 'N';//('n'|'N');
-fragment O: 'O';//('o'|'O');
-fragment P: 'P';//('p'|'P');
-fragment Q: 'Q';//('q'|'Q');
-fragment R: 'R';//('r'|'R');
-fragment S: 'S';//('s'|'S');
-fragment T: 'T';//('t'|'T');
-fragment U: 'U';//('u'|'U');
-fragment V: 'V';//('v'|'V');
-fragment W: 'W';//('w'|'W');
-fragment X: 'X';//('x'|'X');
-fragment Y: 'Y';//('y'|'Y');
-fragment Z: 'Z';//('z'|'Z');
+fragment A: ('a'|'A');
+fragment B: ('b'|'B');
+fragment C: ('c'|'C');
+fragment D: ('d'|'D');
+fragment E: ('e'|'E');
+fragment F: ('f'|'F');
+fragment G: ('g'|'G');
+fragment H: ('h'|'H');
+fragment I: ('i'|'I');
+fragment J: ('j'|'J');
+fragment K: ('k'|'K');
+fragment L: ('l'|'L');
+fragment M: ('m'|'M');
+fragment N: ('n'|'N');
+fragment O: ('o'|'O');
+fragment P: ('p'|'P');
+fragment Q: ('q'|'Q');
+fragment R: ('r'|'R');
+fragment S: ('s'|'S');
+fragment T: ('t'|'T');
+fragment U: ('u'|'U');
+fragment V: ('v'|'V');
+fragment W: ('w'|'W');
+fragment X: ('x'|'X');
+fragment Y: ('y'|'Y');
+fragment Z: ('z'|'Z');
 
 fragment QUOTE: '\'';
 fragment DOUBLE_QUOTE: '"';

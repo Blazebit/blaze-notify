@@ -52,6 +52,15 @@ public class TemporalIntervalExpressionCompilerTest extends AbstractExpressionCo
                         }
                 },
                 {
+                        "interval 1 years",
+                        new ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest>() {
+                            @Override
+                            public Expression getExpectedExpression(TemporalIntervalExpressionCompilerTest testInstance) {
+                                return pos(testInstance.interval("1 YEARS"));
+                            }
+                        }
+                },
+                {
                         "INTERVAL 1 YEARS 2 MONTHS 3 DAYS 2 HOURS 32 MINUTES 1 SECONDS",
                         new ExpectedExpressionProducer<TemporalIntervalExpressionCompilerTest>() {
                             @Override
