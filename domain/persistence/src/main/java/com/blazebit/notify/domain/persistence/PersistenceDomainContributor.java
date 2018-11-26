@@ -66,10 +66,10 @@ public class PersistenceDomainContributor implements DomainContributor {
         createBasicType(domainBuilder, String.class, new DomainOperator[]{ DomainOperator.PLUS }, DomainPredicateType.comparable());
         createBasicType(domainBuilder, Calendar.class, new DomainOperator[]{ DomainOperator.PLUS, DomainOperator.MINUS }, DomainPredicateType.comparable());
         createBasicType(domainBuilder, Boolean.class, new DomainOperator[]{ DomainOperator.NOT }, DomainPredicateType.distinguishable());
-        domainBuilder.withLiteralTypeResolver(NUMERIC_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(STRING_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(TEMPORAL_LITERAL_TYPE_RESOLVER);
-        domainBuilder.withLiteralTypeResolver(BOOLEAN_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withNumericLiteralResolver(NUMERIC_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withStringLiteralResolver(STRING_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withTemporalLiteralResolver(TEMPORAL_LITERAL_TYPE_RESOLVER);
+        domainBuilder.withBooleanLiteralResolver(BOOLEAN_LITERAL_TYPE_RESOLVER);
 
         for (Class<?> type : Arrays.asList(Integer.class, BigDecimal.class)) {
             domainBuilder.withOperationTypeResolver(type, DomainOperator.MODULO, StaticDomainOperationTypeResolvers.returning(Integer.class));

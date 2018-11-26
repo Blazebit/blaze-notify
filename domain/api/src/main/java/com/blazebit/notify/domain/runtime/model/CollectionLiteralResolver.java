@@ -22,7 +22,7 @@ import java.util.Collection;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface CollectionLiteralTypeResolver {
+public interface CollectionLiteralResolver {
 
-    ResolvedLiteral resolveLiteral(DomainModel domainModel, CollectionDomainType collectionDomainType, Collection<ResolvedLiteral> values);
+    ResolvedLiteral resolveLiteral(DomainModel domainModel, CollectionDomainType collectionDomainType, Collection<? extends Object> values);
 }

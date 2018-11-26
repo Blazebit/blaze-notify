@@ -78,7 +78,7 @@ public class CollectionDomainTypeDefinitionImpl extends MetadataDefinitionHolder
     }
 
     @Override
-    public DomainType getType(MetamodelBuildingContext context) {
+    public CollectionDomainType getType(MetamodelBuildingContext context) {
         if (domainType == null) {
             domainType = new CollectionDomainTypeImpl(this, context);
         }

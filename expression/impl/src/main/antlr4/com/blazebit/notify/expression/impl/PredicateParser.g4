@@ -42,7 +42,7 @@ comparison_expression
     : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		                                        #ComparisonPredicate
     | left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression                                        #BetweenPredicate
     | arithmetic_expression 	(not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP         #InPredicate
-	| arithmetic_expression 	(not=NOT)? IN 			path			                                                                #InCollectionPredicate
+	| arithmetic_expression 	(not=NOT)? IN 			enum_literal_or_path			                                                                #InCollectionPredicate
     | left=arithmetic_expression		kind=(IS_NULL | IS_NOT_NULL)                                                                        #IsNullPredicate
     ;
 
@@ -84,17 +84,17 @@ arithmetic_primary
     ;
 
 atom
-    : path
+    : enum_literal_or_path
     | entity_literal_or_function_invocation
     | datetime_literal
     | temporal_interval_literal
     | numeric_literal
     | string_literal
-    | enum_literal
+    | collection_literal
     ;
 
-path
-    : alias=identifier (DOT attributeNames+=identifier)+
+enum_literal_or_path
+    : alias=identifier (DOT attributeNames+=identifier) (DOT attributeNames+=identifier)* #EnumLiteralOrPath
     ;
 
 entity_literal_or_function_invocation
@@ -102,10 +102,6 @@ entity_literal_or_function_invocation
     | name=identifier LP (args+=conditional_expression|arithmetic_expression) (COMMA (args+=conditional_expression|arithmetic_expression))* RP                                                          #IndexedFunctionInvocation
     | name=identifier LP (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression) (COMMA (argNames +=identifier OP_EQ args+=conditional_expression|arithmetic_expression))* RP  #NamedInvocation
     ;
-
-/****************************************************************
- * Date & Time
- ****************************************************************/
 
 datetime_literal
 	: TIMESTAMP LP content=TIMESTAMP_LITERAL_CONTENT RP    #TimestampLiteral
@@ -115,28 +111,16 @@ temporal_interval_literal
     : INTERVAL content=TEMPORAL_INTERVAL_LITERAL_CONTENT #TemporalIntervalLiteral
     ;
 
-/****************************************************************
- * String
- ****************************************************************/
-
 string_literal
 	: STRING_LITERAL    #StringLiteral
 	;
 
-/****************************************************************
- * Enum
- ****************************************************************/
-
-enum_literal
-	: ENUM_VALUE_FUNCTION LP enumName=STRING_LITERAL COMMA enumKey=STRING_LITERAL RP  #EnumLiteral
-	;
-
-/****************************************************************
- * Numeric
- ****************************************************************/
-
 numeric_literal
     : NUMERIC_LITERAL   #NumericLiteral
+	;
+
+collection_literal
+    : LB ((values+=atom) (COMMA (values+=atom))*)? RB   #CollectionLiteral
 	;
 
 identifier

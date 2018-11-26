@@ -63,11 +63,6 @@ STRING_LITERAL
 NUMERIC_LITERAL
     : INTEGER ('.' DIGITS)? EXPONENT_PART?;
 
-ENUM_VALUE_FUNCTION : E N U M '_' V A L U E;
-
-fragment ENUM_KEY
-	: [A-Z_]+;
-
 fragment INTEGER
 	: '0'
 	| DIGIT_NOT_ZERO DIGITS?;
@@ -94,6 +89,8 @@ OP_DIV: '/';
 
 LP: '(';
 RP: ')';
+LB: '[';
+RB: ']';
 COMMA: ',';
 DOT: '.';
 

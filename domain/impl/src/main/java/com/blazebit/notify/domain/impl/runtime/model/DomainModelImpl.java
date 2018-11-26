@@ -28,6 +28,7 @@ public class DomainModelImpl implements DomainModel {
 
     private final Map<String, DomainType> domainTypes;
     private final Map<Class<?>, DomainType> domainTypesByJavaType;
+    private final Map<DomainType, CollectionDomainType> collectionDomainTypes;
     private final Map<String, DomainFunction> domainFunctions;
     private final Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers;
     private final Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers;
@@ -40,10 +41,12 @@ public class DomainModelImpl implements DomainModel {
     private final TemporalLiteralResolver temporalLiteralResolver;
     private final EnumLiteralResolver enumLiteralResolver;
     private final EntityLiteralResolver entityLiteralResolver;
+    private final CollectionLiteralResolver collectionLiteralResolver;
 
-    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers, Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType, NumericLiteralResolver numericLiteralResolver, BooleanLiteralResolver booleanLiteralResolver, StringLiteralResolver stringLiteralResolver, TemporalLiteralResolver temporalLiteralResolver, EnumLiteralResolver enumLiteralResolver, EntityLiteralResolver entityLiteralResolver) {
+    public DomainModelImpl(Map<String, DomainType> domainTypes, Map<Class<?>, DomainType> domainTypesByJavaType, Map<DomainType, CollectionDomainType> collectionDomainTypes, Map<String, DomainFunction> domainFunctions, Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers, Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers, Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType, Map<String, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolvers, Map<Class<?>, Map<DomainPredicateType, DomainPredicateTypeResolver>> domainPredicateTypeResolversByJavaType, NumericLiteralResolver numericLiteralResolver, BooleanLiteralResolver booleanLiteralResolver, StringLiteralResolver stringLiteralResolver, TemporalLiteralResolver temporalLiteralResolver, EnumLiteralResolver enumLiteralResolver, EntityLiteralResolver entityLiteralResolver, CollectionLiteralResolver collectionLiteralResolver) {
         this.domainTypes = domainTypes;
         this.domainTypesByJavaType = domainTypesByJavaType;
+        this.collectionDomainTypes = collectionDomainTypes;
         this.domainFunctions = domainFunctions;
         this.domainFunctionTypeResolvers = domainFunctionTypeResolvers;
         this.domainOperationTypeResolvers = domainOperationTypeResolvers;
@@ -56,6 +59,7 @@ public class DomainModelImpl implements DomainModel {
         this.temporalLiteralResolver = temporalLiteralResolver;
         this.enumLiteralResolver = enumLiteralResolver;
         this.entityLiteralResolver = entityLiteralResolver;
+        this.collectionLiteralResolver = collectionLiteralResolver;
     }
 
     @Override
@@ -66,6 +70,11 @@ public class DomainModelImpl implements DomainModel {
     @Override
     public DomainType getType(Class<?> javaType) {
         return domainTypesByJavaType.get(javaType);
+    }
+
+    @Override
+    public CollectionDomainType getCollectionType(DomainType elementDomainType) {
+        return collectionDomainTypes.get(elementDomainType);
     }
 
     @Override
@@ -139,5 +148,10 @@ public class DomainModelImpl implements DomainModel {
     @Override
     public EntityLiteralResolver getEntityLiteralResolver() {
         return entityLiteralResolver;
+    }
+
+    @Override
+    public CollectionLiteralResolver getCollectionLiteralResolver() {
+        return collectionLiteralResolver;
     }
 }

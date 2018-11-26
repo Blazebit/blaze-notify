@@ -59,10 +59,10 @@ public abstract class AbstractExpressionCompilerTest {
                     .withValue(Gender.MALE.name())
                 .build()
                 .withPredicate("gender", DomainPredicateType.distinguishable())
-                .withLiteralTypeResolver(new DefaultNumericLiteralResolver())
-                .withLiteralTypeResolver(new DefaultStringLiteralResolver())
-                .withLiteralTypeResolver(new DefaultTemporalLiteralResolver())
-                .withLiteralTypeResolver(new DefaultEnumLiteralResolver())
+                .withNumericLiteralResolver(new DefaultNumericLiteralResolver())
+                .withStringLiteralResolver(new DefaultStringLiteralResolver())
+                .withTemporalLiteralResolver(new DefaultTemporalLiteralResolver())
+                .withEnumLiteralResolver(new DefaultEnumLiteralResolver())
                 .createEntityType("user")
                     .addAttribute("id", Long.class)
                     .addAttribute("email", String.class)
@@ -166,6 +166,8 @@ public abstract class AbstractExpressionCompilerTest {
                 } else {
                     if (type instanceof EntityDomainType) {
                         entityDomainType = (EntityDomainType) type;
+                    } else if (type instanceof CollectionDomainType) {
+                        entityDomainType = (EntityDomainType) ((CollectionDomainType) type).getElementType();
                     } else {
                         throw new IllegalArgumentException("De-referencing non-entity type attribute: " + attribute);
                     }
@@ -176,7 +178,7 @@ public abstract class AbstractExpressionCompilerTest {
     }
 
     protected Atom enumValue(String enumName, String enumKey) {
-        return new Atom(expressionCompiler.getLiteralFactory().ofEnumValue(new EnumValue(enumName, enumKey)));
+        return new Atom(expressionCompiler.getLiteralFactory().ofEnumValue((EnumDomainType) domainModel.getType(enumName), enumKey));
     }
 
 //	protected static CollectionAtom collectionAttr(String identifier) {

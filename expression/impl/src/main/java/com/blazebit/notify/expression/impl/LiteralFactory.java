@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Map;
 
 public class LiteralFactory {
@@ -60,6 +61,7 @@ public class LiteralFactory {
     private final TemporalLiteralResolver temporalLiteralResolver;
     private final EnumLiteralResolver enumLiteralResolver;
     private final EntityLiteralResolver entityLiteralResolver;
+    private final CollectionLiteralResolver collectionLiteralResolver;
 
     public LiteralFactory(DomainModel domainModel) {
         this.domainModel = domainModel;
@@ -69,28 +71,30 @@ public class LiteralFactory {
         this.temporalLiteralResolver = domainModel.getTemporalLiteralResolver();
         this.enumLiteralResolver = domainModel.getEnumLiteralResolver();
         this.entityLiteralResolver = domainModel.getEntityLiteralResolver();
+        this.collectionLiteralResolver = domainModel.getCollectionLiteralResolver();
     }
 
-    public ResolvedLiteral ofEnumValue(EnumValue enumValue) {
-        DomainType domainType = domainModel.getType(enumValue.getEnumName());
-        if (domainType == null) {
-            throw new DomainModelException(String.format("Undefined enum type '%s'", enumValue.getEnumName()));
-        } else if (domainType.getKind() == DomainType.DomainTypeKind.ENUM) {
-            EnumDomainTypeValue domainEnumValue = ((EnumDomainType) domainType).getEnumValues().get(enumValue.getEnumKey());
-            if (enumLiteralResolver == null) {
-                throw new DomainModelException("No literal type resolver for enum literals defined");
-            }
-            return enumLiteralResolver.resolveLiteral(domainModel, domainEnumValue);
-        } else {
-            throw new TypeErrorException("Expected domain type of kind " + DomainType.DomainTypeKind.ENUM + " for type name " + enumValue.getEnumName());
+    public ResolvedLiteral ofEnumValue(EnumDomainType enumDomainType, String value) {
+        EnumDomainTypeValue domainEnumValue = enumDomainType.getEnumValues().get(value);
+        if (enumLiteralResolver == null) {
+            throw new DomainModelException("No literal resolver for enum literals defined");
         }
+        return enumLiteralResolver.resolveLiteral(domainModel, domainEnumValue);
     }
 
     public ResolvedLiteral ofEntityAttributeValues(EntityDomainType entityDomainType, Map<EntityDomainTypeAttribute, Expression> attributeValues) {
         if (entityLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for enum literals defined");
+            throw new DomainModelException("No literal resolver for enum literals defined");
         }
         return entityLiteralResolver.resolveLiteral(domainModel, entityDomainType, attributeValues);
+    }
+
+    public ResolvedLiteral ofCollectionValues(CollectionDomainType collectionDomainType, Collection<Expression> expressions) {
+        if (collectionLiteralResolver == null) {
+            throw new DomainModelException("No literal resolver for collection literals defined");
+        }
+        return collectionLiteralResolver.resolveLiteral(domainModel, collectionDomainType, expressions);
+
     }
 
     public ResolvedLiteral ofTemporalIntervalString(String intervalString) {
@@ -117,7 +121,7 @@ public class LiteralFactory {
 
         TemporalInterval interval = new TemporalInterval(years, months, days, hours, minutes, seconds);
         if (temporalLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for temporal interval literals defined");
+            throw new DomainModelException("No literal resolver for temporal interval literals defined");
         }
         return temporalLiteralResolver.resolveIntervalLiteral(domainModel, interval);
     }
@@ -132,7 +136,7 @@ public class LiteralFactory {
 
     public ResolvedLiteral ofString(String string) {
         if (stringLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for string literals defined");
+            throw new DomainModelException("No literal resolver for string literals defined");
         }
         return stringLiteralResolver.resolveLiteral(domainModel, string);
     }
@@ -161,7 +165,7 @@ public class LiteralFactory {
 
     public ResolvedLiteral ofCalendar(Calendar calendar) {
         if (temporalLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for temporal literals defined");
+            throw new DomainModelException("No literal resolver for temporal literals defined");
         }
         return temporalLiteralResolver.resolveTimestampLiteral(domainModel, calendar);
     }
@@ -176,14 +180,14 @@ public class LiteralFactory {
 
     public ResolvedLiteral ofBigDecimal(BigDecimal bigDecimal) {
         if (numericLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for numeric literals defined");
+            throw new DomainModelException("No literal resolver for numeric literals defined");
         }
         return numericLiteralResolver.resolveLiteral(domainModel, bigDecimal);
     }
 
     public ResolvedLiteral ofBoolean(Boolean value) {
         if (booleanLiteralResolver == null) {
-            throw new DomainModelException("No literal type resolver for boolean literals defined");
+            throw new DomainModelException("No literal resolver for boolean literals defined");
         }
         return booleanLiteralResolver.resolveLiteral(domainModel, value);
     }

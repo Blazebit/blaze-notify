@@ -227,49 +227,69 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Expression visitEnumLiteral(PredicateParser.EnumLiteralContext ctx) {
-        String enumName = unquote(ctx.enumName.getText());
-        String enumKey = unquote(ctx.enumKey.getText());
-        return new Atom(literalFactory.ofEnumValue(new EnumValue(enumName, enumKey)));
-    }
-
-    @Override
     public Expression visitNumericLiteral(PredicateParser.NumericLiteralContext ctx) {
         return new Atom(literalFactory.ofNumericString(ctx.NUMERIC_LITERAL().getText()));
     }
 
     @Override
-    public Expression visitPath(PredicateParser.PathContext ctx) {
+    public Expression visitCollectionLiteral(PredicateParser.CollectionLiteralContext ctx) {
+        List<Expression> literalList = getLiteralList(Expression.class, ctx.values);
+        CollectionDomainType collectionDomainType;
+        if (literalList.isEmpty()) {
+            collectionDomainType = domainModel.getCollectionType(null);
+        } else {
+            collectionDomainType = domainModel.getCollectionType(literalList.get(0).getType());
+        }
+
+        return new Atom(literalFactory.ofCollectionValues(collectionDomainType, literalList));
+    }
+
+    @Override
+    public Expression visitEnumLiteralOrPath(PredicateParser.EnumLiteralOrPathContext ctx) {
         String alias = ctx.alias.getText();
         DomainType type = compileContext.getRootDomainType(alias);
         if (type == null) {
+            if (ctx.attributeNames.size() == 1) {
+                DomainType possibleEnumType = domainModel.getType(alias);
+                if (possibleEnumType instanceof EnumDomainType) {
+                    return new Atom(literalFactory.ofEnumValue((EnumDomainType) possibleEnumType, ctx.attributeNames.get(0).getText()));
+                }
+            }
             throw unknownEntityType(alias);
-        } else if (type instanceof EntityDomainType) {
-            EntityDomainType entityType = (EntityDomainType) type;
+        } else {
             List<PredicateParser.IdentifierContext> attributeNames = ctx.attributeNames;
+            if (attributeNames.size() == 0) {
+                return new Atom(new Path(alias, Path.empty(), type));
+            }
+            EntityDomainType entityType;
+            if (type instanceof EntityDomainType) {
+                entityType = (EntityDomainType) type;
+            } else if (type instanceof CollectionDomainType) {
+                entityType = (EntityDomainType) ((CollectionDomainType) type).getElementType();
+            } else {
+                throw noEntityDomainType(alias);
+            }
             List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(attributeNames.size());
-            if (attributeNames.size() != 0) {
-                for (int i = 0; ; ) {
-                    String attributeName = attributeNames.get(i).getText();
-                    EntityDomainTypeAttribute attribute = entityType.getAttribute(attributeName);
-                    pathAttributes.add(attribute);
-                    type = attribute.getType();
-                    i++;
-                    if (i == attributeNames.size()) {
-                        break;
+            for (int i = 0; ; ) {
+                String attributeName = attributeNames.get(i).getText();
+                EntityDomainTypeAttribute attribute = entityType.getAttribute(attributeName);
+                pathAttributes.add(attribute);
+                type = attribute.getType();
+                i++;
+                if (i == attributeNames.size()) {
+                    break;
+                } else {
+                    if (type instanceof EntityDomainType) {
+                        entityType = (EntityDomainType) type;
+                    } else if (type instanceof CollectionDomainType) {
+                        entityType = (EntityDomainType) ((CollectionDomainType) type).getElementType();
                     } else {
-                        if (type instanceof EntityDomainType) {
-                            entityType = (EntityDomainType) type;
-                        } else {
-                            noEntityDomainType(attributeName);
-                        }
+                        throw noEntityDomainType(attributeName);
                     }
                 }
             }
 
             return new Atom(new Path(alias, pathAttributes, type));
-        } else {
-            return new Atom(new Path(alias, Path.empty(), type));
         }
     }
 

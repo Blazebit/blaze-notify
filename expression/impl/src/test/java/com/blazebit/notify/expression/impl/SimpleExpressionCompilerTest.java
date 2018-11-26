@@ -106,7 +106,7 @@ public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest
 
     @Test
     public void testEnum1() {
-        Predicate predicate = parsePredicate("user.gender = ENUM_VALUE('gender','MALE')");
+        Predicate predicate = parsePredicate("user.gender = gender.MALE");
         assertEquals(
                 eq(pos(attr("user", "gender")), pos(enumValue("gender", "MALE"))),
                 predicate
@@ -170,7 +170,7 @@ public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest
 
     @Test
     public void testEnumInLiterals() {
-        Predicate predicate = parsePredicate("user.gender IN (ENUM_VALUE('gender','MALE'),ENUM_VALUE('gender','FEMALE'))");
+        Predicate predicate = parsePredicate("user.gender IN (gender.MALE,gender.FEMALE)");
         assertEquals(
                 in(pos(attr("user", "gender")), pos(enumValue("gender", "MALE")), pos(enumValue("gender", "FEMALE"))),
                 predicate

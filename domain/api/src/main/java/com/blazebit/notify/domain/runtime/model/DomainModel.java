@@ -28,6 +28,8 @@ public interface DomainModel {
 
     public DomainType getType(Class<?> javaType);
 
+    public CollectionDomainType getCollectionType(DomainType elementDomainType);
+
     public Map<String, DomainType> getTypes();
 
     public DomainFunction getFunction(String name);
@@ -53,4 +55,6 @@ public interface DomainModel {
     public EnumLiteralResolver getEnumLiteralResolver();
 
     public EntityLiteralResolver getEntityLiteralResolver();
+
+    public CollectionLiteralResolver getCollectionLiteralResolver();
 }

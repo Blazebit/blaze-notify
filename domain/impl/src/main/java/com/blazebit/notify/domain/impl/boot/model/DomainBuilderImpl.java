@@ -20,6 +20,7 @@ import com.blazebit.notify.domain.boot.model.DomainBuilder;
 import com.blazebit.notify.domain.boot.model.DomainFunctionBuilder;
 import com.blazebit.notify.domain.boot.model.DomainTypeDefinition;
 import com.blazebit.notify.domain.boot.model.MetadataDefinition;
+import com.blazebit.notify.domain.impl.runtime.model.CollectionDomainTypeImpl;
 import com.blazebit.notify.domain.impl.runtime.model.DomainModelImpl;
 import com.blazebit.notify.domain.runtime.model.*;
 
@@ -36,6 +37,8 @@ public class DomainBuilderImpl implements DomainBuilder {
     private Map<String, Set<DomainPredicateType>> enabledPredicates = new HashMap<>();
     private Map<String, DomainTypeDefinitionImplementor<?>> domainTypeDefinitions = new HashMap<>();
     private Map<Class<?>, DomainTypeDefinitionImplementor<?>> domainTypeDefinitionsByJavaType = new HashMap<>();
+    private Map<String, CollectionDomainTypeDefinitionImpl> collectionDomainTypeDefinitions = new HashMap<>();
+    private Map<Class<?>, CollectionDomainTypeDefinitionImpl> collectionDomainTypeDefinitionsByJavaType = new HashMap<>();
     private Map<String, DomainFunctionTypeResolver> domainFunctionTypeResolvers = new HashMap<>();
     private Map<String, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolvers = new HashMap<>();
     private Map<Class<?>, Map<DomainOperator, DomainOperationTypeResolver>> domainOperationTypeResolversByJavaType = new HashMap<>();
@@ -47,6 +50,7 @@ public class DomainBuilderImpl implements DomainBuilder {
     private TemporalLiteralResolver temporalLiteralResolver;
     private EnumLiteralResolver enumLiteralResolver;
     private EntityLiteralResolver entityLiteralResolver;
+    private CollectionLiteralResolver collectionLiteralResolver;
 
     DomainBuilderImpl withDomainTypeDefinition(DomainTypeDefinitionImplementor<?> domainTypeDefinition) {
         domainTypeDefinitions.put(domainTypeDefinition.getName(), domainTypeDefinition);
@@ -69,46 +73,63 @@ public class DomainBuilderImpl implements DomainBuilder {
         return domainTypeDefinitionsByJavaType.get(javaType);
     }
 
-    public DomainTypeDefinition<?> getCollectionDomainTypeDefinition(DomainTypeDefinition<?> typeDefinition) {
+    public CollectionDomainTypeDefinitionImpl getCollectionDomainTypeDefinition(DomainTypeDefinition<?> typeDefinition) {
         if (typeDefinition == null) {
             return null;
         }
-        return new CollectionDomainTypeDefinitionImpl("Collection", Collection.class, typeDefinition);
+        CollectionDomainTypeDefinitionImpl collectionDomainTypeDefinition = collectionDomainTypeDefinitions.get(typeDefinition.getName());
+        if (collectionDomainTypeDefinition == null && typeDefinition.getJavaType() != null) {
+            collectionDomainTypeDefinition = collectionDomainTypeDefinitionsByJavaType.get(typeDefinition.getJavaType());
+        }
+        if (collectionDomainTypeDefinition == null){
+            collectionDomainTypeDefinition = new CollectionDomainTypeDefinitionImpl("Collection", Collection.class, typeDefinition);
+            collectionDomainTypeDefinitions.put(typeDefinition.getName(), collectionDomainTypeDefinition);
+            if (typeDefinition.getJavaType() != null) {
+                collectionDomainTypeDefinitionsByJavaType.put(typeDefinition.getJavaType(), collectionDomainTypeDefinition);
+            }
+        }
+        return collectionDomainTypeDefinition;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(BooleanLiteralResolver typeResolver) {
+    public DomainBuilder withBooleanLiteralResolver(BooleanLiteralResolver typeResolver) {
         this.booleanLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(NumericLiteralResolver typeResolver) {
+    public DomainBuilder withNumericLiteralResolver(NumericLiteralResolver typeResolver) {
         this.numericLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(StringLiteralResolver typeResolver) {
+    public DomainBuilder withStringLiteralResolver(StringLiteralResolver typeResolver) {
         this.stringLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(TemporalLiteralResolver typeResolver) {
+    public DomainBuilder withTemporalLiteralResolver(TemporalLiteralResolver typeResolver) {
         this.temporalLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(EnumLiteralResolver typeResolver) {
+    public DomainBuilder withEnumLiteralResolver(EnumLiteralResolver typeResolver) {
         this.enumLiteralResolver = typeResolver;
         return this;
     }
 
     @Override
-    public DomainBuilder withLiteralTypeResolver(EntityLiteralResolver typeResolver) {
+    public DomainBuilder withEntityLiteralResolver(EntityLiteralResolver typeResolver) {
         this.entityLiteralResolver = typeResolver;
+        return this;
+    }
+
+    @Override
+    public DomainBuilder withCollectionLiteralResolver(CollectionLiteralResolver typeResolver) {
+        this.collectionLiteralResolver = typeResolver;
         return this;
     }
 
@@ -291,6 +312,7 @@ public class DomainBuilderImpl implements DomainBuilder {
 
         Map<String, DomainType> domainTypes = new HashMap<>(domainTypeDefinitions.size());
         Map<Class<?>, DomainType> domainTypesByJavaType = new HashMap<>(domainTypeDefinitions.size());
+        Map<DomainType, CollectionDomainType> collectionDomainTypes = new HashMap<>(domainTypeDefinitions.size());
         if (!context.hasErrors()) {
             for (DomainTypeDefinitionImplementor<?> typeDefinition : domainTypeDefinitions.values()) {
                 DomainType domainType = context.getType(typeDefinition);
@@ -298,6 +320,9 @@ public class DomainBuilderImpl implements DomainBuilder {
                 if (typeDefinition.getJavaType() != null) {
                     domainTypesByJavaType.put(domainType.getJavaType(), domainType);
                 }
+                CollectionDomainTypeDefinitionImpl collectionDomainTypeDefinition = getCollectionDomainTypeDefinition(typeDefinition);
+                collectionDomainTypeDefinition.bindTypes(this, context);
+                collectionDomainTypes.put(domainType, collectionDomainTypeDefinition.getType(context));
             }
         }
         Map<String, DomainFunction> domainFunctions = new HashMap<>(domainFunctionDefinitions.size());
@@ -480,6 +505,6 @@ public class DomainBuilderImpl implements DomainBuilder {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return new DomainModelImpl(domainTypes, domainTypesByJavaType, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, domainPredicateTypeResolvers, domainPredicateTypeResolversByJavaType, numericLiteralResolver, booleanLiteralResolver, stringLiteralResolver, temporalLiteralResolver, enumLiteralResolver, entityLiteralResolver);
+        return new DomainModelImpl(domainTypes, domainTypesByJavaType, collectionDomainTypes, domainFunctions, domainFunctionTypeResolvers, domainOperationTypeResolvers, domainOperationTypeResolversByJavaType, domainPredicateTypeResolvers, domainPredicateTypeResolversByJavaType, numericLiteralResolver, booleanLiteralResolver, stringLiteralResolver, temporalLiteralResolver, enumLiteralResolver, entityLiteralResolver, collectionLiteralResolver);
     }
 }
