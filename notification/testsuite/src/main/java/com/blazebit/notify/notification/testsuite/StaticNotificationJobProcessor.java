@@ -26,7 +26,7 @@ public class StaticNotificationJobProcessor<R extends NotificationReceiver, N ex
     }
 
     @Override
-    public N process(NotificationJob<R, N, T> notificationJob, NotificationJobContext context) {
+    public N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context) {
         notificationJob.getReceiverResolver().resolveNotificationReceivers(notificationJob, context);
         return null;
     }

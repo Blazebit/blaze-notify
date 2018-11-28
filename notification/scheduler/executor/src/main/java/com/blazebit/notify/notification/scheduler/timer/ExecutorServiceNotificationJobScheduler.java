@@ -15,10 +15,7 @@
  */
 package com.blazebit.notify.notification.scheduler.timer;
 
-import com.blazebit.notify.notification.Notification;
-import com.blazebit.notify.notification.NotificationJob;
-import com.blazebit.notify.notification.NotificationJobProcessor;
-import com.blazebit.notify.notification.NotificationJobScheduler;
+import com.blazebit.notify.notification.*;
 import com.blazebit.notify.notification.event.NotificationEventListener;
 
 import java.util.NoSuchElementException;
@@ -52,11 +49,11 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
 
     @Override
     public boolean add(NotificationJob<?, ?, ?> job) {
-        return queue(new JobScheduleEntry(job));
+        return queue(new JobScheduleEntry(job, new MutableScheduleContext()));
     }
 
     private void scheduleOrRequeue(JobScheduleEntry scheduleEntry) {
-        long jobSchedule = scheduleEntry.schedule;
+        long jobSchedule = scheduleEntry.job.getSchedule().nextEpochSchedule(scheduleEntry.scheduleContext);
         if (System.currentTimeMillis() > jobSchedule) {
             try {
                 schedule(scheduleEntry);
@@ -77,7 +74,7 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
             return false;
         }
         jobQueue.add(scheduleEntry);
-        long jobSchedule = scheduleEntry.schedule;
+        long jobSchedule = scheduleEntry.nextSchedule;
         do {
             ScheduleEntry currentScheduleEntry = nextScheduleEntry.get();
             long lastSchedule = currentScheduleEntry.schedule;
@@ -111,7 +108,7 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
             JobScheduleEntry peek = jobQueue.peek();
             if (peek != null) {
                 long sleepStart = System.currentTimeMillis();
-                long sleepingMillis = peek.schedule - sleepStart;
+                long sleepingMillis = peek.nextSchedule - sleepStart;
                 if (sleepingMillis > 0) {
                     try {
                         Thread.sleep(sleepingMillis);
@@ -145,15 +142,21 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
         }
     }
 
-    public void schedule(JobScheduleEntry scheduleEntry) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void schedule(JobScheduleEntry scheduleEntry) {
+        scheduleEntry.scheduleContext.setLastScheduledExecutionTime(scheduleEntry.nextSchedule);
+        scheduleEntry.scheduleContext.setLastActualExecutionTime(System.currentTimeMillis());
         NotificationJobProcessor jobProcessor = scheduleEntry.job.getJobProcessor();
-        MutableNotificationJobContext jobContext = new MutableNotificationJobContext(processCount);
+        MutableNotificationJobProcessingContext jobContext = new MutableNotificationJobProcessingContext(processCount);
         Notification<?, ?, ?> lastProcessedNotification;
         do {
             lastProcessedNotification = jobProcessor.process(scheduleEntry.job, jobContext);
             jobContext.setLastProcessed(lastProcessedNotification);
-            eventListener.onNotificationsCreated();
+            if (eventListener != null) {
+                eventListener.onNotificationsCreated();
+            }
         } while (lastProcessedNotification != null);
+        scheduleEntry.scheduleContext.setLastCompletionTime(System.currentTimeMillis());
     }
 
     private static class ScheduleEntry {
@@ -169,16 +172,18 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
     private static class JobScheduleEntry implements Comparable<JobScheduleEntry> {
 
         private final NotificationJob<?, ?, ?> job;
-        private final long schedule;
+        private final MutableScheduleContext scheduleContext;
+        private final long nextSchedule;
 
-        public JobScheduleEntry(NotificationJob<?, ?, ?> job) {
+        JobScheduleEntry(NotificationJob<?, ?, ?> job, MutableScheduleContext scheduleContext) {
             this.job = job;
-            this.schedule = job.getSchedule().nextEpochSchedule();
+            this.scheduleContext = scheduleContext;
+            this.nextSchedule = job.getSchedule().nextEpochSchedule(scheduleContext);
         }
 
         @Override
         public int compareTo(JobScheduleEntry o) {
-            return Long.compare(schedule, o.schedule);
+            return Long.compare(nextSchedule, o.nextSchedule);
         }
 
         @Override
@@ -189,7 +194,7 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
 
             JobScheduleEntry that = (JobScheduleEntry) o;
 
-            if (schedule != that.schedule) {
+            if (nextSchedule != that.nextSchedule) {
                 return false;
             }
             return job.equals(that.job);
@@ -198,7 +203,7 @@ public class ExecutorServiceNotificationJobScheduler implements NotificationJobS
         @Override
         public int hashCode() {
             int result = job.hashCode();
-            result = 31 * result + (int) (schedule ^ (schedule >>> 32));
+            result = 31 * result + (int) (nextSchedule ^ (nextSchedule >>> 32));
             return result;
         }
     }

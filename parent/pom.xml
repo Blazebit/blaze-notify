@@ -20,6 +20,7 @@
         <blaze-notify.codename></blaze-notify.codename>
 
         <version.blaze-persistence>1.3.0-Alpha3</version.blaze-persistence>
+        <version.spring>5.0.7.RELEASE</version.spring>
         <version.junit>4.12</version.junit>
     </properties>
 

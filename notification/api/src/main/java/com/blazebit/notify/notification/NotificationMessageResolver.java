@@ -15,7 +15,7 @@
  */
 package com.blazebit.notify.notification;
 
-public interface NotificationMessageResolver<R extends NotificationReceiver, T extends NotificationMessage> {
+public interface NotificationMessageResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
-    T create(R notificationReceiver, NotificationJobContext context);
+    T resolveNotificationMessage(NotificationJob<R, N, T> notificationJob, R notificationReceiver);
 }

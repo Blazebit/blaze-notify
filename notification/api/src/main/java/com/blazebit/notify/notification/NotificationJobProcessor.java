@@ -23,5 +23,5 @@ public interface NotificationJobProcessor<R extends NotificationReceiver, N exte
      * @param context
      * @return the last processed notification
      */
-    N process(NotificationJob<R, N, T> notificationJob, NotificationJobContext context);
+    N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context);
 }

@@ -24,16 +24,19 @@ import freemarker.template.TemplateException;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Map;
 
-public class FreemarkerTemplateProcessor<R extends NotificationReceiver> implements TemplateProcessor<FreemarkerTemplate, R> {
+public abstract class FreemarkerTemplateProcessor<R extends NotificationReceiver, P extends NotificationMessagePart> implements TemplateProcessor<FreemarkerTemplate, R, P> {
     @Override
-    public NotificationMessagePart processTemplate(FreemarkerTemplate template, R receiver) {
+    public P processTemplate(FreemarkerTemplate template, Map<String, Object> model) {
         StringWriter stringWriter = new StringWriter();
         try {
-            template.getFreemarkerTemplate().process(receiver, stringWriter);
+            template.getFreemarkerTemplate().process(model, stringWriter);
         } catch (TemplateException | IOException e) {
             throw new TemplateProcessorException(e);
         }
-        return new DefaultNotificationMessagePart(stringWriter.toString());
+        return createNotificationMessagePart(stringWriter.toString());
     }
+
+    protected abstract P createNotificationMessagePart(String processedTemplateContent);
 }

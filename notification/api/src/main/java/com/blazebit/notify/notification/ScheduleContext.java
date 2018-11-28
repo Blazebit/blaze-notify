@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.template.api;
+package com.blazebit.notify.notification;
 
-import com.blazebit.notify.notification.NotificationMessagePart;
-import com.blazebit.notify.notification.NotificationReceiver;
+public interface ScheduleContext {
 
-import java.util.Map;
+    long getLastScheduledExecutionTime();
 
-public interface TemplateProcessor<T extends Template, R extends NotificationReceiver, P extends NotificationMessagePart> {
+    long getLastActualExecutionTime();
 
-    P processTemplate(T template, Map<String, Object> model);
+    long getLastCompletionTime();
 }

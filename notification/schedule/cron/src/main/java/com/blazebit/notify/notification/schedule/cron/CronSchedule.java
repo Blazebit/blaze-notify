@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification;
+package com.blazebit.notify.notification.schedule.cron;
 
-import java.util.List;
+import com.blazebit.notify.notification.Schedule;
+import com.blazebit.notify.notification.ScheduleContext;
 
-public class StaticNotificationReceiverResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationReceiverResolver<R, N, T> {
-    private final List<R> notificationReceivers;
+import java.text.ParseException;
+import java.util.Date;
 
-    public StaticNotificationReceiverResolver(List<R> notificationReceivers) {
-        this.notificationReceivers = notificationReceivers;
+public class CronSchedule implements Schedule {
+
+    private final CronExpression cronExpression;
+
+    public CronSchedule(String cronExpression) throws ParseException {
+        this.cronExpression = new CronExpression(cronExpression);
     }
 
     @Override
-    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext) {
-        return notificationReceivers;
+    public long nextEpochSchedule(ScheduleContext ctx) {
+        return cronExpression.getNextValidTimeAfter(new Date(ctx.getLastScheduledExecutionTime())).getTime();
     }
 }

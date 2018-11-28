@@ -34,7 +34,7 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<R extends Not
     }
 
     @Override
-    public N process(NotificationJob<R, N, T> notificationJob, NotificationJobContext context) {
+    public N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context) {
         InsertCriteriaBuilder<?> insertCriteriaBuilder = cbf.insert(em, getNotificationEntityClass())
                 .from(getNotificationReceiverEntityClass(), "receiver")
                 .from(getNotificationJobEntityClass(), "job");

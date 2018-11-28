@@ -32,7 +32,7 @@ public class ExpressionNotificationReceiverResolver<R extends NotificationReceiv
     }
 
     @Override
-    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobContext jobContext) {
+    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext) {
         // TODO
         // expressionServiceFactory.createInterpreter().evaluate(this.predicate, null);
         return null;

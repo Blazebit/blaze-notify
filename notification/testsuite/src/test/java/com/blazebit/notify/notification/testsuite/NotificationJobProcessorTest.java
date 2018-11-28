@@ -35,7 +35,7 @@ public class NotificationJobProcessorTest<R extends NotificationReceiver, N exte
     public static Object[][] createCombinations() {
         return createCombinations(new NotificationJobProcessor() {
             @Override
-            public Notification process(NotificationJob notificationJob, NotificationJobContext context) {
+            public Notification process(NotificationJob notificationJob, NotificationJobProcessingContext context) {
                 notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
                 notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
                 return null;
@@ -45,7 +45,7 @@ public class NotificationJobProcessorTest<R extends NotificationReceiver, N exte
 
     @Test
     public void simpleTest() {
-        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null /* TODO receiverResolver */));
+        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO receiverResolver */, null));
         jobScheduler.stop();
         assertEquals(2, sink.size());
     }

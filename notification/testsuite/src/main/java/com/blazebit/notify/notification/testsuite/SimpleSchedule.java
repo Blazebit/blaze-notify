@@ -17,11 +17,12 @@
 package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.Schedule;
+import com.blazebit.notify.notification.ScheduleContext;
 
 public class SimpleSchedule implements Schedule {
 
     @Override
-    public long nextEpochSchedule() {
+    public long nextEpochSchedule(ScheduleContext ctx) {
         return 0;
     }
 }
