@@ -17,5 +17,5 @@ package com.blazebit.notify.template.api;
 
 public interface Template {
 
-    String getId();
+    String getTemplateType();
 }

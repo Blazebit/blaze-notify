@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification;
+package com.blazebit.notify.template.api;
 
-public interface Notification<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends Comparable<N> {
+public interface TemplateProcessorFactory {
 
-    NotificationJob<R, N, T> getNotificationJob();
+    String getTemplateType();
 
-    Channel<R, N, T> getChannel();
-
-    R getReceiver();
-
-    long getEpochDeadline();
+    TemplateProcessor<?> createTemplateProcessor();
 }

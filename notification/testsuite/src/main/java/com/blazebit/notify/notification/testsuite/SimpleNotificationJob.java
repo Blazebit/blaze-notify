@@ -18,6 +18,7 @@ package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.*;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class SimpleNotificationJob<R extends NotificationReceiver> implements NotificationJob<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> {
@@ -43,7 +44,7 @@ public class SimpleNotificationJob<R extends NotificationReceiver> implements No
         this.schedule = schedule;
         this.notificationSchedule = notificationSchedule;
         this.receiverResolver = receiverResolver;
-        this.jobParameters = jobParameters;
+        this.jobParameters = Collections.unmodifiableMap(jobParameters);
     }
 
     @Override

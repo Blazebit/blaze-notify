@@ -139,6 +139,8 @@
                     </includes>
                     <excludes>
                         <exclude>**/src/main/java/com/blazebit/notify/notification/schedule/cron/CronExpression.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/MessageFormatterMethod.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/TemplatingUtil.java</exclude>
                     </excludes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>

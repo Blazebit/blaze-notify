@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification;
+package com.blazebit.notify.template.freemarker;
 
-public interface Notification<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends Comparable<N> {
+import com.blazebit.notify.template.api.TemplateProcessor;
+import com.blazebit.notify.template.api.TemplateProcessorFactory;
 
-    NotificationJob<R, N, T> getNotificationJob();
+public class FreemarkerTemplateProcessorFactory implements TemplateProcessorFactory {
+    @Override
+    public String getTemplateType() {
+        return FreemarkerTemplate.TEMPLATE_TYPE;
+    }
 
-    Channel<R, N, T> getChannel();
-
-    R getReceiver();
-
-    long getEpochDeadline();
+    @Override
+    public TemplateProcessor<?> createTemplateProcessor() {
+        return new FreemarkerTemplateProcessor<>();
+    }
 }

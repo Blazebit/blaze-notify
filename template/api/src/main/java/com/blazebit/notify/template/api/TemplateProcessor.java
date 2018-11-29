@@ -15,12 +15,9 @@
  */
 package com.blazebit.notify.template.api;
 
-import com.blazebit.notify.notification.NotificationMessagePart;
-import com.blazebit.notify.notification.NotificationReceiver;
-
 import java.util.Map;
 
-public interface TemplateProcessor<T extends Template, R extends NotificationReceiver, P extends NotificationMessagePart> {
+public interface TemplateProcessor<T extends Template> {
 
-    P processTemplate(T template, Map<String, Object> model);
+    String processTemplate(T template, Map<String, Object> model);
 }

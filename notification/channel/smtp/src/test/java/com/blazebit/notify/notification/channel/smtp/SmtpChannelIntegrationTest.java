@@ -31,7 +31,7 @@ public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTe
         String subject = "test subject";
         String textBody = "test body";
         String expectedContentType = "text/plain; charset=UTF-8";
-        smtpChannel.sendNotificationMessage(new SmtpNotificationReceiver(TEST_MAIL_USER), new SmtpMessage(from, new EmailSubject(subject), new EmailBody(textBody), null));
+        smtpChannel.sendNotificationMessage(new DefaultSmtpNotificationReceiver(TEST_MAIL_USER), new SmtpMessage(from, new EmailSubject(subject), new EmailBody(textBody), null));
 
         Message[] receivedEmails = mailClient.awaitIncomingEmails(5000, 1);
         assertEquals(1, receivedEmails.length);

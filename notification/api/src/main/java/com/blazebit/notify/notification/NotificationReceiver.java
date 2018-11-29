@@ -15,5 +15,9 @@
  */
 package com.blazebit.notify.notification;
 
+import java.util.Locale;
+
 public interface NotificationReceiver {
+
+    Locale getLocale();
 }

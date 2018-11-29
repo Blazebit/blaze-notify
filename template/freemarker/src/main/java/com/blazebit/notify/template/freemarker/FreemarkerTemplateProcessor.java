@@ -15,7 +15,6 @@
  */
 package com.blazebit.notify.template.freemarker;
 
-import com.blazebit.notify.notification.DefaultNotificationMessagePart;
 import com.blazebit.notify.notification.NotificationMessagePart;
 import com.blazebit.notify.notification.NotificationReceiver;
 import com.blazebit.notify.template.api.TemplateProcessor;
@@ -24,19 +23,29 @@ import freemarker.template.TemplateException;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
-public abstract class FreemarkerTemplateProcessor<R extends NotificationReceiver, P extends NotificationMessagePart> implements TemplateProcessor<FreemarkerTemplate, R, P> {
+public class FreemarkerTemplateProcessor<R extends NotificationReceiver, P extends NotificationMessagePart> implements TemplateProcessor<FreemarkerTemplate> {
     @Override
-    public P processTemplate(FreemarkerTemplate template, Map<String, Object> model) {
+    public String processTemplate(FreemarkerTemplate template, Map<String, Object> model) {
+        final String resourceBundleKey = "resourceBundle";
+        final String localeKey = "locale";
+        if (model.containsKey(resourceBundleKey)) {
+            model = new HashMap<>(model);
+            ResourceBundle resourceBundle = (ResourceBundle) model.remove(resourceBundleKey);
+            Locale locale = (Locale) model.get(localeKey);
+            model.put("msg", new MessageFormatterMethod(locale, resourceBundle));
+        }
+
         StringWriter stringWriter = new StringWriter();
         try {
             template.getFreemarkerTemplate().process(model, stringWriter);
         } catch (TemplateException | IOException e) {
             throw new TemplateProcessorException(e);
         }
-        return createNotificationMessagePart(stringWriter.toString());
+        return stringWriter.toString();
     }
-
-    protected abstract P createNotificationMessagePart(String processedTemplateContent);
 }

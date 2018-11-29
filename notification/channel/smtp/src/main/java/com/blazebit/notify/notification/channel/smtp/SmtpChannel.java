@@ -37,7 +37,7 @@ import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, SmtpMessage>> implements Channel<SmtpNotificationReceiver, N, SmtpMessage> {
+public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notification<R, N, SmtpMessage>> implements Channel<R, N, SmtpMessage> {
 
     private static final Logger LOG = Logger.getLogger(SmtpChannel.class.getName());
 
@@ -47,13 +47,14 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
     private final Config config;
     private Session session;
     private Transport transport;
+    private boolean initialized;
 
     public SmtpChannel(Config config) {
         this.config = config;
     }
 
     @Override
-    public void init() {
+    public void initialize() {
         Properties props = new Properties();
         if (config.host != null) {
             props.setProperty("mail.smtp.host", config.host);
@@ -85,9 +86,11 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
         session = Session.getInstance(props);
         try {
             transport = session.getTransport("smtp");
+            LOG.log(Level.FINEST, "SMTP transport opened");
         } catch (NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
+        initialized = true;
     }
 
     @Override
@@ -95,6 +98,7 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
         if (transport != null) {
             try {
                 transport.close();
+                LOG.log(Level.FINEST, "SMTP transport closed");
             } catch (MessagingException e) {
                 LOG.log(Level.WARNING, "Failed to close transport", e);
             }
@@ -102,7 +106,10 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
     }
 
     @Override
-    public void sendNotificationMessage(SmtpNotificationReceiver receiver, SmtpMessage message) {
+    public void sendNotificationMessage(R receiver, SmtpMessage message) {
+        if (!initialized) {
+            throw new IllegalStateException("Channel has not been initialized");
+        }
         try {
             if (!transport.isConnected()) {
                 if (config.auth) {
@@ -111,7 +118,6 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
                     transport.connect();
                 }
             }
-
 
             SMTPMessage msg = new SMTPMessage(session);
 
@@ -154,6 +160,7 @@ public class SmtpChannel<N extends Notification<SmtpNotificationReceiver, N, Smt
             msg.setSentDate(new Date());
 
             transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(receiver.getEmail())});
+            LOG.log(Level.FINEST, "SMTP notification sent to " + receiver);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Failed to send email", e);
             throw new RuntimeException(e);

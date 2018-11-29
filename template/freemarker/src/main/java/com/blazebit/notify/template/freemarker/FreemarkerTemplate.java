@@ -19,6 +19,8 @@ import com.blazebit.notify.template.api.Template;
 
 public class FreemarkerTemplate implements Template {
 
+    public static final String TEMPLATE_TYPE = "freemarker";
+
     private final freemarker.template.Template freemarkerTemplate;
 
     public FreemarkerTemplate(freemarker.template.Template freemarkerTemplate) {
@@ -26,8 +28,8 @@ public class FreemarkerTemplate implements Template {
     }
 
     @Override
-    public String getId() {
-        return freemarkerTemplate.getName();
+    public String getTemplateType() {
+        return TEMPLATE_TYPE;
     }
 
     public freemarker.template.Template getFreemarkerTemplate() {

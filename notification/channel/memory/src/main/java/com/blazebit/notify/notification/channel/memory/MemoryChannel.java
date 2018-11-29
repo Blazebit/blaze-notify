@@ -47,7 +47,7 @@ public class MemoryChannel<R extends NotificationReceiver, N extends Notificatio
     }
 
     @Override
-    public void init() {
+    public void initialize() {
     }
 
     @Override

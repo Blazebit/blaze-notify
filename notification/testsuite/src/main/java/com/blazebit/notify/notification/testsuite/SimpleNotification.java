@@ -51,4 +51,9 @@ public class SimpleNotification<R extends NotificationReceiver, T extends Notifi
     public long getEpochDeadline() {
         return epochDeadline;
     }
+
+    @Override
+    public int compareTo(SimpleNotification<R, T> o) {
+        return 0;
+    }
 }

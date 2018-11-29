@@ -48,4 +48,9 @@ public class DefaultNotification<R extends NotificationReceiver, N extends Notif
     public long getEpochDeadline() {
         return epochDeadline;
     }
+
+    @Override
+    public int compareTo(N o) {
+        return 0;
+    }
 }

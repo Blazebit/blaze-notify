@@ -17,14 +17,7 @@ package com.blazebit.notify.notification.channel.smtp;
 
 import com.blazebit.notify.notification.NotificationReceiver;
 
-public class SmtpNotificationReceiver implements NotificationReceiver {
-    private final String email;
+public interface SmtpNotificationReceiver extends NotificationReceiver {
 
-    public SmtpNotificationReceiver(String email) {
-        this.email = email;
-    }
-
-    public String getEmail() {
-        return email;
-    }
+    String getEmail();
 }

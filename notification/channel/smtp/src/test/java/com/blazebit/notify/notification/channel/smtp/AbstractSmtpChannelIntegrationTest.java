@@ -70,7 +70,7 @@ public abstract class AbstractSmtpChannelIntegrationTest {
                 .withPort(TEST_MAIL_SERVER_SMTP_PORT)
                 .build();
         smtpChannel = new SmtpChannel(config);
-        smtpChannel.init();
+        smtpChannel.initialize();
     }
 
 

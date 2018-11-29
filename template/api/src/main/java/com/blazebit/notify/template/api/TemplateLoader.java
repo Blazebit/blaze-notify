@@ -15,10 +15,9 @@
  */
 package com.blazebit.notify.template.api;
 
-import com.blazebit.notify.notification.NotificationJobProcessingContext;
 import com.blazebit.notify.notification.NotificationReceiver;
 
-public interface TemplateLoader<R extends NotificationReceiver, T extends Template> {
+public interface TemplateLoader<R extends NotificationReceiver> {
 
-    T loadTemplate(R notificationReceiver, NotificationJobProcessingContext context);
+    Template loadTemplate(R notificationReceiver);
 }

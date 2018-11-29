@@ -20,5 +20,5 @@ public interface Channel<R extends NotificationReceiver, N extends Notification<
 
     void sendNotificationMessage(R receiver, T message);
 
-    void init();
+    void initialize();
 }

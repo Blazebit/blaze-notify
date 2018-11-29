@@ -15,15 +15,15 @@
  */
 package com.blazebit.notify.template.freemarker;
 
-import com.blazebit.notify.notification.NotificationJobProcessingContext;
 import com.blazebit.notify.notification.NotificationReceiver;
+import com.blazebit.notify.template.api.Template;
 import com.blazebit.notify.template.api.TemplateLoader;
 import freemarker.template.Configuration;
 
 import java.io.IOException;
 import java.util.Locale;
 
-public class FreemarkerTemplateLoader<R extends NotificationReceiver> implements TemplateLoader<R, FreemarkerTemplate> {
+public class FreemarkerTemplateLoader<R extends NotificationReceiver> implements TemplateLoader<R> {
 
     private final Configuration cfg;
     private final String templateName;
@@ -40,18 +40,14 @@ public class FreemarkerTemplateLoader<R extends NotificationReceiver> implements
     }
 
     @Override
-    public FreemarkerTemplate loadTemplate(R notificationReceiver, NotificationJobProcessingContext context) {
-        Locale locale = resolveReceiverLocale(notificationReceiver);
+    public Template loadTemplate(R notificationReceiver) {
+        Locale locale = notificationReceiver.getLocale();
         freemarker.template.Template template;
         try {
-            template = locale == null ? cfg.getTemplate(templateName, templateEncoding) : cfg.getTemplate(templateName, locale, templateEncoding);
+            template = cfg.getTemplate(templateName, locale, templateEncoding);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return new FreemarkerTemplate(template);
-    }
-
-    protected Locale resolveReceiverLocale(R notificationReceiver) {
-        return null;
     }
 }
