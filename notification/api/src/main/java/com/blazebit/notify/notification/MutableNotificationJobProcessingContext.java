@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification.scheduler.timer;
+package com.blazebit.notify.notification;
 
 import com.blazebit.notify.notification.Notification;
 import com.blazebit.notify.notification.NotificationJobProcessingContext;
@@ -21,10 +21,18 @@ import com.blazebit.notify.notification.NotificationJobProcessingContext;
 public class MutableNotificationJobProcessingContext implements NotificationJobProcessingContext {
 
     private final int processCount;
+    private final int partitionId;
+    private final int partitionCount;
     private Notification<?, ?, ?> lastProcessed;
 
     MutableNotificationJobProcessingContext(int processCount) {
+        this(processCount, -1, -1);
+    }
+
+    MutableNotificationJobProcessingContext(int processCount, int partitionId, int partitionCount) {
         this.processCount = processCount;
+        this.partitionId = partitionId;
+        this.partitionCount = partitionCount;
     }
 
     @Override
@@ -39,5 +47,15 @@ public class MutableNotificationJobProcessingContext implements NotificationJobP
     @Override
     public int getProcessCount() {
         return processCount;
+    }
+
+    @Override
+    public int getPartitionId() {
+        return partitionId;
+    }
+
+    @Override
+    public int getPartitionCount() {
+        return partitionCount;
     }
 }

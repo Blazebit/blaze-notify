@@ -13,31 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification.scheduler.spring;
+package com.blazebit.notify.notification;
 
-import com.blazebit.notify.notification.Notification;
-import com.blazebit.notify.notification.NotificationJob;
-import com.blazebit.notify.notification.NotificationJobProcessor;
-import com.blazebit.notify.notification.NotificationJobScheduler;
 import com.blazebit.notify.notification.event.NotificationEventListener;
-import org.springframework.scheduling.TaskScheduler;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class TaskSchedulerBasedNotificationJobScheduler implements NotificationJobScheduler {
+public class DefaultNotificationJobScheduler implements NotificationJobScheduler {
+    private static final Logger LOG = Logger.getLogger(DefaultNotificationJobScheduler.class.getName());
+    private static final int DEFAULT_PROCESS_COUNT = 100;
 
-    private final TaskScheduler taskScheduler;
+    private final Scheduler scheduler;
     private final NotificationEventListener eventListener;
+    private final int processCount;
     private volatile boolean closed;
 
-    public TaskSchedulerBasedNotificationJobScheduler(TaskScheduler taskScheduler) {
-        this(taskScheduler, null);
+    public DefaultNotificationJobScheduler(Scheduler scheduler) {
+        this(scheduler, null, DEFAULT_PROCESS_COUNT);
     }
 
-    public TaskSchedulerBasedNotificationJobScheduler(TaskScheduler taskScheduler, NotificationEventListener eventListener) {
-        this.taskScheduler = taskScheduler;
+    public DefaultNotificationJobScheduler(Scheduler scheduler, NotificationEventListener eventListener) {
+        this(scheduler, eventListener, DEFAULT_PROCESS_COUNT);
+    }
+
+    public DefaultNotificationJobScheduler(Scheduler scheduler, NotificationEventListener eventListener, int processCount) {
+        this.scheduler = scheduler;
         this.eventListener = eventListener;
+        this.processCount = processCount;
     }
 
     @Override
@@ -50,7 +54,7 @@ public class TaskSchedulerBasedNotificationJobScheduler implements NotificationJ
             return false;
         } else {
             long nextSchedule = notificationJobRunner.job.getSchedule().nextEpochSchedule(notificationJobRunner.scheduleContext);
-            taskScheduler.schedule(notificationJobRunner, new Date(nextSchedule));
+            scheduler.schedule(notificationJobRunner, nextSchedule);
             return true;
         }
     }
@@ -87,13 +91,17 @@ public class TaskSchedulerBasedNotificationJobScheduler implements NotificationJ
             scheduleContext.setLastScheduledExecutionTime(supposedSchedule);
             scheduleContext.setLastActualExecutionTime(System.currentTimeMillis());
             NotificationJobProcessor jobProcessor = job.getJobProcessor();
-            MutableNotificationJobProcessingContext jobContext = new MutableNotificationJobProcessingContext(0);
+            MutableNotificationJobProcessingContext jobContext = new MutableNotificationJobProcessingContext(processCount);
             Notification<?, ?, ?> lastProcessedNotification;
             do {
                 lastProcessedNotification = jobProcessor.process(job, jobContext);
                 jobContext.setLastProcessed(lastProcessedNotification);
                 if (eventListener != null) {
-                    eventListener.onNotificationsCreated();
+                    try {
+                        eventListener.onNotificationsCreated();
+                    } catch (Exception e) {
+                        LOG.log(Level.SEVERE, "An error occurred in the notification event listener", e);
+                    }
                 }
             } while (lastProcessedNotification != null);
             scheduleContext.setLastCompletionTime(System.currentTimeMillis());

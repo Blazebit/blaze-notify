@@ -20,4 +20,8 @@ public interface NotificationJobProcessingContext {
     Notification<?, ?, ?> getLastProcessed();
 
     int getProcessCount();
+
+    int getPartitionId();
+
+    int getPartitionCount();
 }

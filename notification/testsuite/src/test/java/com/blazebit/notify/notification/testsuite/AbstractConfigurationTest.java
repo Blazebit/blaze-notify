@@ -17,7 +17,7 @@ package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.*;
 import com.blazebit.notify.notification.channel.memory.MemoryChannel;
-import com.blazebit.notify.notification.scheduler.timer.ExecutorServiceNotificationJobScheduler;
+import com.blazebit.notify.notification.scheduler.timer.ExecutorServiceScheduler;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -49,7 +49,7 @@ public abstract class AbstractConfigurationTest<R extends NotificationReceiver, 
     public static Object[][] createCombinations(NotificationJobProcessor jobProcessor) {
         Queue<NotificationMessage> sink;
         return new Object[][]{
-                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new ExecutorServiceNotificationJobScheduler(), new SimpleNotificationMessage(), sink, jobProcessor}
+                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new DefaultNotificationJobScheduler(new ExecutorServiceScheduler()), new SimpleNotificationMessage(), sink, jobProcessor}
         };
     }
 }

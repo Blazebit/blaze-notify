@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification.event;
+package com.blazebit.notify.notification;
 
-public class NotificationCreatedEvent {
+import java.util.concurrent.ScheduledFuture;
+
+public interface Scheduler {
+
+    ScheduledFuture<?> schedule(Runnable task, long schedule);
 }
