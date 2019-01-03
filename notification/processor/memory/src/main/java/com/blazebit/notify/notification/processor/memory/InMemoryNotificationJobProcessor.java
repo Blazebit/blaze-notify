@@ -33,20 +33,18 @@ public abstract class InMemoryNotificationJobProcessor<R extends NotificationRec
 
     @Override
     public N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context) {
-        List<R> receivers = notificationJob.getReceiverResolver().resolveNotificationReceivers(notificationJob, context);
-        int startIdx = context.getLastProcessed() == null ? 0 : (receivers.indexOf(context.getLastProcessed().getReceiver()) + 1);
-        int endIdx = Math.min(startIdx + context.getProcessCount(), receivers.size());
-        receivers = receivers.subList(startIdx, endIdx);
+        List<R> receiverBatch = notificationJob.getReceiverResolver().resolveNotificationReceivers(notificationJob, context);
 
         N lastNotificationProcessed = null;
-        for (int i = startIdx; i < endIdx; i++) {
-            N notification = produceNotification(notificationJob, receivers.get(i));
+        for (int i = 0; i < receiverBatch.size(); i++) {
+            N notification = produceNotification(notificationJob, receiverBatch.get(i));
             try {
                 sink.put(notification);
                 lastNotificationProcessed = notification;
             } catch (InterruptedException e) {
                 LOG.warning("Thread was interrupted while adding notification " + notification + " to sink");
                 Thread.currentThread().interrupt();
+                break;
             }
         }
 
