@@ -44,17 +44,20 @@ public class TriggerSchedule implements Schedule {
 
         @Override
         public Date lastScheduledExecutionTime() {
-            return new Date(delegate.getLastScheduledExecutionTime());
+            Long lastScheduledExecution = delegate.getLastScheduledExecutionTime();
+            return lastScheduledExecution == null ? null : new Date(lastScheduledExecution);
         }
 
         @Override
         public Date lastActualExecutionTime() {
-            return new Date(delegate.getLastActualExecutionTime());
+            Long lastActualExecutionTime = delegate.getLastActualExecutionTime();
+            return lastActualExecutionTime == null ? null : new Date(lastActualExecutionTime);
         }
 
         @Override
         public Date lastCompletionTime() {
-            return new Date(delegate.getLastCompletionTime());
+            Long lastCompletionTime = delegate.getLastCompletionTime();
+            return lastCompletionTime == null ? null : new Date(lastCompletionTime);
         }
     }
 
