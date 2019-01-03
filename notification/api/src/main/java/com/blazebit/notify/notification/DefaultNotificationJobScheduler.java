@@ -17,6 +17,7 @@ package com.blazebit.notify.notification;
 
 import com.blazebit.notify.notification.event.NotificationEventListener;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -82,6 +83,7 @@ public class DefaultNotificationJobScheduler implements NotificationJobScheduler
 
         private NotificationJobRunner(NotificationJob<?, ?, ?> job) {
             this.job = job;
+            this.scheduleContext.setLastScheduledExecutionTime(new Date().getTime());
         }
 
         @Override

@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Collections;
 import java.util.Queue;
 
 import static org.junit.Assert.assertEquals;
@@ -44,9 +45,10 @@ public class NotificationJobProcessorTest<R extends NotificationReceiver, N exte
     }
 
     @Test
-    public void simpleTest() {
-        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO receiverResolver */, null));
+    public void simpleTest() throws InterruptedException {
+        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO receiverResolver */, Collections.emptyMap()));
         jobScheduler.stop();
+        Thread.sleep(1000);
         assertEquals(2, sink.size());
     }
 
