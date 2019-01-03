@@ -15,13 +15,15 @@
  */
 package com.blazebit.notify.notification;
 
+import com.blazebit.notify.notification.ScheduleContext;
+
 public class MutableScheduleContext implements ScheduleContext {
-    private Long lastScheduledExecutionTime;
-    private Long lastActualExecutionTime;
-    private Long lastCompletionTime;
+    private long lastScheduledExecutionTime;
+    private long lastActualExecutionTime;
+    private long lastCompletionTime;
 
     @Override
-    public Long getLastScheduledExecutionTime() {
+    public long getLastScheduledExecutionTime() {
         return lastScheduledExecutionTime;
     }
 
@@ -30,7 +32,7 @@ public class MutableScheduleContext implements ScheduleContext {
     }
 
     @Override
-    public Long getLastActualExecutionTime() {
+    public long getLastActualExecutionTime() {
         return lastActualExecutionTime;
     }
 
@@ -39,7 +41,7 @@ public class MutableScheduleContext implements ScheduleContext {
     }
 
     @Override
-    public Long getLastCompletionTime() {
+    public long getLastCompletionTime() {
         return lastCompletionTime;
     }
 
