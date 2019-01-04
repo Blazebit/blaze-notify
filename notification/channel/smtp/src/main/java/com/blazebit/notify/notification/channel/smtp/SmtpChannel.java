@@ -159,8 +159,12 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
             msg.saveChanges();
             msg.setSentDate(new Date());
 
-            transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(receiver.getEmail())});
-            LOG.log(Level.FINEST, "SMTP notification sent to " + receiver);
+            if (config.getFilter() == null || config.getFilter().filterSmtpMessage(receiver, message, msg)) {
+                transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(receiver.getEmail())});
+                LOG.log(Level.FINEST, "SMTP notification sent to " + receiver);
+            } else {
+                LOG.log(Level.FINEST, "SMTP notification to " + receiver + " skipped by filter");
+            }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Failed to send email", e);
             throw new RuntimeException(e);
@@ -205,8 +209,9 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
         private final boolean enableStartTls;
         private final long timeout;
         private final long connectionTimeout;
+        private final SmtpChannelFilter filter;
 
-        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, long timeout, long connectionTimeout) {
+        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, long timeout, long connectionTimeout, SmtpChannelFilter filter) {
             this.host = host;
             this.port = port;
             this.auth = auth;
@@ -216,6 +221,7 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
             this.enableStartTls = enableStartTls;
             this.timeout = timeout;
             this.connectionTimeout = connectionTimeout;
+            this.filter = filter;
         }
 
         public String getHost() {
@@ -254,6 +260,10 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
             return connectionTimeout;
         }
 
+        public SmtpChannelFilter getFilter() {
+            return filter;
+        }
+
         public static Builder builder() {
             return new Builder();
         }
@@ -268,9 +278,10 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
             private boolean enableStartTls;
             private long timeout = 10000;
             private long connectionTimeout = 10000;
+            private SmtpChannelFilter filter;
 
             public Config build() {
-                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, timeout, connectionTimeout);
+                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, timeout, connectionTimeout, filter);
             }
 
             public Builder withHost(String host) {
@@ -307,6 +318,11 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
 
             public Builder withConnectionTimeout(long connectionTimeout) {
                 this.connectionTimeout = connectionTimeout;
+                return this;
+            }
+
+            public Builder withFilter(SmtpChannelFilter filter) {
+                this.filter = filter;
                 return this;
             }
         }
