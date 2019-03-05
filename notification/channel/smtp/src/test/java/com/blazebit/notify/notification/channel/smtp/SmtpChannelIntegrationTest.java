@@ -19,9 +19,14 @@ import org.junit.Test;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTest {
 
@@ -30,14 +35,26 @@ public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTe
         String from = "no-reply@localhost";
         String subject = "test subject";
         String textBody = "test body";
-        String expectedContentType = "text/plain; charset=UTF-8";
-        smtpChannel.sendNotificationMessage(new DefaultSmtpNotificationReceiver(TEST_MAIL_USER), new SmtpMessage(from, new EmailSubject(subject), new EmailBody(textBody), null));
+        String attachmentName = "attachment";
+        String attachmentContent = "attachment content";
+        String expectedContentTypePrefix = "multipart/alternative";
+        String attachmentMimeType = "text/plain; charset=UTF-8";
+        List<Attachment> attachments = Collections.singletonList(new Attachment(attachmentName, new ByteArrayDataSource(attachmentContent, attachmentMimeType)));
+        smtpChannel.sendNotificationMessage(
+                new DefaultSmtpNotificationReceiver(TEST_MAIL_USER),
+                new SmtpMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
+        );
 
         Message[] receivedEmails = mailClient.awaitIncomingEmails(5000, 1);
         assertEquals(1, receivedEmails.length);
-        assertEquals(from, receivedEmails[0].getFrom()[0].toString());
-        assertEquals(expectedContentType.toLowerCase(), receivedEmails[0].getContentType().toLowerCase());
-        assertEquals(subject, receivedEmails[0].getSubject());
-        assertEquals(textBody, ((String) receivedEmails[0].getContent()).trim());
+        Message msg = receivedEmails[0];
+        assertEquals(from, msg.getFrom()[0].toString());
+        assertTrue(msg.getContentType().toLowerCase().startsWith(expectedContentTypePrefix));
+        assertEquals(subject, msg.getSubject());
+        assertTrue(msg.getContent() instanceof MimeMultipart);
+        MimeMultipart msgContent = (MimeMultipart) msg.getContent();
+        assertEquals(textBody, ((String) msgContent.getBodyPart(0).getContent()).trim());
+        assertTrue(msgContent.getBodyPart(1).getContentType().contains("name=" + attachmentName));
+        assertEquals(attachmentContent, msgContent.getBodyPart(1).getContent());
     }
 }

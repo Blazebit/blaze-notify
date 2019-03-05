@@ -13,13 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.template.api;
+package com.blazebit.notify.notification.channel.smtp;
 
-public interface TemplateProcessorFactory<R> {
+import javax.activation.DataSource;
 
-    boolean canProcessTemplateOfType(Class<? extends Template> type, TemplateProcessorRegistry templateProcessorRegistry);
+public class Attachment {
+    private final String name;
+    private final DataSource dataSource;
 
-    Class<R> getTemplateProcessorResultType();
+    public Attachment(String name, DataSource dataSource) {
+        this.name = name;
+        this.dataSource = dataSource;
+    }
 
-    TemplateProcessor<?, R> createTemplateProcessor(TemplateProcessorRegistry templateProcessorRegistry);
+    public String getName() {
+        return name;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
+    }
 }

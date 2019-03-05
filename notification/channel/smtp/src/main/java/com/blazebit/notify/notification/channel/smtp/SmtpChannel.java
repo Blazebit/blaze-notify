@@ -23,11 +23,10 @@ import com.blazebit.notify.notification.security.TruststoreProvider;
 import com.blazebit.notify.notification.security.TruststoreProviderFactory;
 import com.sun.mail.smtp.SMTPMessage;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.*;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.*;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -123,15 +122,24 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
 
             EmailBody textBody = message.getTextBody();
             EmailBody htmlBody = message.getHtmlBody();
-            if (textBody != null && htmlBody != null) {
+            boolean hasAttachments = !message.getAttachments().isEmpty();
+            if (textBody != null && htmlBody != null || hasAttachments) {
                 Multipart multipart = new MimeMultipart("alternative");
-                MimeBodyPart textPart = new MimeBodyPart();
-                textPart.setText(textBody.getBody(), CHARSET_UTF8);
-                multipart.addBodyPart(textPart);
+                if (textBody != null) {
+                    MimeBodyPart textPart = new MimeBodyPart();
+                    textPart.setText(textBody.getBody(), CHARSET_UTF8);
+                    multipart.addBodyPart(textPart);
+                }
 
-                MimeBodyPart htmlPart = new MimeBodyPart();
-                htmlPart.setContent(htmlBody.getBody(), HTML_MIME_TYPE);
-                multipart.addBodyPart(htmlPart);
+                if (htmlBody != null) {
+                    MimeBodyPart htmlPart = new MimeBodyPart();
+                    htmlPart.setContent(htmlBody.getBody(), HTML_MIME_TYPE);
+                    multipart.addBodyPart(htmlPart);
+                }
+
+                for (Attachment attachment : message.getAttachments()) {
+                    multipart.addBodyPart(createAttachmentBodyPart(attachment.getName(), attachment.getDataSource()));
+                }
 
                 msg.setContent(multipart);
             } else if (textBody != null) {
@@ -170,6 +178,18 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
             throw new RuntimeException(e);
         }
     }
+
+    private MimeBodyPart createAttachmentBodyPart(String attachmentFilename, DataSource dataSource) throws MessagingException {
+		try {
+			MimeBodyPart mimeBodyPart = new MimeBodyPart();
+			mimeBodyPart.setDisposition(MimeBodyPart.ATTACHMENT);
+			mimeBodyPart.setFileName(MimeUtility.encodeText(attachmentFilename));
+			mimeBodyPart.setDataHandler(new DataHandler(dataSource));
+			return mimeBodyPart;
+		} catch (UnsupportedEncodingException ex) {
+			throw new MessagingException("Failed to encode attachment filename", ex);
+		}
+	}
 
     protected InternetAddress toInternetAddress(String email, String displayName) throws UnsupportedEncodingException, AddressException {
         if (email == null || "".equals(email.trim())) {

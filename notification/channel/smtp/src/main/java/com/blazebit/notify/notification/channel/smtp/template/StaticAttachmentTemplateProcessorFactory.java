@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.template.freemarker;
+package com.blazebit.notify.notification.channel.smtp.template;
 
+import com.blazebit.notify.notification.channel.smtp.Attachment;
 import com.blazebit.notify.template.api.Template;
 import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateProcessorFactory;
 import com.blazebit.notify.template.api.TemplateProcessorRegistry;
 
-public class FreemarkerTemplateProcessorFactory implements TemplateProcessorFactory<String> {
+public class StaticAttachmentTemplateProcessorFactory implements TemplateProcessorFactory<Attachment> {
 
     @Override
     public boolean canProcessTemplateOfType(Class<? extends Template> type, TemplateProcessorRegistry templateProcessorRegistry) {
-        return FreemarkerTemplate.class.isAssignableFrom(type);
+        return StaticAttachmentTemplate.class.isAssignableFrom(type);
     }
 
     @Override
-    public Class<String> getTemplateProcessorResultType() {
-        return String.class;
+    public Class<Attachment> getTemplateProcessorResultType() {
+        return Attachment.class;
     }
 
     @Override
-    public TemplateProcessor<?, String> createTemplateProcessor(TemplateProcessorRegistry templateProcessorRegistry) {
-        return new FreemarkerTemplateProcessor<>();
+    public TemplateProcessor<?, Attachment> createTemplateProcessor(TemplateProcessorRegistry templateProcessorRegistry) {
+        return new StaticAttachmentTemplateProcessor<>();
     }
 }

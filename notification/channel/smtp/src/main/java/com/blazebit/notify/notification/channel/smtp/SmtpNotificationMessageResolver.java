@@ -36,9 +36,10 @@ public class SmtpNotificationMessageResolver<R extends SmtpNotificationReceiver,
     private final TemplateLoader<R> subjectTemplateLoader;
     private final TemplateLoader<R> textBodyTemplateLoader;
     private final TemplateLoader<R> htmlBodyTemplateLoader;
+    private final Collection<TemplateLoader<R>> attachmentLoaders;
     private final TemplateProcessorRegistry templateProcessorRegistry;
 
-    public SmtpNotificationMessageResolver(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, String resourceBundle, TemplateLoader<R> subjectTemplateLoader, TemplateLoader<R> textBodyTemplateLoader, TemplateLoader<R> htmlBodyTemplateLoader, TemplateProcessorRegistry templateProcessorRegistry) {
+    public SmtpNotificationMessageResolver(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, String resourceBundle, TemplateLoader<R> subjectTemplateLoader, TemplateLoader<R> textBodyTemplateLoader, TemplateLoader<R> htmlBodyTemplateLoader, Collection<TemplateLoader<R>> attachmentLoaders, TemplateProcessorRegistry templateProcessorRegistry) {
         this.from = from;
         this.fromDisplayName = fromDisplayName;
         this.replyTo = replyTo;
@@ -48,6 +49,7 @@ public class SmtpNotificationMessageResolver<R extends SmtpNotificationReceiver,
         this.subjectTemplateLoader = subjectTemplateLoader;
         this.textBodyTemplateLoader = textBodyTemplateLoader;
         this.htmlBodyTemplateLoader = htmlBodyTemplateLoader;
+        this.attachmentLoaders = attachmentLoaders == null ? Collections.<TemplateLoader<R>>emptyList() : attachmentLoaders;
         this.templateProcessorRegistry = templateProcessorRegistry;
     }
 
@@ -63,17 +65,25 @@ public class SmtpNotificationMessageResolver<R extends SmtpNotificationReceiver,
         resolvedJobParameters.put("receiver", notificationReceiver);
         resolvedJobParameters = Collections.unmodifiableMap(resolvedJobParameters);
 
-        EmailSubject subject = subjectTemplateLoader == null ? null : new EmailSubject(loadAndprocessTemplate(subjectTemplateLoader, notificationReceiver, resolvedJobParameters));
-        EmailBody textBody = textBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(textBodyTemplateLoader, notificationReceiver, resolvedJobParameters));
-        EmailBody htmlBody = htmlBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(htmlBodyTemplateLoader, notificationReceiver, resolvedJobParameters));
-        return new SmtpMessage(from, fromDisplayName, replyTo, replyToDisplayName, envelopeFrom, subject, textBody, htmlBody);
+        EmailSubject subject = subjectTemplateLoader == null ? null : new EmailSubject(loadAndprocessTemplate(subjectTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
+        EmailBody textBody = textBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(textBodyTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
+        EmailBody htmlBody = htmlBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(htmlBodyTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
+        Collection<Attachment> attachments = new ArrayList<>(attachmentLoaders.size());
+        for (TemplateLoader<R> attachmentTemplateLoader : attachmentLoaders) {
+            attachments.add(loadAndprocessTemplate(attachmentTemplateLoader, notificationReceiver, resolvedJobParameters, Attachment.class));
+        }
+        return new SmtpMessage(from, fromDisplayName, replyTo, replyToDisplayName, envelopeFrom, subject, textBody, htmlBody, attachments);
     }
 
-    private String loadAndprocessTemplate(TemplateLoader<R> templateLoader, R notificationReceiver, Map<String, Object> model) {
+    private <D> D loadAndprocessTemplate(TemplateLoader<R> templateLoader, R notificationReceiver, Map<String, Object> model, Class<D> expectedTemplateProcessingResultType) {
         Template template = templateLoader.loadTemplate(notificationReceiver);
-        TemplateProcessor<Template> templateProcessor = (TemplateProcessor<Template>) templateProcessorRegistry.getTemplateProcessor(template.getTemplateType());
+        TemplateProcessor<Template, D> templateProcessor = (TemplateProcessor<Template, D>) templateProcessorRegistry.getTemplateProcessor(template.getClass(), expectedTemplateProcessingResultType);
         if (templateProcessor == null) {
-            throw new RuntimeException("No template processor found for template type " + template.getTemplateType());
+            throw new RuntimeException(
+                    String.format("No template processor found for template of type %s with expected processing result type %s",
+                    template.getClass(),
+                    expectedTemplateProcessingResultType)
+            );
         }
         return templateProcessor.processTemplate(template, model);
     }

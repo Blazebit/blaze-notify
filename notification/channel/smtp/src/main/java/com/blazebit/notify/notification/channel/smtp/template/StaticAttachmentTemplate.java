@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.template.freemarker;
+package com.blazebit.notify.notification.channel.smtp.template;
 
+import com.blazebit.notify.notification.channel.smtp.Attachment;
 import com.blazebit.notify.template.api.Template;
 
-public class FreemarkerTemplate implements Template {
+import javax.activation.DataSource;
 
-    private final freemarker.template.Template freemarkerTemplate;
+public class StaticAttachmentTemplate implements Template {
+    private final Attachment attachment;
 
-    public FreemarkerTemplate(freemarker.template.Template freemarkerTemplate) {
-        this.freemarkerTemplate = freemarkerTemplate;
+    public StaticAttachmentTemplate(Attachment attachment) {
+        this.attachment = attachment;
     }
 
-    public freemarker.template.Template getFreemarkerTemplate() {
-        return freemarkerTemplate;
+    public StaticAttachmentTemplate(String attachmentName, DataSource dataSource) {
+        this.attachment = new Attachment(attachmentName, dataSource);
+    }
+
+    public Attachment getAttachment() {
+        return attachment;
     }
 }

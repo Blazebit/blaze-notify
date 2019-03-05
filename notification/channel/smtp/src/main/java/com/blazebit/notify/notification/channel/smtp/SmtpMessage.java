@@ -17,6 +17,9 @@ package com.blazebit.notify.notification.channel.smtp;
 
 import com.blazebit.notify.notification.NotificationMessage;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class SmtpMessage implements NotificationMessage {
     private final String from;
     private final String fromDisplayName;
@@ -26,8 +29,9 @@ public class SmtpMessage implements NotificationMessage {
     private final EmailSubject subject;
     private final EmailBody textBody;
     private final EmailBody htmlBody;
+    private final Collection<Attachment> attachments;
 
-    public SmtpMessage(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, EmailSubject subject, EmailBody textBody, EmailBody htmlBody) {
+    public SmtpMessage(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, EmailSubject subject, EmailBody textBody, EmailBody htmlBody, Collection<Attachment> attachments) {
         this.from = from;
         this.fromDisplayName = fromDisplayName;
         this.replyTo = replyTo;
@@ -36,10 +40,11 @@ public class SmtpMessage implements NotificationMessage {
         this.subject = subject;
         this.textBody = textBody;
         this.htmlBody = htmlBody;
+        this.attachments = attachments;
     }
 
     public SmtpMessage(String from, EmailSubject subject, EmailBody textBody, EmailBody htmlBody) {
-        this(from, null, null, null, null, subject, textBody, htmlBody);
+        this(from, null, null, null, null, subject, textBody, htmlBody, Collections.<Attachment>emptyList());
     }
 
     public String getFrom() {
@@ -72,5 +77,9 @@ public class SmtpMessage implements NotificationMessage {
 
     public EmailBody getHtmlBody() {
         return htmlBody;
+    }
+
+    public Collection<Attachment> getAttachments() {
+        return attachments;
     }
 }

@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class FreemarkerTemplateProcessor<R extends NotificationReceiver, P extends NotificationMessagePart> implements TemplateProcessor<FreemarkerTemplate> {
+public class FreemarkerTemplateProcessor<R extends NotificationReceiver, P extends NotificationMessagePart> implements TemplateProcessor<FreemarkerTemplate, String> {
     @Override
     public String processTemplate(FreemarkerTemplate template, Map<String, Object> model) {
         final String resourceBundleKey = "resourceBundle";
@@ -47,5 +47,10 @@ public class FreemarkerTemplateProcessor<R extends NotificationReceiver, P exten
             throw new TemplateProcessorException(e);
         }
         return stringWriter.toString();
+    }
+
+    @Override
+    public Class<String> getTemplateProcessingResultType() {
+        return String.class;
     }
 }

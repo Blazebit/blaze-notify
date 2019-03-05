@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.template.freemarker;
+package com.blazebit.notify.notification.channel.smtp.template;
 
-import com.blazebit.notify.template.api.Template;
+import com.blazebit.notify.notification.channel.smtp.Attachment;
+import com.blazebit.notify.template.api.TemplateProcessor;
 
-public class FreemarkerTemplate implements Template {
+import java.util.Map;
 
-    private final freemarker.template.Template freemarkerTemplate;
-
-    public FreemarkerTemplate(freemarker.template.Template freemarkerTemplate) {
-        this.freemarkerTemplate = freemarkerTemplate;
+public class StaticAttachmentTemplateProcessor<T extends StaticAttachmentTemplate> implements TemplateProcessor<T, Attachment> {
+    @Override
+    public Attachment processTemplate(T template, Map<String, Object> model) {
+        return template.getAttachment();
     }
 
-    public freemarker.template.Template getFreemarkerTemplate() {
-        return freemarkerTemplate;
+    @Override
+    public Class<Attachment> getTemplateProcessingResultType() {
+        return Attachment.class;
     }
 }

@@ -39,7 +39,7 @@ public abstract class AbstractSmtpChannelIntegrationTest {
 
     protected static final ImapMailClient mailClient = new ImapMailClient(TEST_MAIL_USER, TEST_MAIL_PWD, TEST_MAIL_SERVER_DOMAIN, TEST_MAIL_SERVER_IMAP_PORT, false);
 
-    protected static SmtpChannel smtpChannel;
+    protected static SmtpChannel<DefaultSmtpNotificationReceiver, ?> smtpChannel;
     private static GuiceJamesServer jamesServer;
 
     @BeforeClass
