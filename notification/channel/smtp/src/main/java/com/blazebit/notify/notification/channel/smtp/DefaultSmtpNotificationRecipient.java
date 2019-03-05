@@ -18,10 +18,10 @@ package com.blazebit.notify.notification.channel.smtp;
 import java.util.Locale;
 import java.util.Objects;
 
-public class DefaultSmtpNotificationReceiver implements SmtpNotificationReceiver {
+public class DefaultSmtpNotificationRecipient implements SmtpNotificationRecipient {
     private final String email;
 
-    public DefaultSmtpNotificationReceiver(String email) {
+    public DefaultSmtpNotificationRecipient(String email) {
         this.email = email;
     }
 
@@ -39,7 +39,7 @@ public class DefaultSmtpNotificationReceiver implements SmtpNotificationReceiver
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DefaultSmtpNotificationReceiver that = (DefaultSmtpNotificationReceiver) o;
+        DefaultSmtpNotificationRecipient that = (DefaultSmtpNotificationRecipient) o;
         return Objects.equals(email, that.email);
     }
 

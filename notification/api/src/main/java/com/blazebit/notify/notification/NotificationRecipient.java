@@ -15,17 +15,9 @@
  */
 package com.blazebit.notify.notification;
 
-import java.util.List;
+import java.util.Locale;
 
-public class StaticNotificationReceiverResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationReceiverResolver<R, N, T> {
-    private final List<R> notificationReceivers;
+public interface NotificationRecipient {
 
-    public StaticNotificationReceiverResolver(List<R> notificationReceivers) {
-        this.notificationReceivers = notificationReceivers;
-    }
-
-    @Override
-    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext) {
-        return notificationReceivers;
-    }
+    Locale getLocale();
 }

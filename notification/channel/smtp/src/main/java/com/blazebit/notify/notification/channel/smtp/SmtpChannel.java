@@ -36,7 +36,7 @@ import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notification<R, N, SmtpMessage>> implements Channel<R, N, SmtpMessage> {
+public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notification<R, N, SmtpMessage>> implements Channel<R, N, SmtpMessage> {
 
     private static final Logger LOG = Logger.getLogger(SmtpChannel.class.getName());
 
@@ -105,7 +105,7 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
     }
 
     @Override
-    public void sendNotificationMessage(R receiver, SmtpMessage message) {
+    public void sendNotificationMessage(R recipient, SmtpMessage message) {
         if (!initialized) {
             throw new IllegalStateException("Channel has not been initialized");
         }
@@ -162,16 +162,16 @@ public class SmtpChannel<R extends SmtpNotificationReceiver, N extends Notificat
                 msg.setEnvelopeFrom(envelopeFrom);
             }
 
-            msg.setHeader("To", receiver.getEmail());
+            msg.setHeader("To", recipient.getEmail());
             msg.setSubject(message.getSubject().getSubject(), "utf-8");
             msg.saveChanges();
             msg.setSentDate(new Date());
 
-            if (config.getFilter() == null || config.getFilter().filterSmtpMessage(receiver, message, msg)) {
-                transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(receiver.getEmail())});
-                LOG.log(Level.FINEST, "SMTP notification sent to " + receiver);
+            if (config.getFilter() == null || config.getFilter().filterSmtpMessage(recipient, message, msg)) {
+                transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(recipient.getEmail())});
+                LOG.log(Level.FINEST, "SMTP notification sent to " + recipient);
             } else {
-                LOG.log(Level.FINEST, "SMTP notification to " + receiver + " skipped by filter");
+                LOG.log(Level.FINEST, "SMTP notification to " + recipient + " skipped by filter");
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Failed to send email", e);

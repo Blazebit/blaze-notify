@@ -21,23 +21,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class SmtpChannelReceiverPatternFilter implements SmtpChannelFilter {
+public class SmtpChannelRecipientPatternFilter implements SmtpChannelFilter {
 
     private final List<Pattern> includes;
     private final List<Pattern> excludes;
 
-    public SmtpChannelReceiverPatternFilter(List<Pattern> includes, List<Pattern> excludes) {
+    public SmtpChannelRecipientPatternFilter(List<Pattern> includes, List<Pattern> excludes) {
         this.includes = includes == null ? Collections.<Pattern>emptyList() : includes;
         this.excludes = excludes == null ? Collections.<Pattern>emptyList() : excludes;
     }
 
     @Override
-    public boolean filterSmtpMessage(SmtpNotificationReceiver receiver, SmtpMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
-        String receiverEmail = receiver.getEmail();
+    public boolean filterSmtpMessage(SmtpNotificationRecipient recipient, SmtpMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
+        String recipientEmail = recipient.getEmail();
         if (!includes.isEmpty()) {
             boolean included = false;
             for (int i = 0; i < includes.size(); i++) {
-                if (includes.get(i).matcher(receiverEmail).matches()) {
+                if (includes.get(i).matcher(recipientEmail).matches()) {
                     included = true;
                 }
             }
@@ -47,7 +47,7 @@ public class SmtpChannelReceiverPatternFilter implements SmtpChannelFilter {
         }
 
         for (int i = 0; i < excludes.size(); i++) {
-            if (excludes.get(i).matcher(receiverEmail).matches()) {
+            if (excludes.get(i).matcher(recipientEmail).matches()) {
                 return false;
             }
         }

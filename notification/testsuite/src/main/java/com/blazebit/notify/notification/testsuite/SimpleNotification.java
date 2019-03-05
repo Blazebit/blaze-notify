@@ -18,17 +18,17 @@ package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.*;
 
-public class SimpleNotification<R extends NotificationReceiver, T extends NotificationMessage> implements Notification<R, SimpleNotification<R, T>, T> {
+public class SimpleNotification<R extends NotificationRecipient, T extends NotificationMessage> implements Notification<R, SimpleNotification<R, T>, T> {
 
     private final NotificationJob<R, SimpleNotification<R, T>, T> notificationJob;
     private final Channel<R, SimpleNotification<R, T>, T> channel;
-    private final R receiver;
+    private final R recipient;
     private final long epochDeadline;
 
-    public SimpleNotification(NotificationJob<R, SimpleNotification<R, T>, T> notificationJob, Channel<R, SimpleNotification<R, T>, T> channel, R receiver, long epochDeadline) {
+    public SimpleNotification(NotificationJob<R, SimpleNotification<R, T>, T> notificationJob, Channel<R, SimpleNotification<R, T>, T> channel, R recipient, long epochDeadline) {
         this.notificationJob = notificationJob;
         this.channel = channel;
-        this.receiver = receiver;
+        this.recipient = recipient;
         this.epochDeadline = epochDeadline;
     }
 
@@ -43,8 +43,8 @@ public class SimpleNotification<R extends NotificationReceiver, T extends Notifi
     }
 
     @Override
-    public R getReceiver() {
-        return receiver;
+    public R getRecipient() {
+        return recipient;
     }
 
     @Override

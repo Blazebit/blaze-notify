@@ -15,17 +15,17 @@
  */
 package com.blazebit.notify.notification;
 
-public class DefaultNotification<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements Notification<R, N, T> {
+public class DefaultNotification<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> implements Notification<R, N, T> {
 
     private final NotificationJob<R, N, T> notificationJob;
     private final Channel<R, N, T> channel;
-    private final R receiver;
+    private final R recipient;
     private final long epochDeadline;
 
-    public DefaultNotification(NotificationJob<R, N, T> notificationJob, Channel<R, N, T> channel, R receiver, long epochDeadline) {
+    public DefaultNotification(NotificationJob<R, N, T> notificationJob, Channel<R, N, T> channel, R recipient, long epochDeadline) {
         this.notificationJob = notificationJob;
         this.channel = channel;
-        this.receiver = receiver;
+        this.recipient = recipient;
         this.epochDeadline = epochDeadline;
     }
 
@@ -40,8 +40,8 @@ public class DefaultNotification<R extends NotificationReceiver, N extends Notif
     }
 
     @Override
-    public R getReceiver() {
-        return receiver;
+    public R getRecipient() {
+        return recipient;
     }
 
     @Override

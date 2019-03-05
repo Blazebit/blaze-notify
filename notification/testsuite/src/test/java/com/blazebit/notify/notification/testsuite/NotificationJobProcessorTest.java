@@ -26,7 +26,7 @@ import java.util.Queue;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class NotificationJobProcessorTest<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
+public class NotificationJobProcessorTest<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
 
     public NotificationJobProcessorTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
         super(channel, jobScheduler, defaultMessage, sink, jobProcessor);
@@ -46,7 +46,7 @@ public class NotificationJobProcessorTest<R extends NotificationReceiver, N exte
 
     @Test
     public void simpleTest() throws InterruptedException {
-        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO receiverResolver */, Collections.emptyMap()));
+        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO recipientResolver */, Collections.emptyMap()));
         jobScheduler.stop();
         Thread.sleep(1000);
         assertEquals(2, sink.size());

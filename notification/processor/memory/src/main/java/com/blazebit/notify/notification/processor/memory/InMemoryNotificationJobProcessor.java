@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-public abstract class InMemoryNotificationJobProcessor<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationJobProcessor<R, N, T> {
+public abstract class InMemoryNotificationJobProcessor<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationJobProcessor<R, N, T> {
 
     private static final Logger LOG = Logger.getLogger(InMemoryNotificationJobProcessor.class.getName());
 
@@ -33,11 +33,11 @@ public abstract class InMemoryNotificationJobProcessor<R extends NotificationRec
 
     @Override
     public N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context) {
-        List<R> receiverBatch = notificationJob.getReceiverResolver().resolveNotificationReceivers(notificationJob, context);
+        List<R> recipientBatch = notificationJob.getRecipientResolver().resolveNotificationRecipients(notificationJob, context);
 
         N lastNotificationProcessed = null;
-        for (int i = 0; i < receiverBatch.size(); i++) {
-            N notification = produceNotification(notificationJob, receiverBatch.get(i));
+        for (int i = 0; i < recipientBatch.size(); i++) {
+            N notification = produceNotification(notificationJob, recipientBatch.get(i));
             try {
                 sink.put(notification);
                 lastNotificationProcessed = notification;
@@ -51,5 +51,5 @@ public abstract class InMemoryNotificationJobProcessor<R extends NotificationRec
         return lastNotificationProcessed;
     }
 
-    protected abstract N produceNotification(NotificationJob<R, N, T> notificationJob, R receiver);
+    protected abstract N produceNotification(NotificationJob<R, N, T> notificationJob, R recipient);
 }

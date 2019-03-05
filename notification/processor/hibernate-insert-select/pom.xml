@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-receiver-resolver-expression</artifactId>
+            <artifactId>blaze-notify-notification-recipient-resolver-expression</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -16,14 +16,14 @@
 package com.blazebit.notify.notification.processor.hibernate.insertselect;
 
 import com.blazebit.notify.notification.*;
-import com.blazebit.notify.notification.receiver.resolver.expression.ExpressionNotificationReceiverResolver;
+import com.blazebit.notify.notification.recipient.resolver.expression.ExpressionNotificationRecipientResolver;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
 
 import javax.persistence.EntityManager;
 
-public abstract class AbstractInsertSelectNotificationJobProcessor<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationJobProcessor<R, N, T> {
+public abstract class AbstractInsertSelectNotificationJobProcessor<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationJobProcessor<R, N, T> {
 
     private final CriteriaBuilderFactory cbf;
     private final EntityManager em;
@@ -36,31 +36,31 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<R extends Not
     @Override
     public N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context) {
         InsertCriteriaBuilder<?> insertCriteriaBuilder = cbf.insert(em, getNotificationEntityClass())
-                .from(getNotificationReceiverEntityClass(), "receiver")
+                .from(getNotificationRecipientEntityClass(), "recipient")
                 .from(getNotificationJobEntityClass(), "job");
 
-        String receiverIdPath = "receiver." + getNotificationReceiverIdPath();
+        String recipientIdPath = "recipient." + getNotificationRecipientIdPath();
         insertCriteriaBuilder.where("job." + getNotificationJobIdPath()).eq(getJobId(notificationJob));
-        insertCriteriaBuilder.where(receiverIdPath).gt(getReceiverId(context.getLastProcessed().getReceiver()));
-        insertCriteriaBuilder.orderByAsc(receiverIdPath);
+        insertCriteriaBuilder.where(recipientIdPath).gt(getRecipientId(context.getLastProcessed().getRecipient()));
+        insertCriteriaBuilder.orderByAsc(recipientIdPath);
         insertCriteriaBuilder.setMaxResults(context.getProcessCount());
 
-        if (notificationJob.getReceiverResolver() != null) {
-            if (notificationJob.getReceiverResolver() instanceof ExpressionNotificationReceiverResolver) {
+        if (notificationJob.getRecipientResolver() != null) {
+            if (notificationJob.getRecipientResolver() instanceof ExpressionNotificationRecipientResolver) {
                 // TODO: Apply predicate
-//            ((ExpressionNotificationReceiverResolver<?, ?>) notificationJob.getReceiverResolver()).getPredicate()
+//            ((ExpressionNotificationRecipientResolver<?, ?>) notificationJob.getRecipientResolver()).getPredicate()
             } else {
-                throw new IllegalArgumentException("Expected receiver resolver of type " + ExpressionNotificationReceiverResolver.class.getName() + " but got " + notificationJob.getReceiverResolver().getClass().getName());
+                throw new IllegalArgumentException("Expected recipient resolver of type " + ExpressionNotificationRecipientResolver.class.getName() + " but got " + notificationJob.getRecipientResolver().getClass().getName());
             }
         }
 
-        bindNotificationAttributes(insertCriteriaBuilder, "receiver", "job");
+        bindNotificationAttributes(insertCriteriaBuilder, "recipient", "job");
 
-        ReturningResult<Long> returningResult = insertCriteriaBuilder.executeWithReturning(receiverIdPath, Long.class);
+        ReturningResult<Long> returningResult = insertCriteriaBuilder.executeWithReturning(recipientIdPath, Long.class);
         return createNotificationReference(returningResult.getLastResult());
     }
 
-    protected abstract void bindNotificationAttributes(InsertCriteriaBuilder<?> insertCriteriaBuilder, String receiverAlias, String jobAlias);
+    protected abstract void bindNotificationAttributes(InsertCriteriaBuilder<?> insertCriteriaBuilder, String recipientAlias, String jobAlias);
 
     protected abstract Class<?> getNotificationEntityClass();
 
@@ -68,14 +68,14 @@ public abstract class AbstractInsertSelectNotificationJobProcessor<R extends Not
 
     protected abstract String getNotificationJobIdPath();
 
-    protected abstract Class<?> getNotificationReceiverEntityClass();
+    protected abstract Class<?> getNotificationRecipientEntityClass();
 
-    protected abstract String getNotificationReceiverIdPath();
+    protected abstract String getNotificationRecipientIdPath();
 
     protected abstract Long getJobId(NotificationJob<R, N, T> job);
 
-    protected abstract Long getReceiverId(NotificationReceiver receiver);
+    protected abstract Long getRecipientId(NotificationRecipient recipient);
 
-    protected abstract N createNotificationReference(Long receiverId);
+    protected abstract N createNotificationReference(Long recipientId);
 
 }

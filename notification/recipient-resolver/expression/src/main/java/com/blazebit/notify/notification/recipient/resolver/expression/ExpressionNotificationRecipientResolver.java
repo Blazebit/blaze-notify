@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification.receiver.resolver.expression;
+package com.blazebit.notify.notification.recipient.resolver.expression;
 
 import com.blazebit.notify.expression.ExpressionServiceFactory;
 import com.blazebit.notify.expression.Predicate;
@@ -21,18 +21,18 @@ import com.blazebit.notify.notification.*;
 
 import java.util.List;
 
-public class ExpressionNotificationReceiverResolver<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationReceiverResolver<R, N, T> {
+public class ExpressionNotificationRecipientResolver<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> implements NotificationRecipientResolver<R, N, T> {
 
     private final ExpressionServiceFactory expressionServiceFactory;
     private final Predicate predicate;
 
-    public ExpressionNotificationReceiverResolver(ExpressionServiceFactory expressionServiceFactory, Predicate predicate) {
+    public ExpressionNotificationRecipientResolver(ExpressionServiceFactory expressionServiceFactory, Predicate predicate) {
         this.expressionServiceFactory = expressionServiceFactory;
         this.predicate = predicate;
     }
 
     @Override
-    public List<R> resolveNotificationReceivers(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext) {
+    public List<R> resolveNotificationRecipients(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext) {
         // TODO
         // expressionServiceFactory.createInterpreter().evaluate(this.predicate, null);
         return null;

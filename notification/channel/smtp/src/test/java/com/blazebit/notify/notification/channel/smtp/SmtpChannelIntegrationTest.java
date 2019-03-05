@@ -41,7 +41,7 @@ public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTe
         String attachmentMimeType = "text/plain; charset=UTF-8";
         List<Attachment> attachments = Collections.singletonList(new Attachment(attachmentName, new ByteArrayDataSource(attachmentContent, attachmentMimeType)));
         smtpChannel.sendNotificationMessage(
-                new DefaultSmtpNotificationReceiver(TEST_MAIL_USER),
+                new DefaultSmtpNotificationRecipient(TEST_MAIL_USER),
                 new SmtpMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
         );
 

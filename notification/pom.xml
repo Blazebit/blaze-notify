@@ -18,7 +18,7 @@
         <module>processor</module>
         <module>scheduler</module>
         <module>testsuite</module>
-        <module>receiver-resolver</module>
+        <module>recipient-resolver</module>
         <module>schedule</module>
     </modules>
 

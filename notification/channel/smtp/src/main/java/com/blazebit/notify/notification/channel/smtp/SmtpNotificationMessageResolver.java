@@ -25,7 +25,7 @@ import com.blazebit.notify.template.api.TemplateProcessorRegistry;
 
 import java.util.*;
 
-public class SmtpNotificationMessageResolver<R extends SmtpNotificationReceiver, N extends Notification<R, N, SmtpMessage>> implements NotificationMessageResolver<R, N, SmtpMessage> {
+public class SmtpNotificationMessageResolver<R extends SmtpNotificationRecipient, N extends Notification<R, N, SmtpMessage>> implements NotificationMessageResolver<R, N, SmtpMessage> {
 
     private final String from;
     private final String fromDisplayName;
@@ -54,29 +54,29 @@ public class SmtpNotificationMessageResolver<R extends SmtpNotificationReceiver,
     }
 
     @Override
-    public SmtpMessage resolveNotificationMessage(NotificationJob<R, N, SmtpMessage> notificationJob, R notificationReceiver) {
+    public SmtpMessage resolveNotificationMessage(NotificationJob<R, N, SmtpMessage> notificationJob, R notificationRecipient) {
         Map<String, Object> resolvedJobParameters = new HashMap<>(notificationJob.getJobParameters());
-        Locale locale = notificationReceiver.getLocale();
+        Locale locale = notificationRecipient.getLocale();
         if (resourceBundle != null) {
             ResourceBundle resourceBundle = ResourceBundle.getBundle(this.resourceBundle, locale);
             resolvedJobParameters.put("resourceBundle", resourceBundle);
         }
         resolvedJobParameters.put("locale", locale);
-        resolvedJobParameters.put("receiver", notificationReceiver);
+        resolvedJobParameters.put("recipient", notificationRecipient);
         resolvedJobParameters = Collections.unmodifiableMap(resolvedJobParameters);
 
-        EmailSubject subject = subjectTemplateLoader == null ? null : new EmailSubject(loadAndprocessTemplate(subjectTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
-        EmailBody textBody = textBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(textBodyTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
-        EmailBody htmlBody = htmlBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(htmlBodyTemplateLoader, notificationReceiver, resolvedJobParameters, String.class));
+        EmailSubject subject = subjectTemplateLoader == null ? null : new EmailSubject(loadAndprocessTemplate(subjectTemplateLoader, notificationRecipient, resolvedJobParameters, String.class));
+        EmailBody textBody = textBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(textBodyTemplateLoader, notificationRecipient, resolvedJobParameters, String.class));
+        EmailBody htmlBody = htmlBodyTemplateLoader == null ? null : new EmailBody(loadAndprocessTemplate(htmlBodyTemplateLoader, notificationRecipient, resolvedJobParameters, String.class));
         Collection<Attachment> attachments = new ArrayList<>(attachmentLoaders.size());
         for (TemplateLoader<R> attachmentTemplateLoader : attachmentLoaders) {
-            attachments.add(loadAndprocessTemplate(attachmentTemplateLoader, notificationReceiver, resolvedJobParameters, Attachment.class));
+            attachments.add(loadAndprocessTemplate(attachmentTemplateLoader, notificationRecipient, resolvedJobParameters, Attachment.class));
         }
         return new SmtpMessage(from, fromDisplayName, replyTo, replyToDisplayName, envelopeFrom, subject, textBody, htmlBody, attachments);
     }
 
-    private <D> D loadAndprocessTemplate(TemplateLoader<R> templateLoader, R notificationReceiver, Map<String, Object> model, Class<D> expectedTemplateProcessingResultType) {
-        Template template = templateLoader.loadTemplate(notificationReceiver);
+    private <D> D loadAndprocessTemplate(TemplateLoader<R> templateLoader, R notificationRecipient, Map<String, Object> model, Class<D> expectedTemplateProcessingResultType) {
+        Template template = templateLoader.loadTemplate(notificationRecipient);
         TemplateProcessor<Template, D> templateProcessor = (TemplateProcessor<Template, D>) templateProcessorRegistry.getTemplateProcessor(template.getClass(), expectedTemplateProcessingResultType);
         if (templateProcessor == null) {
             throw new RuntimeException(

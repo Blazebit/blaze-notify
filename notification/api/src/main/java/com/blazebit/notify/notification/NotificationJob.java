@@ -17,7 +17,7 @@ package com.blazebit.notify.notification;
 
 import java.util.Map;
 
-public interface NotificationJob<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
+public interface NotificationJob<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
     Channel<R, N, T> getChannel();
 
@@ -29,7 +29,7 @@ public interface NotificationJob<R extends NotificationReceiver, N extends Notif
 
     Schedule getNotificationSchedule();
 
-    NotificationReceiverResolver<R, N, T> getReceiverResolver();
+    NotificationRecipientResolver<R, N, T> getRecipientResolver();
 
     Map<String, Object> getJobParameters();
 }

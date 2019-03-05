@@ -25,9 +25,4 @@ public class StaticAttachmentTemplateProcessor<T extends StaticAttachmentTemplat
     public Attachment processTemplate(T template, Map<String, Object> model) {
         return template.getAttachment();
     }
-
-    @Override
-    public Class<Attachment> getTemplateProcessingResultType() {
-        return Attachment.class;
-    }
 }

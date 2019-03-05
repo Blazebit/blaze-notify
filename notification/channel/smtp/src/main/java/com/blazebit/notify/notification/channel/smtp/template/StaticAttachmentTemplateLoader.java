@@ -15,11 +15,11 @@
  */
 package com.blazebit.notify.notification.channel.smtp.template;
 
-import com.blazebit.notify.notification.NotificationReceiver;
+import com.blazebit.notify.notification.NotificationRecipient;
 import com.blazebit.notify.template.api.Template;
 import com.blazebit.notify.template.api.TemplateLoader;
 
-public class StaticAttachmentTemplateLoader<R extends NotificationReceiver> implements TemplateLoader<R> {
+public class StaticAttachmentTemplateLoader<R extends NotificationRecipient> implements TemplateLoader<R> {
     private final StaticAttachmentTemplate staticAttachmentTemplate;
 
     public StaticAttachmentTemplateLoader(StaticAttachmentTemplate staticAttachmentTemplate) {
@@ -27,7 +27,7 @@ public class StaticAttachmentTemplateLoader<R extends NotificationReceiver> impl
     }
 
     @Override
-    public Template loadTemplate(R notificationReceiver) {
+    public Template loadTemplate(R notificationRecipient) {
         return staticAttachmentTemplate;
     }
 }

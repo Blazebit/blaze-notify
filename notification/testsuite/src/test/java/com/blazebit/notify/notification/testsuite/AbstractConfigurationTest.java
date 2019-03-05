@@ -25,7 +25,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 @RunWith(Parameterized.class)
-public abstract class AbstractConfigurationTest<R extends NotificationReceiver, N extends Notification<R, N, T>, T extends NotificationMessage> {
+public abstract class AbstractConfigurationTest<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
 
     protected Channel<R, N, T> channel;
     protected NotificationJobScheduler jobScheduler;
