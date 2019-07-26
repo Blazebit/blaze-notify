@@ -40,7 +40,7 @@ Blaze-Notify is split up into different modules. We recommend that you define a 
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.0.0-SNAPSHOT</blaze-persistence.version>
+    <blaze-notify.version>1.0.0-SNAPSHOT</blaze-notify.version>
 </properties>
 ```
 
