@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>blaze-notify-parent</artifactId>
+        <groupId>com.blazebit</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>blaze-notify-server</artifactId>
+    <packaging>war</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>7.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.2.11.Final</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Actor dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-actor-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-actor-scheduler-executor</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Job dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-schedule-cron</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-transaction-jta</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-jpa-storage</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Notification dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-channel-smtp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-processor-hibernate-insert-select</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-recipient-resolver-expression</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-jpa-model-expression</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-jpa-storage</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Persistence dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
+            <version>${version.blaze-persistence}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+            <version>${version.blaze-persistence}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Expression dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-expression-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-expression-persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Templating dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-template-freemarker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Domain dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-declarative-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-declarative-persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-declarative-integration-cdi</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.deltaspike.core</groupId>
+            <artifactId>deltaspike-core-api</artifactId>
+            <version>1.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.deltaspike.core</groupId>
+            <artifactId>deltaspike-core-impl</artifactId>
+            <version>1.9.0</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- Skip JAR creation for WAR project -->
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>NONE</phase>
+                    </execution>
+                    <execution>
+                        <id>modular-jar</id>
+                        <phase>NONE</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -14,12 +14,13 @@
     <packaging>pom</packaging>
     <modules>
         <module>api</module>
+        <module>impl</module>
+        <module>jpa</module>
+        <module>memory</module>
         <module>channel</module>
         <module>processor</module>
-        <module>scheduler</module>
         <module>testsuite</module>
         <module>recipient-resolver</module>
-        <module>schedule</module>
     </modules>
 
 </project>

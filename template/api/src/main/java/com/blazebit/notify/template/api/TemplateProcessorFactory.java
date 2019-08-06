@@ -17,9 +17,7 @@ package com.blazebit.notify.template.api;
 
 public interface TemplateProcessorFactory<R> {
 
-    boolean canProcessTemplateOfType(Class<? extends Template> type, TemplateProcessorRegistry templateProcessorRegistry);
+    TemplateProcessorKey<R> getTemplateProcessorKey();
 
-    Class<R> getTemplateProcessorResultType();
-
-    TemplateProcessor<?, R> createTemplateProcessor(TemplateProcessorRegistry templateProcessorRegistry);
+    TemplateProcessor<R> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource);
 }

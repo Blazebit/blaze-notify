@@ -15,13 +15,14 @@
  */
 package com.blazebit.notify.notification;
 
-public interface NotificationJobProcessor<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
+import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.JobProcessor;
 
-    /**
-     * Produces a batch of notifications and returns the last produced one.
-     * @param notificationJob
-     * @param context
-     * @return the last processed notification
-     */
-    N process(NotificationJob<R, N, T> notificationJob, NotificationJobProcessingContext context);
+public interface NotificationJobProcessor<T extends NotificationJobTrigger> extends JobProcessor<T> {
+
+    default void process(T jobTrigger, JobContext context) {
+        process(jobTrigger, (NotificationJobContext) context);
+    }
+
+    void process(T jobTrigger, NotificationJobContext context);
 }

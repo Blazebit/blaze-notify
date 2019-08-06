@@ -15,13 +15,18 @@
     <dependencies>
         <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>
-            <groupId>org.apache.openejb</groupId>
+            <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-notification-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-processor-hibernate-insert-select</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

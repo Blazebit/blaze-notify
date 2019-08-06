@@ -21,13 +21,23 @@ import com.blazebit.notify.expression.ExpressionCompiler;
 import com.blazebit.notify.expression.ExpressionInterpreter;
 import com.blazebit.notify.expression.ExpressionSerializer;
 import com.blazebit.notify.expression.ExpressionServiceFactory;
+import com.blazebit.notify.expression.spi.ExpressionSerializerFactory;
+
+import java.util.Map;
 
 public class ExpressionServiceFactoryImpl implements ExpressionServiceFactory {
 
     private final DomainModel domainModel;
+    private final Map<Class<?>, ExpressionSerializerFactory> expressionSerializers;
 
-    public ExpressionServiceFactoryImpl(DomainModel domainModel) {
+    public ExpressionServiceFactoryImpl(DomainModel domainModel, Map<Class<?>, ExpressionSerializerFactory> expressionSerializers) {
         this.domainModel = domainModel;
+        this.expressionSerializers = expressionSerializers;
+    }
+
+    @Override
+    public DomainModel getDomainModel() {
+        return domainModel;
     }
 
     @Override
@@ -41,7 +51,10 @@ public class ExpressionServiceFactoryImpl implements ExpressionServiceFactory {
     }
 
     @Override
-    public ExpressionSerializer createSerializer() {
-        return new ExpressionSerializerImpl();
+    public <T> ExpressionSerializer<T> createSerializer(Class<T> serializationTarget) {
+        if (serializationTarget == StringBuilder.class) {
+            return (ExpressionSerializer<T>) new ExpressionSerializerImpl();
+        }
+        return (ExpressionSerializer<T>) expressionSerializers.get(serializationTarget).createSerializer(domainModel);
     }
 }

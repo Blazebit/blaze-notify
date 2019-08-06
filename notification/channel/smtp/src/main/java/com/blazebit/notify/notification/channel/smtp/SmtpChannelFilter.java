@@ -19,5 +19,5 @@ import com.sun.mail.smtp.SMTPMessage;
 
 public interface SmtpChannelFilter {
 
-    boolean filterSmtpMessage(SmtpNotificationRecipient recipient, SmtpMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage);
+    boolean filterSmtpMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage);
 }

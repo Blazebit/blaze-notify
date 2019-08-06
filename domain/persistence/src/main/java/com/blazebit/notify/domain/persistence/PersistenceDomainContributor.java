@@ -38,7 +38,10 @@ public class PersistenceDomainContributor implements DomainContributor {
     private static final NumericLiteralResolver NUMERIC_LITERAL_TYPE_RESOLVER = new NumericLiteralResolver() {
         @Override
         public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
-            return new DefaultResolvedLiteral(domainModel.getType(BigDecimal.class), value);
+            if (value instanceof BigDecimal && ((BigDecimal) value).scale() > 0) {
+                return new DefaultResolvedLiteral(domainModel.getType(BigDecimal.class), value);
+            }
+            return new DefaultResolvedLiteral(domainModel.getType(Integer.class), value.intValue());
         }
     };
     private static final TemporalLiteralResolver TEMPORAL_LITERAL_TYPE_RESOLVER = new TemporalLiteralResolver() {
@@ -61,6 +64,8 @@ public class PersistenceDomainContributor implements DomainContributor {
 
     @Override
     public void contribute(DomainBuilder domainBuilder) {
+        // TODO: think about using BigInteger instead of BigDecimal
+        // TODO: allow comparison and arithmetic between Integer and BigDecimal
         createBasicType(domainBuilder, Integer.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
         createBasicType(domainBuilder, BigDecimal.class, DomainOperator.arithmetic(), DomainPredicateType.comparable());
         createBasicType(domainBuilder, String.class, new DomainOperator[]{ DomainOperator.PLUS }, DomainPredicateType.comparable());

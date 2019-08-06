@@ -32,7 +32,7 @@ public class SmtpChannelRecipientPatternFilter implements SmtpChannelFilter {
     }
 
     @Override
-    public boolean filterSmtpMessage(SmtpNotificationRecipient recipient, SmtpMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
+    public boolean filterSmtpMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
         String recipientEmail = recipient.getEmail();
         if (!includes.isEmpty()) {
             boolean included = false;

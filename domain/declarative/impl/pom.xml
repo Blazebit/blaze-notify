@@ -12,4 +12,16 @@
 
     <artifactId>blaze-notify-domain-declarative-impl</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-common-utils</artifactId>
+            <version>${version.blaze-utils}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-domain-declarative-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

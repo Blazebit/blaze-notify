@@ -12,4 +12,12 @@
 
     <artifactId>blaze-notify-notification-api</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-job-api</artifactId>
+            <version>${version.blaze-notify-job}</version>
+        </dependency>
+    </dependencies>
+
 </project>

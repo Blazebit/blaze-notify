@@ -19,10 +19,12 @@ package com.blazebit.notify.expression.impl;
 import com.blazebit.notify.expression.*;
 
 import java.util.List;
+import java.util.Map;
 
-public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionSerializer {
+public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionSerializer<StringBuilder> {
 
     private StringBuilder sb;
+    private Context context;
 
     public ExpressionSerializerImpl() {
         this(new StringBuilder());
@@ -33,19 +35,31 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
     }
 
     @Override
-    public String serialize(Expression expression) {
-        expression.accept(this);
-        return sb.toString();
+    public Context createContext(Map<String, Object> contextParameters) {
+        return new Context() {
+            @Override
+            public Object getContextParameter(String contextParameterName) {
+                return contextParameters.get(contextParameterName);
+            }
+        };
     }
 
     @Override
     public void serializeTo(Expression expression, StringBuilder target) {
+        serializeTo(null, expression, target);
+    }
+
+    @Override
+    public void serializeTo(Context newContext, Expression expression, StringBuilder target) {
         StringBuilder old = sb;
+        Context oldContext = context;
         sb = target;
+        context = newContext;
         try {
             expression.accept(this);
         } finally {
             sb = old;
+            context = oldContext;
         }
     }
 

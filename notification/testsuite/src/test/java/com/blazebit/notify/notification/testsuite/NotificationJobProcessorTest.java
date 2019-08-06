@@ -22,33 +22,39 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collections;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class NotificationJobProcessorTest<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
+public class NotificationJobProcessorTest extends AbstractConfigurationTest<SimpleNotificationRecipient, SimpleNotificationMessage> {
 
-    public NotificationJobProcessorTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
-        super(channel, jobScheduler, defaultMessage, sink, jobProcessor);
+    public NotificationJobProcessorTest(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, SimpleNotificationMessage defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+        super(channel, defaultMessage, sink, jobProcessorFactory, jobInstanceProcessorFactory);
     }
 
     @Parameterized.Parameters
     public static Object[][] createCombinations() {
-        return createCombinations(new NotificationJobProcessor() {
+        return createCombinations(new NotificationJobProcessorFactory() {
             @Override
-            public Notification process(NotificationJob notificationJob, NotificationJobProcessingContext context) {
-                notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
-                notificationJob.getChannel().sendNotificationMessage(null, new SimpleNotificationMessage());
-                return null;
+            public <T extends NotificationJobTrigger> NotificationJobProcessor<T> createJobProcessor(NotificationJobContext jobContext, T jobTrigger) {
+                return new NotificationJobProcessor<T>() {
+                    @Override
+                    public void process(T jobTrigger, NotificationJobContext context) {
+                        SimpleNotification notification = new SimpleNotification((SimpleNotificationJobTrigger) jobTrigger);
+                        Channel channel = jobContext.getChannel(jobContext.resolveChannelKey(notification));
+                        channel.sendNotificationMessage(null, new SimpleNotificationMessage());
+                        channel.sendNotificationMessage(null, new SimpleNotificationMessage());
+                    }
+                };
             }
         });
     }
 
     @Test
     public void simpleTest() throws InterruptedException {
-        jobScheduler.add(new SimpleNotificationJob(channel, jobProcessor, null, new SimpleSchedule(), new SimpleSchedule(), null/* TODO recipientResolver */, Collections.emptyMap()));
-        jobScheduler.stop();
-        Thread.sleep(1000);
+        jobContext.getJobManager().addJobTrigger(new SimpleNotificationJobTrigger(channel, null, null/* TODO recipientResolver */, new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
+        jobContext.stop(1, TimeUnit.MINUTES);
         assertEquals(2, sink.size());
     }
 

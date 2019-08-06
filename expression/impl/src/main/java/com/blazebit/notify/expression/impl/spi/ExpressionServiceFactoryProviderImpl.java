@@ -19,13 +19,30 @@ package com.blazebit.notify.expression.impl.spi;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.expression.ExpressionServiceFactory;
 import com.blazebit.notify.expression.impl.ExpressionServiceFactoryImpl;
+import com.blazebit.notify.expression.spi.ExpressionSerializerFactory;
 import com.blazebit.notify.expression.spi.ExpressionServiceFactoryProvider;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ServiceLoader;
 
 public class ExpressionServiceFactoryProviderImpl implements ExpressionServiceFactoryProvider {
 
+    private final Map<Class<?>, ExpressionSerializerFactory> expressionSerializers = new HashMap<>();
+
+    public ExpressionServiceFactoryProviderImpl() {
+        loadDefaults();
+    }
+
+    private void loadDefaults() {
+        for (ExpressionSerializerFactory expressionSerializerFactory : ServiceLoader.load(ExpressionSerializerFactory.class)) {
+            expressionSerializers.put(expressionSerializerFactory.getSerializationTargetType(), expressionSerializerFactory);
+        }
+    }
+
     @Override
     public ExpressionServiceFactory create(DomainModel model) {
-        return new ExpressionServiceFactoryImpl(model);
+        return new ExpressionServiceFactoryImpl(model, expressionSerializers);
     }
 
 }

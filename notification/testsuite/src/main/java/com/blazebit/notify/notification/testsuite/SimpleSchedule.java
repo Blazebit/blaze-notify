@@ -16,8 +16,8 @@
 
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.Schedule;
-import com.blazebit.notify.notification.ScheduleContext;
+import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.ScheduleContext;
 
 public class SimpleSchedule implements Schedule {
 

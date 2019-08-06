@@ -25,10 +25,10 @@ import java.util.Queue;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class ChannelTest<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> extends AbstractConfigurationTest<R, N, T> {
+public class ChannelTest<R extends NotificationRecipient<?>, T extends NotificationMessage> extends AbstractConfigurationTest<R, T> {
 
-    public ChannelTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
-        super(channel, jobScheduler, defaultMessage, sink, jobProcessor);
+    public ChannelTest(Channel<R, T> channel, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+        super(channel, defaultMessage, sink, jobProcessorFactory, jobInstanceProcessorFactory);
     }
 
     @Test

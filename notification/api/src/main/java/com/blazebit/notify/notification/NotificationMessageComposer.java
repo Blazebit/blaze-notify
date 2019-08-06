@@ -17,5 +17,5 @@ package com.blazebit.notify.notification;
 
 public interface NotificationMessageComposer {
 
-    NotificationMessage composeNotificationMessage(Channel channel, NotificationRecipient notificationRecipient);
+    <R extends NotificationRecipient<?>, M extends NotificationMessage> M composeNotificationMessage(Channel<R, M> channel, M notificationRecipient);
 }

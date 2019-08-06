@@ -11,12 +11,4 @@
 
     <artifactId>blaze-notify-template-api</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
 </project>

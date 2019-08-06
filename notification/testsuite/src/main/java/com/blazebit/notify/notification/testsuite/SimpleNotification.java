@@ -16,44 +16,22 @@
 
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.memory.model.AbstractNotification;
 
-public class SimpleNotification<R extends NotificationRecipient, T extends NotificationMessage> implements Notification<R, SimpleNotification<R, T>, T> {
+public class SimpleNotification extends AbstractNotification<SimpleNotificationId, SimpleNotificationRecipient, SimpleNotificationJobInstance> {
 
-    private final NotificationJob<R, SimpleNotification<R, T>, T> notificationJob;
-    private final Channel<R, SimpleNotification<R, T>, T> channel;
-    private final R recipient;
-    private final long epochDeadline;
-
-    public SimpleNotification(NotificationJob<R, SimpleNotification<R, T>, T> notificationJob, Channel<R, SimpleNotification<R, T>, T> channel, R recipient, long epochDeadline) {
-        this.notificationJob = notificationJob;
-        this.channel = channel;
-        this.recipient = recipient;
-        this.epochDeadline = epochDeadline;
+    public SimpleNotification() {
     }
 
-    @Override
-    public NotificationJob<R, SimpleNotification<R, T>, T> getNotificationJob() {
-        return notificationJob;
+    public SimpleNotification(SimpleNotificationId id) {
+        super(id);
     }
 
-    @Override
-    public Channel<R, SimpleNotification<R, T>, T> getChannel() {
-        return channel;
+    public SimpleNotification(SimpleNotificationJobTrigger trigger) {
+        setNotificationJobInstance(new SimpleNotificationJobInstance(trigger));
     }
 
-    @Override
-    public R getRecipient() {
-        return recipient;
-    }
-
-    @Override
-    public long getEpochDeadline() {
-        return epochDeadline;
-    }
-
-    @Override
-    public int compareTo(SimpleNotification<R, T> o) {
-        return 0;
+    public SimpleNotification(SimpleNotificationJobInstance jobInstance) {
+        setNotificationJobInstance(jobInstance);
     }
 }

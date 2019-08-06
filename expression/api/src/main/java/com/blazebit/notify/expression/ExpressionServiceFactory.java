@@ -16,11 +16,15 @@
 
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainModel;
+
 public interface ExpressionServiceFactory {
+
+    public DomainModel getDomainModel();
 
     public ExpressionCompiler createCompiler();
 
     public ExpressionInterpreter createInterpreter();
 
-    public ExpressionSerializer createSerializer();
+    public <T> ExpressionSerializer<T> createSerializer(Class<T> serializationTarget);
 }

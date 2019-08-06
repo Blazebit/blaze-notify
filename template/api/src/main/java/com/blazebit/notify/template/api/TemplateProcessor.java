@@ -17,7 +17,16 @@ package com.blazebit.notify.template.api;
 
 import java.util.Map;
 
-public interface TemplateProcessor<T extends Template, R> {
+public interface TemplateProcessor<R> {
 
-    R processTemplate(T template, Map<String, Object> model);
+    R processTemplate(Map<String, Object> model);
+
+    static <T> TemplateProcessor<T> of(T element) {
+        return new TemplateProcessor<T>() {
+            @Override
+            public T processTemplate(Map<String, Object> model) {
+                return element;
+            }
+        };
+    }
 }

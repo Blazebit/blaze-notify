@@ -17,7 +17,7 @@ package com.blazebit.notify.notification.channel.smtp;
 
 import com.blazebit.notify.notification.NotificationRecipient;
 
-public interface SmtpNotificationRecipient extends NotificationRecipient {
+public interface SmtpNotificationRecipient<ID> extends NotificationRecipient<ID> {
 
     String getEmail();
 }

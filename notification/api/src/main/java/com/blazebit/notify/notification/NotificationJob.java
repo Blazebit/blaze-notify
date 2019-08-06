@@ -15,21 +15,8 @@
  */
 package com.blazebit.notify.notification;
 
-import java.util.Map;
+import com.blazebit.notify.job.Job;
 
-public interface NotificationJob<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
+public interface NotificationJob extends Job {
 
-    Channel<R, N, T> getChannel();
-
-    NotificationJobProcessor<R, N, T> getJobProcessor();
-
-    NotificationMessageResolver<R, N, T> getMessageResolver();
-
-    Schedule getSchedule();
-
-    Schedule getNotificationSchedule();
-
-    NotificationRecipientResolver<R, N, T> getRecipientResolver();
-
-    Map<String, Object> getJobParameters();
 }

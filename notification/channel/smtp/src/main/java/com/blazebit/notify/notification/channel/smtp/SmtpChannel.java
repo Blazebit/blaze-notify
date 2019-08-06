@@ -15,13 +15,16 @@
  */
 package com.blazebit.notify.notification.channel.smtp;
 
-import com.blazebit.notify.notification.Channel;
-import com.blazebit.notify.notification.Notification;
+import com.blazebit.exception.ExceptionUtils;
+import com.blazebit.notify.job.ConfigurationSource;
+import com.blazebit.notify.notification.*;
 import com.blazebit.notify.notification.security.HostnameVerificationPolicy;
 import com.blazebit.notify.notification.security.JSSETruststoreConfigurator;
 import com.blazebit.notify.notification.security.TruststoreProvider;
 import com.blazebit.notify.notification.security.TruststoreProviderFactory;
 import com.sun.mail.smtp.SMTPMessage;
+import com.sun.mail.smtp.SMTPSendFailedException;
+import com.sun.mail.smtp.SMTPTransport;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -29,14 +32,27 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.ServiceLoader;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notification<R, N, SmtpMessage>> implements Channel<R, N, SmtpMessage> {
+public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNotificationMessage> {
+
+    public static final ChannelKey<SmtpChannel> KEY = ChannelKey.of("smtp", SmtpChannel.class);
+
+    public static final String SMTP_HOST_PROPERTY = "channel.smtp.host";
+    public static final String SMTP_PORT_PROPERTY = "channel.smtp.port";
+    public static final String SMTP_USER_PROPERTY = "channel.smtp.user";
+    public static final String SMTP_PASSWORD_PROPERTY = "channel.smtp.password";
+    public static final String SMTP_CONNECTION_TIMEOUT_PROPERTY = "channel.smtp.connection_timeout";
+    public static final String SMTP_TIMEOUT_PROPERTY = "channel.smtp.timout";
+    public static final String SMTP_ENABLE_SSL_PROPERTY = "channel.smtp.enable_ssl";
+    public static final String SMTP_ENABLE_STARTTLS_PROPERTY = "channel.smtp.enable_starttls";
+    public static final String SMTP_NODE_NAME_PROPERTY = "channel.smtp.node_name";
+    public static final String SMTP_FILTER_PROPERTY = "channel.smtp.filter";
 
     private static final Logger LOG = Logger.getLogger(SmtpChannel.class.getName());
 
@@ -44,17 +60,41 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
     private static final String HTML_MIME_TYPE = "text/html; charset=" + CHARSET_UTF8;
 
     private final Config config;
-    private Session session;
-    private Transport transport;
-    private boolean initialized;
+    private final Session session;
+    private final BlockingQueue<Transport> transports;
+
+    public SmtpChannel(ConfigurationSource configurationSource) {
+        this(fromConfigurationSource(configurationSource));
+    }
+
+    private static Config fromConfigurationSource(ConfigurationSource configurationSource) {
+        Config.Builder builder = Config.builder()
+                .withHost(configurationSource.getPropertyOrFail(SMTP_HOST_PROPERTY, String.class, Function.identity()))
+                .withPort(configurationSource.getPropertyOrFail(SMTP_PORT_PROPERTY, Integer.class, Integer::valueOf))
+                .withConnectionTimeout(configurationSource.getPropertyOrDefault(SMTP_CONNECTION_TIMEOUT_PROPERTY, Long.class, Long::valueOf, o -> 10000L))
+                .withTimeout(configurationSource.getPropertyOrDefault(SMTP_TIMEOUT_PROPERTY, Long.class, Long::valueOf, o -> 10000L))
+                .withEnableSsl(configurationSource.getPropertyOrDefault(SMTP_ENABLE_SSL_PROPERTY, Boolean.class, Boolean::valueOf, o -> false))
+                .withEnableStartTls(configurationSource.getPropertyOrDefault(SMTP_ENABLE_STARTTLS_PROPERTY, Boolean.class, Boolean::valueOf, o -> false))
+                .withNodeName(configurationSource.getPropertyOrDefault(SMTP_NODE_NAME_PROPERTY, String.class, Function.identity(), o -> null))
+                .withFilter(configurationSource.getPropertyOrDefault(SMTP_FILTER_PROPERTY, SmtpChannelFilter.class, null, o -> null));
+
+        String user = configurationSource.getPropertyOrDefault(SMTP_USER_PROPERTY, String.class, Function.identity(), o -> null);
+        String password = configurationSource.getPropertyOrDefault(SMTP_PASSWORD_PROPERTY, String.class, Function.identity(), o -> null);
+
+        if (user != null && !user.isEmpty() || password != null && !password.isEmpty()) {
+            builder.withAuth(user, password);
+        }
+
+        // TODO: trust store config?
+
+        return builder.build();
+    }
 
     public SmtpChannel(Config config) {
         this.config = config;
-    }
 
-    @Override
-    public void initialize() {
         Properties props = new Properties();
+
         if (config.host != null) {
             props.setProperty("mail.smtp.host", config.host);
         }
@@ -82,39 +122,61 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
         props.setProperty("mail.smtp.timeout", Long.toString(config.timeout));
         props.setProperty("mail.smtp.connectiontimeout", Long.toString(config.connectionTimeout));
 
-        session = Session.getInstance(props);
-        try {
-            transport = session.getTransport("smtp");
-            LOG.log(Level.FINEST, "SMTP transport opened");
-        } catch (NoSuchProviderException e) {
-            throw new RuntimeException(e);
+        if (config.nodeName != null) {
+            props.setProperty("mail.from", config.nodeName);
         }
-        initialized = true;
+
+        session = Session.getInstance(props);
+        transports = new ArrayBlockingQueue<>(config.connectionPoolSize);
+        for (int i = 0; i < config.connectionPoolSize; i++) {
+            try {
+                transports.add(session.getTransport("smtp"));
+            } catch (NoSuchProviderException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        LOG.log(Level.FINEST, "SMTP transport opened");
     }
 
     @Override
     public void close() {
-        if (transport != null) {
+        Throwable firstThrowable = null;
+        for (Transport transport : transports) {
             try {
                 transport.close();
-                LOG.log(Level.FINEST, "SMTP transport closed");
             } catch (MessagingException e) {
                 LOG.log(Level.WARNING, "Failed to close transport", e);
+            } catch (Throwable t) {
+                firstThrowable = firstThrowable == null ? t : firstThrowable;
             }
+        }
+        LOG.log(Level.FINEST, "SMTP transport closed");
+        if (firstThrowable != null) {
+            ExceptionUtils.doThrow(firstThrowable);
         }
     }
 
     @Override
-    public void sendNotificationMessage(R recipient, SmtpMessage message) {
-        if (!initialized) {
-            throw new IllegalStateException("Channel has not been initialized");
+    public Object sendNotificationMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage message) {
+        Transport transport;
+        try {
+            transport = transports.take();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         try {
             if (!transport.isConnected()) {
-                if (config.auth) {
-                    transport.connect(config.user, config.password);
-                } else {
-                    transport.connect();
+                try {
+                    if (config.auth) {
+                        transport.connect(config.user, config.password);
+                    } else {
+                        transport.connect();
+                    }
+                } catch (IllegalStateException e) {
+                    // Only rethrow when we are still not connected
+                    if (!transport.isConnected()) {
+                        throw e;
+                    }
                 }
             }
 
@@ -164,19 +226,56 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
 
             msg.setHeader("To", recipient.getEmail());
             msg.setSubject(message.getSubject().getSubject(), "utf-8");
-            msg.saveChanges();
-            msg.setSentDate(new Date());
 
             if (config.getFilter() == null || config.getFilter().filterSmtpMessage(recipient, message, msg)) {
                 transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(recipient.getEmail())});
-                LOG.log(Level.FINEST, "SMTP notification sent to " + recipient);
-            } else {
+                Integer responseCode = getResponseCode(transport);
+                String response = getResponse(transport);
+                if (LOG.isLoggable(Level.FINEST)) {
+                    LOG.log(Level.FINEST, "SMTP notification sent to " + recipient + " with response code " + responseCode + " and response: " + response);
+                }
+                return msg.getMessageID();
+            } else if (LOG.isLoggable(Level.FINEST)) {
                 LOG.log(Level.FINEST, "SMTP notification to " + recipient + " skipped by filter");
             }
-        } catch (Exception e) {
+            return null;
+        } catch (SendFailedException e) {
+            Integer responseCode = getResponseCode(e);
+            if (responseCode != null) {
+                if (responseCode == 454) {
+                    LOG.log(Level.FINE, "Rate limit exceeded", e);
+                    throw new NotificationRateLimitException(e);
+                }
+            }
             LOG.log(Level.SEVERE, "Failed to send email", e);
-            throw new RuntimeException(e);
+            throw new NotificationException(e);
+        } catch (Throwable e) {
+            LOG.log(Level.SEVERE, "Failed to send email", e);
+            throw new NotificationException(e);
+        } finally {
+            transports.add(transport);
         }
+    }
+
+    private Integer getResponseCode(SendFailedException e) {
+        if (e instanceof SMTPSendFailedException) {
+            return ((SMTPSendFailedException) e).getReturnCode();
+        }
+        return null;
+    }
+
+    private Integer getResponseCode(Transport transport) {
+        if (transport instanceof SMTPTransport) {
+            return ((SMTPTransport) transport).getLastReturnCode();
+        }
+        return null;
+    }
+
+    private String getResponse(Transport transport) {
+        if (transport instanceof SMTPTransport) {
+            return ((SMTPTransport) transport).getLastServerResponse();
+        }
+        return null;
     }
 
     private MimeBodyPart createAttachmentBodyPart(String attachmentFilename, DataSource dataSource) throws MessagingException {
@@ -229,9 +328,11 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
         private final boolean enableStartTls;
         private final long timeout;
         private final long connectionTimeout;
+        private final int connectionPoolSize;
+        private final String nodeName;
         private final SmtpChannelFilter filter;
 
-        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, long timeout, long connectionTimeout, SmtpChannelFilter filter) {
+        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, long timeout, long connectionTimeout, int connectionPoolSize, String nodeName, SmtpChannelFilter filter) {
             this.host = host;
             this.port = port;
             this.auth = auth;
@@ -241,6 +342,8 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
             this.enableStartTls = enableStartTls;
             this.timeout = timeout;
             this.connectionTimeout = connectionTimeout;
+            this.connectionPoolSize = connectionPoolSize;
+            this.nodeName = nodeName;
             this.filter = filter;
         }
 
@@ -280,6 +383,14 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
             return connectionTimeout;
         }
 
+        public int getConnectionPoolSize() {
+            return connectionPoolSize;
+        }
+
+        public String getNodeName() {
+            return nodeName;
+        }
+
         public SmtpChannelFilter getFilter() {
             return filter;
         }
@@ -298,10 +409,12 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
             private boolean enableStartTls;
             private long timeout = 10000;
             private long connectionTimeout = 10000;
+            private int connectionPoolSize = 1;
+            private String nodeName;
             private SmtpChannelFilter filter;
 
             public Config build() {
-                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, timeout, connectionTimeout, filter);
+                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, timeout, connectionTimeout, connectionPoolSize, nodeName, filter);
             }
 
             public Builder withHost(String host) {
@@ -314,7 +427,7 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
                 return this;
             }
 
-            public Builder enableAuth(String user, String password) {
+            public Builder withAuth(String user, String password) {
                 this.auth = true;
                 this.user = user;
                 this.password = password;
@@ -338,6 +451,16 @@ public class SmtpChannel<R extends SmtpNotificationRecipient, N extends Notifica
 
             public Builder withConnectionTimeout(long connectionTimeout) {
                 this.connectionTimeout = connectionTimeout;
+                return this;
+            }
+
+            public Builder withConnectionPoolSize(int connectionPoolSize) {
+                this.connectionPoolSize = connectionPoolSize;
+                return this;
+            }
+
+            public Builder withNodeName(String nodeName) {
+                this.nodeName = nodeName;
                 return this;
             }
 

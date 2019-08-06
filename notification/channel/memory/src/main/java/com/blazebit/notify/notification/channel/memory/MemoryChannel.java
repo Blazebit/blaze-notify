@@ -20,8 +20,9 @@ import com.blazebit.notify.notification.*;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class MemoryChannel<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> implements Channel<R, N, T> {
+public class MemoryChannel<R extends NotificationRecipient<?>, T extends NotificationMessage> implements Channel<R, T> {
 
+    public static final ChannelKey<MemoryChannel<NotificationRecipient<?>, NotificationMessage>> KEY = (ChannelKey<MemoryChannel<NotificationRecipient<?>, NotificationMessage>>) (ChannelKey) ChannelKey.of("memory", MemoryChannel.class);
     private static final int DEFAULT_CAPACITY = 1024;
     private final Queue<T> queue;
 
@@ -42,12 +43,9 @@ public class MemoryChannel<R extends NotificationRecipient, N extends Notificati
     }
 
     @Override
-    public void sendNotificationMessage(R recipient, T message) {
+    public Object sendNotificationMessage(R recipient, T message) {
         queue.add(message);
-    }
-
-    @Override
-    public void initialize() {
+        return null;
     }
 
     @Override

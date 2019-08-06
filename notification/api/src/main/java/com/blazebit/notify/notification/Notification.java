@@ -15,13 +15,57 @@
  */
 package com.blazebit.notify.notification;
 
-public interface Notification<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> extends Comparable<N> {
+import com.blazebit.notify.job.TimeFrame;
 
-    NotificationJob<R, N, T> getNotificationJob();
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 
-    Channel<R, N, T> getChannel();
+public interface Notification<ID> {
 
-    R getRecipient();
+    ID getId();
 
-    long getEpochDeadline();
+    NotificationJobInstance<?> getNotificationJobInstance();
+
+    NotificationRecipient<?> getRecipient();
+
+    NotificationState getState();
+
+    int getDeferCount();
+
+    void incrementDeferCount();
+
+    Instant getScheduleTime();
+
+    void setScheduleTime(Instant scheduleTime);
+
+    Instant getCreationTime();
+
+    Set<? extends TimeFrame> getPublishTimeFrames();
+
+    default Map<String, Serializable> getParameters() {
+        return getNotificationJobInstance().getJobConfiguration().getJobParameters();
+    }
+
+    default int getMaximumDeferCount() {
+        return getNotificationJobInstance().getJobConfiguration().getMaximumDeferCount();
+    }
+
+    default Instant getDeadline() {
+        return getNotificationJobInstance().getJobConfiguration().getDeadline();
+    }
+
+    void markDone(Object result);
+
+    void markFailed(Throwable t);
+
+    default void markDeferred(Instant newScheduleTime) {
+        incrementDeferCount();
+        setScheduleTime(newScheduleTime);
+    }
+
+    void markDeadlineReached();
+
+    void markDropped();
 }

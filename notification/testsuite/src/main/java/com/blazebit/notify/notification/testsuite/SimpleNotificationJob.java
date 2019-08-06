@@ -16,69 +16,25 @@
 
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.Channel;
+import com.blazebit.notify.notification.NotificationRecipientResolver;
+import com.blazebit.notify.notification.memory.model.AbstractNotificationJob;
 
-import java.util.Collections;
-import java.util.Map;
+public class SimpleNotificationJob extends AbstractNotificationJob {
 
-public class SimpleNotificationJob<R extends NotificationRecipient> implements NotificationJob<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> {
+    private final Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel;
+    private final NotificationRecipientResolver recipientResolver;
 
-    private final Channel<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> channel;
-    private final NotificationJobProcessor<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> jobProcessor;
-    private final NotificationMessageResolver<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> messageResolver;
-    private final Schedule schedule;
-    private final Schedule notificationSchedule;
-    private final NotificationRecipientResolver<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> recipientResolver;
-    private final Map<String, Object> jobParameters;
-
-    public SimpleNotificationJob(
-            Channel<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> channel,
-            NotificationJobProcessor<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> jobProcessor, NotificationMessageResolver<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> messageResolver,
-            Schedule schedule,
-            Schedule notificationSchedule,
-            NotificationRecipientResolver<R, SimpleNotification<R, SimpleNotificationMessage>,
-                        SimpleNotificationMessage> recipientResolver, Map<String, Object> jobParameters) {
+    public SimpleNotificationJob(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, NotificationRecipientResolver recipientResolver) {
         this.channel = channel;
-        this.jobProcessor = jobProcessor;
-        this.messageResolver = messageResolver;
-        this.schedule = schedule;
-        this.notificationSchedule = notificationSchedule;
         this.recipientResolver = recipientResolver;
-        this.jobParameters = Collections.unmodifiableMap(jobParameters);
     }
 
-    @Override
-    public Channel<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> getChannel() {
+    public Channel<SimpleNotificationRecipient, SimpleNotificationMessage> getChannel() {
         return channel;
     }
 
-    @Override
-    public NotificationJobProcessor<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> getJobProcessor() {
-        return jobProcessor;
-    }
-
-    @Override
-    public NotificationMessageResolver<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> getMessageResolver() {
-        return messageResolver;
-    }
-
-    @Override
-    public Schedule getSchedule() {
-        return schedule;
-    }
-
-    @Override
-    public Schedule getNotificationSchedule() {
-        return notificationSchedule;
-    }
-
-    @Override
-    public NotificationRecipientResolver<R, SimpleNotification<R, SimpleNotificationMessage>, SimpleNotificationMessage> getRecipientResolver() {
+    public NotificationRecipientResolver getRecipientResolver() {
         return recipientResolver;
-    }
-
-    @Override
-    public Map<String, Object> getJobParameters() {
-        return jobParameters;
     }
 }

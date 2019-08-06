@@ -15,25 +15,19 @@
  */
 package com.blazebit.notify.template.freemarker;
 
-import com.blazebit.notify.template.api.Template;
-import com.blazebit.notify.template.api.TemplateProcessor;
-import com.blazebit.notify.template.api.TemplateProcessorFactory;
-import com.blazebit.notify.template.api.TemplateProcessorRegistry;
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.notify.template.api.*;
 
+@ServiceProvider(TemplateProcessorFactory.class)
 public class FreemarkerTemplateProcessorFactory implements TemplateProcessorFactory<String> {
 
     @Override
-    public boolean canProcessTemplateOfType(Class<? extends Template> type, TemplateProcessorRegistry templateProcessorRegistry) {
-        return FreemarkerTemplate.class.isAssignableFrom(type);
+    public TemplateProcessorKey<String> getTemplateProcessorKey() {
+        return FreemarkerTemplateProcessor.KEY;
     }
 
     @Override
-    public Class<String> getTemplateProcessorResultType() {
-        return String.class;
-    }
-
-    @Override
-    public TemplateProcessor<?, String> createTemplateProcessor(TemplateProcessorRegistry templateProcessorRegistry) {
-        return new FreemarkerTemplateProcessor<>();
+    public TemplateProcessor<String> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource) {
+        return new FreemarkerTemplateProcessor(configurationSource);
     }
 }

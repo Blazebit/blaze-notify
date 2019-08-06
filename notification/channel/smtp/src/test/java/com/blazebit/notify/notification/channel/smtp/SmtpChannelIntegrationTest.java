@@ -42,7 +42,7 @@ public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTe
         List<Attachment> attachments = Collections.singletonList(new Attachment(attachmentName, new ByteArrayDataSource(attachmentContent, attachmentMimeType)));
         smtpChannel.sendNotificationMessage(
                 new DefaultSmtpNotificationRecipient(TEST_MAIL_USER),
-                new SmtpMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
+                new SmtpNotificationMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
         );
 
         Message[] receivedEmails = mailClient.awaitIncomingEmails(5000, 1);

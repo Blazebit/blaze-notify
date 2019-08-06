@@ -15,9 +15,24 @@
  */
 package com.blazebit.notify.notification;
 
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public interface NotificationRecipientResolver<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
+public interface NotificationRecipientResolver {
 
-    List<R> resolveNotificationRecipients(NotificationJob<R, N, T> job, NotificationJobProcessingContext jobContext);
+    List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext);
+
+    static <X extends NotificationRecipient<?>> NotificationRecipientResolver of(X... recipients) {
+        final List<X> list = new ArrayList<>(recipients.length);
+        Collections.addAll(list, recipients);
+        return new NotificationRecipientResolver() {
+            @Override
+            public List<X> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext) {
+                return list;
+            }
+        };
+    }
 }

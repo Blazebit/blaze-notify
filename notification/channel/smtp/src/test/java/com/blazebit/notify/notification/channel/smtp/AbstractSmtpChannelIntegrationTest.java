@@ -39,7 +39,7 @@ public abstract class AbstractSmtpChannelIntegrationTest {
 
     protected static final ImapMailClient mailClient = new ImapMailClient(TEST_MAIL_USER, TEST_MAIL_PWD, TEST_MAIL_SERVER_DOMAIN, TEST_MAIL_SERVER_IMAP_PORT, false);
 
-    protected static SmtpChannel<DefaultSmtpNotificationRecipient, ?> smtpChannel;
+    protected static SmtpChannel smtpChannel;
     private static GuiceJamesServer jamesServer;
 
     @BeforeClass
@@ -70,10 +70,7 @@ public abstract class AbstractSmtpChannelIntegrationTest {
                 .withPort(TEST_MAIL_SERVER_SMTP_PORT)
                 .build();
         smtpChannel = new SmtpChannel(config);
-        smtpChannel.initialize();
     }
-
-
 
     private static void startMailServer() {
         String tempDir = System.getProperty("java.io.tmpdir");

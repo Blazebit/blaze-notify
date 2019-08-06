@@ -15,41 +15,128 @@
  */
 package com.blazebit.notify.notification.testsuite;
 
+import com.blazebit.notify.job.ConfigurationSource;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.JobInstanceState;
+import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.spi.ScheduleFactory;
 import com.blazebit.notify.notification.*;
 import com.blazebit.notify.notification.channel.memory.MemoryChannel;
-import com.blazebit.notify.notification.scheduler.timer.ExecutorServiceScheduler;
+import com.blazebit.notify.notification.NotificationJobProcessorFactory;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.time.Instant;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @RunWith(Parameterized.class)
-public abstract class AbstractConfigurationTest<R extends NotificationRecipient, N extends Notification<R, N, T>, T extends NotificationMessage> {
+public abstract class AbstractConfigurationTest<R extends NotificationRecipient<?>, T extends NotificationMessage> {
 
-    protected Channel<R, N, T> channel;
-    protected NotificationJobScheduler jobScheduler;
+    protected NotificationJobContext jobContext;
+    protected ChannelKey channelKey = ChannelKey.of(null, null);
+    protected Channel<R, T> channel;
     protected T defaultMessage;
     protected Queue<NotificationMessage> sink;
-    protected NotificationJobProcessor<R, N, T> jobProcessor;
 
-    public AbstractConfigurationTest(Channel<R, N, T> channel, NotificationJobScheduler jobScheduler, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessor<R, N, T> jobProcessor) {
+    public AbstractConfigurationTest(Channel<R, T> channel, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+        this.jobContext = NotificationJobContext.Builder.create()
+                .withJobProcessorFactory(jobProcessorFactory)
+                .withJobInstanceProcessorFactory(jobInstanceProcessorFactory)
+                .withChannelFactory(new SimpleChannelFactory())
+                .withChannelResolver((notification, notificationJobContext) -> channelKey)
+                .withRecipientResolver((jobInstance, jobProcessingContext) -> ((SimpleNotificationJobInstance) jobInstance).getTrigger().getJob().getRecipientResolver().resolveNotificationRecipients(jobInstance, jobProcessingContext))
+                .withScheduleFactory(new SimpleScheduleFactory())
+                .withService(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor())
+                .createContext();
         this.channel = channel;
-        this.jobScheduler = jobScheduler;
         this.defaultMessage = defaultMessage;
         this.sink = sink;
-        this.jobProcessor = jobProcessor;
+    }
+
+    @After
+    public void stop() {
+        jobContext.stop();
     }
 
     @Parameterized.Parameters
     public static Object[][] createCombinations() {
-        return createCombinations(null);
+        return createCombinations(new SimpleNotificationJobProcessorFactory(), new SimpleNotificationJobInstanceProcessorFactory());
     }
 
-    public static Object[][] createCombinations(NotificationJobProcessor jobProcessor) {
+    public static Object[][] createCombinations(NotificationJobProcessorFactory jobProcessorFactory) {
+        return createCombinations(jobProcessorFactory, new SimpleNotificationJobInstanceProcessorFactory());
+    }
+
+    public static Object[][] createCombinations(NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+        return createCombinations(new SimpleNotificationJobProcessorFactory(), jobInstanceProcessorFactory);
+    }
+
+    public static Object[][] createCombinations(NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
         Queue<NotificationMessage> sink;
         return new Object[][]{
-                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new DefaultNotificationJobScheduler(new ExecutorServiceScheduler()), new SimpleNotificationMessage(), sink, jobProcessor}
+                {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new SimpleNotificationMessage(), sink, jobProcessorFactory, jobInstanceProcessorFactory}
         };
+    }
+
+    private class SimpleChannelFactory implements ChannelFactory {
+        @Override
+        public ChannelKey getChannelType() {
+            return channelKey;
+        }
+
+        @Override
+        public Channel createChannel(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
+            return channel;
+        }
+    }
+
+    private static class SimpleNotificationJobProcessorFactory implements NotificationJobProcessorFactory {
+        @Override
+        public <T extends NotificationJobTrigger> NotificationJobProcessor<T> createJobProcessor(NotificationJobContext jobContext, T jobTrigger) {
+            return (NotificationJobProcessor<T>) new SimpleNotificationJobProcessor();
+        }
+    }
+
+    private static class SimpleNotificationJobProcessor implements NotificationJobProcessor<NotificationJobTrigger> {
+        @Override
+        public void process(NotificationJobTrigger jobTrigger, NotificationJobContext context) {
+            SimpleNotificationJobInstance jobInstance = new SimpleNotificationJobInstance();
+            jobInstance.setTrigger((SimpleNotificationJobTrigger) jobTrigger);
+            jobInstance.setState(JobInstanceState.NEW);
+            jobInstance.setCreationTime(Instant.now());
+            jobInstance.setScheduleTime(Instant.ofEpochMilli(jobTrigger.getNotificationSchedule(context).nextEpochSchedule()));
+            context.getJobManager().addJobInstance(jobInstance);
+        }
+    }
+
+    private static class SimpleNotificationJobInstanceProcessorFactory implements NotificationJobInstanceProcessorFactory {
+        @Override
+        public <T extends NotificationJobInstance<?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
+            return (NotificationJobInstanceProcessor<?, T>) new SimpleNotificationJobInstanceProcessor();
+        }
+    }
+
+    private static class SimpleNotificationJobInstanceProcessor implements NotificationJobInstanceProcessor<Object, NotificationJobInstance<?>> {
+        @Override
+        public Object process(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<Object> context) {
+            return null;
+        }
+    }
+
+    private static class SimpleScheduleFactory implements ScheduleFactory {
+
+        @Override
+        public String asCronExpression(Instant instant) {
+            return null;
+        }
+
+        @Override
+        public Schedule createSchedule(String cronExpression) {
+            return new SimpleSchedule();
+        }
     }
 }

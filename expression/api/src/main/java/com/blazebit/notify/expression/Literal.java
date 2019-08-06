@@ -34,6 +34,10 @@ public class Literal implements ArithmeticExpression {
         return resolvedLiteral.getType();
     }
 
+    public Object getValue() {
+        return resolvedLiteral.getValue();
+    }
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

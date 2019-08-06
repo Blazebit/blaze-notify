@@ -16,10 +16,18 @@
 
 package com.blazebit.notify.expression;
 
-public interface ExpressionSerializer {
+import java.util.Map;
 
-    public String serialize(Expression expression);
+public interface ExpressionSerializer<T> {
 
-    public void serializeTo(Expression expression, StringBuilder target);
+    public Context createContext(Map<String, Object> contextParameters);
+
+    public void serializeTo(Expression expression, T target);
+
+    public void serializeTo(Context context, Expression expression, T target);
+
+    interface Context {
+        public Object getContextParameter(String contextParameterName);
+    }
 
 }

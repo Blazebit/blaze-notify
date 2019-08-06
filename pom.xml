@@ -17,6 +17,9 @@
         <module>expression</module>
         <module>notification</module>
         <module>documentation</module>
+        <module>actor</module>
+        <module>job</module>
+        <module>server</module>
         <module>template</module>
     </modules>
 
@@ -30,7 +33,7 @@
     <properties>
         <jdk8.home>${env.JAVA_HOME}</jdk8.home>
         <jdk8.classes.jar>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</jdk8.classes.jar>
-        <java.version>1.7</java.version>
+        <java.version>1.8</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <version.checkstyle>8.7</version.checkstyle>
@@ -138,7 +141,7 @@
                         <include>**/src/main/**/*.xml</include>
                     </includes>
                     <excludes>
-                        <exclude>**/src/main/java/com/blazebit/notify/notification/schedule/cron/CronExpression.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/notify/job/schedule/cron/CronExpression.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/MessageFormatterMethod.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/TemplatingUtil.java</exclude>
                     </excludes>
@@ -173,17 +176,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                    </execution>
-                    <!-- TODO: needed? -->
-                    <execution>
-                        <id>modular-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>module</classifier>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
