@@ -30,7 +30,6 @@ import javax.persistence.*;
 @SequenceGenerator(name = "idGenerator", sequenceName = "email_notification_recipient_seq", allocationSize = 1)
 @Table(name = "email_notification_recipient")
 @DomainType(discoverMode = DiscoverMode.EXPLICIT)
-@EntityType(EmailNotificationRecipient.class)
 public class EmailNotificationRecipient extends AbstractNotificationRecipient implements SmtpNotificationRecipient<Long> {
 
     private String email;

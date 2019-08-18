@@ -21,11 +21,11 @@ import com.blazebit.notify.domain.impl.boot.model.DomainBuilderImpl;
 import com.blazebit.notify.domain.runtime.model.*;
 import com.blazebit.notify.expression.*;
 import com.blazebit.notify.expression.impl.model.Gender;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 
 public abstract class AbstractExpressionCompilerTest {
@@ -52,7 +52,7 @@ public abstract class AbstractExpressionCompilerTest {
                 .createBasicType("string", String.class)
                 .withOperator("string", new DomainOperator[]{ DomainOperator.PLUS })
                 .withPredicate("string", DomainPredicateType.distinguishable())
-                .createBasicType("timestamp", Calendar.class)
+                .createBasicType("timestamp", Instant.class)
                 .withPredicate("timestamp", DomainPredicateType.comparable())
                 .createEnumType("gender", Gender.class)
                     .withValue(Gender.FEMALE.name())
@@ -67,7 +67,7 @@ public abstract class AbstractExpressionCompilerTest {
                     .addAttribute("id", Long.class)
                     .addAttribute("email", String.class)
                     .addAttribute("age", Integer.class)
-                    .addAttribute("birthday", Calendar.class)
+                    .addAttribute("birthday", Instant.class)
                     .addAttribute("gender", Gender.class)
                 .build();
 
@@ -87,7 +87,7 @@ public abstract class AbstractExpressionCompilerTest {
     @Before
     public void setup() {
         domainModel = createDomainModel();
-        expressionCompiler = new ExpressionCompilerImpl(domainModel);
+        expressionCompiler = new ExpressionCompilerImpl(domainModel, new LiteralFactory(domainModel));
     }
 
     protected DomainModel createDomainModel() {
@@ -103,24 +103,19 @@ public abstract class AbstractExpressionCompilerTest {
     }
 
     protected Expression parseArithmeticExpression(String input) {
-        return expressionCompiler.parse(input, new ExpressionCompilerImpl.RuleInvoker() {
-            @Override
-            public ParserRuleContext invokeRule(PredicateParser parser) {
-                return parser.arithmetic_expression();
-            }
-        }, getCompileContext());
+        return expressionCompiler.createExpression(input, getCompileContext());
     }
 
-    protected DisjunctivePredicate or(Predicate... disjuncts) {
-        return new DisjunctivePredicate(booleanDomainType(), Arrays.asList(disjuncts));
+    protected CompoundPredicate or(Predicate... disjuncts) {
+        return new CompoundPredicate(booleanDomainType(), Arrays.asList(disjuncts), false);
     }
 
-    protected ConjunctivePredicate and(Predicate... conjuncts) {
-        return new ConjunctivePredicate(booleanDomainType(), Arrays.asList(conjuncts));
+    protected CompoundPredicate and(Predicate... conjuncts) {
+        return new CompoundPredicate(booleanDomainType(), Arrays.asList(conjuncts), true);
     }
 
-    protected Literal time(Calendar value) {
-        return new Literal(expressionCompiler.getLiteralFactory().ofCalendar(value));
+    protected Literal time(Instant value) {
+        return new Literal(expressionCompiler.getLiteralFactory().ofInstant(value));
     }
 
     protected Literal time(String value) {
@@ -209,8 +204,8 @@ public abstract class AbstractExpressionCompilerTest {
         return new ComparisonPredicate(booleanDomainType(), left, right, ComparisonOperator.LOWER_OR_EQUAL);
     }
 
-    protected static ArithmeticFactor pos(ArithmeticExpression expression) {
-        return new ArithmeticFactor(expression, false);
+    protected static ArithmeticExpression pos(ArithmeticExpression expression) {
+        return expression;//new ArithmeticFactor(expression, false);
     }
 
     protected static ArithmeticFactor neg(ArithmeticExpression expression) {
@@ -246,7 +241,7 @@ public abstract class AbstractExpressionCompilerTest {
             arguments.put(domainFunction.getArguments().get(i), argumentArray[i]);
         }
         DomainType functionType = domainModel.getFunctionTypeResolver(functionName).resolveType(domainModel, domainFunction, argumentTypes);
-        return new FunctionInvocation(functionName, arguments, functionType);
+        return new FunctionInvocation(domainFunction, arguments, functionType);
     }
 
     private DomainType booleanDomainType() {

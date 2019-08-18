@@ -31,4 +31,10 @@ public @interface DomainFunction {
 
     String value() default "";
 
+    Class<?> type() default void.class;
+
+    String typeName() default "";
+
+    boolean collection() default false;
+
 }

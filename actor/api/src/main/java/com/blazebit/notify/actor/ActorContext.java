@@ -286,7 +286,7 @@ public interface ActorContext {
 
             private final ActorManager actorManager;
             private final ActorScheduler actorScheduler;
-            private final SchedulerFactory schedulerFactory;
+            private final CapturingSchedulerFactory schedulerFactory;
             private final ClusterStateManager clusterStateManager;
             private final Map<String, Object> properties;
             private final Map<Class<?>, Object> serviceMap;
@@ -295,7 +295,7 @@ public interface ActorContext {
                                           ConsumerListenerFactory consumerListenerFactory, ClusterStateManager clusterStateManager, Map<String, Object> properties, Map<Class<?>, Object> serviceMap) {
                 this.properties = new HashMap<>(properties);
                 this.serviceMap = new HashMap<>(serviceMap);
-                this.schedulerFactory = schedulerFactory;
+                this.schedulerFactory = new CapturingSchedulerFactory(schedulerFactory);
                 this.clusterStateManager = clusterStateManager;
                 this.actorManager = actorManagerFactory.createActorManager(this);
                 this.actorScheduler = null;//actorSchedulerFactory.createActorScheduler(this);
@@ -328,12 +328,58 @@ public interface ActorContext {
 
             @Override
             public void stop() {
-                actorScheduler.stop();
+                schedulerFactory.stop();
             }
 
             @Override
             public void stop(long timeout, TimeUnit unit) throws InterruptedException {
-                actorScheduler.stop(timeout, unit);
+                schedulerFactory.stop(timeout, unit);
+            }
+        }
+
+        private static class CapturingSchedulerFactory implements SchedulerFactory {
+
+            private final List<Scheduler> schedulers = new CopyOnWriteArrayList<>();
+            private final SchedulerFactory delegate;
+            private volatile boolean closed;
+
+            public CapturingSchedulerFactory(SchedulerFactory delegate) {
+                this.delegate = delegate;
+            }
+
+            @Override
+            public Scheduler createScheduler(ActorContext actorContext, String actorName) {
+                if (closed) {
+                    return null;
+                }
+                Scheduler scheduler = delegate.createScheduler(actorContext, actorName);
+                schedulers.add(scheduler);
+                return scheduler;
+            }
+
+            public void stop() {
+                closed = true;
+                for (Scheduler scheduler : schedulers) {
+                    if (scheduler.supportsStop()) {
+                        scheduler.stop();
+                    }
+                }
+            }
+
+            public void stop(long timeout, TimeUnit unit) throws InterruptedException {
+                closed = true;
+                // Snapshot it first to avoid concurrency in timing code
+                Scheduler[] schedulers = this.schedulers.toArray(new Scheduler[this.schedulers.size()]);
+                long millis = unit.toMillis(timeout);
+                long started = System.currentTimeMillis();
+                for (Scheduler scheduler : schedulers) {
+                    if (scheduler.supportsStop()) {
+                        scheduler.stop(millis, TimeUnit.MILLISECONDS);
+                        long next = System.currentTimeMillis();
+                        millis -= next - started;
+                        started = next;
+                    }
+                }
             }
         }
     }

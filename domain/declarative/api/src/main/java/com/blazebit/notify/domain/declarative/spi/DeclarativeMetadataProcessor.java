@@ -28,6 +28,6 @@ public interface DeclarativeMetadataProcessor<T extends Annotation> {
 
     public Class<T> getProcessingAnnotation();
 
-    public MetadataDefinition<?> process(T annotation);
+    public MetadataDefinition<?> process(Class<?> annotatedClass, T annotation);
 
 }

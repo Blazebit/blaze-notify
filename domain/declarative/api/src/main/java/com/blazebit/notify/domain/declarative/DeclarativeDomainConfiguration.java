@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.domain.declarative;
 
-import com.blazebit.notify.domain.declarative.spi.DeclarativeMetadataProcessor;
+import com.blazebit.notify.domain.declarative.spi.*;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 
 import java.lang.annotation.Annotation;
@@ -31,7 +31,17 @@ public interface DeclarativeDomainConfiguration {
 
     DeclarativeDomainConfiguration addDomainFunctions(Class<?> domainFunctionsClass);
 
+    TypeResolver getTypeResolver();
+
+    DeclarativeDomainConfiguration setTypeResolver(TypeResolver typeResolver);
+
     DeclarativeDomainConfiguration withMetadataProcessor(DeclarativeMetadataProcessor<? extends Annotation> metadataProcessor);
+
+    DeclarativeDomainConfiguration withMetadataProcessor(DeclarativeAttributeMetadataProcessor<? extends Annotation> metadataProcessor);
+
+    DeclarativeDomainConfiguration withMetadataProcessor(DeclarativeFunctionMetadataProcessor<? extends Annotation> metadataProcessor);
+
+    DeclarativeDomainConfiguration withMetadataProcessor(DeclarativeFunctionParameterMetadataProcessor<? extends Annotation> metadataProcessor);
 
     DomainModel createDomainModel();
 }

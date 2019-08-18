@@ -16,36 +16,22 @@
 package com.blazebit.notify.expression.impl;
 
 import com.blazebit.notify.domain.runtime.model.*;
-import com.blazebit.notify.expression.*;
+import com.blazebit.notify.expression.DomainModelException;
+import com.blazebit.notify.expression.Expression;
+import com.blazebit.notify.expression.SyntaxErrorException;
 
 import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Map;
 
 public class LiteralFactory {
 
-    private static final ThreadLocal<DateFormat> DATE_LITERAL_FORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd");
-        }
-    };
-    private static final ThreadLocal<DateFormat> DATE_TIME_LITERAL_FORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-    };
-    private static final ThreadLocal<DateFormat> DATE_TIME_MILLISECONDS_LITERAL_FORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        }
-    };
+    private static final DateTimeFormatter DATE_LITERAL_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter DATE_TIME_LITERAL_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter DATE_TIME_MILLISECONDS_LITERAL_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
     private static final String TEMPORAL_INTERVAL_YEARS_FIELD = "years";
     private static final String TEMPORAL_INTERVAL_MONTHS_FIELD = "months";
@@ -82,6 +68,10 @@ public class LiteralFactory {
         return enumLiteralResolver.resolveLiteral(domainModel, domainEnumValue);
     }
 
+    public void appendEnumValue(StringBuilder sb, EnumDomainTypeValue domainEnumValue) {
+        sb.append(domainEnumValue.getOwner().getName()).append('.').append(domainEnumValue.getValue());
+    }
+
     public ResolvedLiteral ofEntityAttributeValues(EntityDomainType entityDomainType, Map<EntityDomainTypeAttribute, Expression> attributeValues) {
         if (entityLiteralResolver == null) {
             throw new DomainModelException("No literal resolver for enum literals defined");
@@ -94,28 +84,55 @@ public class LiteralFactory {
             throw new DomainModelException("No literal resolver for collection literals defined");
         }
         return collectionLiteralResolver.resolveLiteral(domainModel, collectionDomainType, expressions);
-
     }
 
     public ResolvedLiteral ofTemporalIntervalString(String intervalString) {
-        String[] intervalStringParts = intervalString.split("\\s");
+        String[] intervalStringParts = intervalString.split("\\s+");
         int years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
         for (int i = 0; i < intervalStringParts.length / 2; i++) {
-            int amount = Integer.parseInt(intervalStringParts[2 * i]);
+            String amountString = intervalStringParts[2 * i];
             String temporalField = intervalStringParts[2 * i + 1];
 
+            int amount = 0;
+            NumberFormatException exception = null;
+            try {
+                amount = Integer.parseInt(amountString);
+            } catch (NumberFormatException ex) {
+                exception = ex;
+            }
+
             if (TEMPORAL_INTERVAL_YEARS_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_YEARS_FIELD + "': " + amountString, exception);
+                }
                 years = amount;
             } else if (TEMPORAL_INTERVAL_MONTHS_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_MONTHS_FIELD + "': " + amountString, exception);
+                }
                 months = amount;
             } else if (TEMPORAL_INTERVAL_DAYS_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_DAYS_FIELD + "': " + amountString, exception);
+                }
                 days = amount;
             } else if (TEMPORAL_INTERVAL_HOURS_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_HOURS_FIELD + "': " + amountString, exception);
+                }
                 hours = amount;
             } else if (TEMPORAL_INTERVAL_MINUTES_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_MINUTES_FIELD + "': " + amountString, exception);
+                }
                 minutes = amount;
             } else if (TEMPORAL_INTERVAL_SECONDS_FIELD.equalsIgnoreCase(temporalField)) {
+                if (exception != null || amount < 0) {
+                    throw new SyntaxErrorException("Illegal value given for temporal field '" + TEMPORAL_INTERVAL_SECONDS_FIELD + "': " + amountString, exception);
+                }
                 seconds = amount;
+            } else {
+                throw new SyntaxErrorException("Illegal temporal field in interval: " + temporalField);
             }
         }
 
@@ -127,8 +144,23 @@ public class LiteralFactory {
     }
 
     public ResolvedLiteral ofQuotedString(String quotedString) {
-        if (quotedString.length() >= 2 && quotedString.charAt(0) == '\'' && quotedString.charAt(quotedString.length() - 1) == '\'') {
-            return ofString(quotedString.substring(1, quotedString.length() - 1));
+        final char quoteChar;
+        if (quotedString.length() >= 2 && ((quoteChar = quotedString.charAt(0)) == '\'' || quoteChar == '"') && quotedString.charAt(quotedString.length() - 1) == quoteChar) {
+            StringBuilder sb = new StringBuilder();
+            int endIndex = quotedString.length() - 1;
+            for (int i = 1; i < endIndex; i++) {
+                char c = quotedString.charAt(i);
+                // Double quote
+                if (c == quoteChar) {
+                    if (quotedString.charAt(i + 1) != quoteChar) {
+                        throw new SyntaxErrorException("String quoting unbalanced [" + quotedString + "]");
+                    }
+                    i++;
+                }
+                sb.append(c);
+            }
+
+            return ofString(sb.toString());
         } else {
             throw new SyntaxErrorException("String not quoted [" + quotedString + "]");
         }
@@ -141,33 +173,54 @@ public class LiteralFactory {
         return stringLiteralResolver.resolveLiteral(domainModel, string);
     }
 
+    public void appendString(StringBuilder sb, String value) {
+        sb.append('\'');
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            // Double quote
+            if (c == '\'') {
+                sb.append('\'');
+            }
+            sb.append(c);
+        }
+        sb.append('\'');
+    }
+
     public ResolvedLiteral ofDateTimeString(String dateTimeString) {
-        boolean hasBlank = dateTimeString.contains(" ");
-        boolean hasDot = dateTimeString.contains(".");
+        boolean hasBlank = dateTimeString.indexOf(' ') != -1;
+        boolean hasDot = dateTimeString.indexOf('.') != -1;
 
         try {
-            Calendar dateTime;
+            Instant dateTime;
             if (!hasBlank && !hasDot) {
-                dateTime = Calendar.getInstance();
-                dateTime.setTime(DATE_LITERAL_FORMAT.get().parse(dateTimeString));
+                dateTime = Instant.ofEpochSecond(LocalDate.parse(dateTimeString, DATE_LITERAL_FORMAT).toEpochDay() * 24 * 60 * 60);
             } else if (!hasDot) {
-                dateTime = Calendar.getInstance();
-                dateTime.setTime(DATE_TIME_LITERAL_FORMAT.get().parse(dateTimeString));
+                dateTime = ZonedDateTime.parse(dateTimeString, DATE_TIME_LITERAL_FORMAT).toInstant();
             } else {
-                dateTime = Calendar.getInstance();
-                dateTime.setTime(DATE_TIME_MILLISECONDS_LITERAL_FORMAT.get().parse(dateTimeString));
+                dateTime = ZonedDateTime.parse(dateTimeString, DATE_TIME_MILLISECONDS_LITERAL_FORMAT).toInstant();
             }
-            return ofCalendar(dateTime);
-        } catch (ParseException e) {
-            throw new SyntaxErrorException("Invalid datetime literal " + dateTimeString);
+            return ofInstant(dateTime);
+        } catch (DateTimeParseException e) {
+            throw new SyntaxErrorException("Invalid datetime literal " + dateTimeString, e);
         }
     }
 
-    public ResolvedLiteral ofCalendar(Calendar calendar) {
+    public ResolvedLiteral ofInstant(Instant instant) {
         if (temporalLiteralResolver == null) {
             throw new DomainModelException("No literal resolver for temporal literals defined");
         }
-        return temporalLiteralResolver.resolveTimestampLiteral(domainModel, calendar);
+        return temporalLiteralResolver.resolveTimestampLiteral(domainModel, instant);
+    }
+
+    public void appendInstant(StringBuilder sb, Instant value) {
+        ZonedDateTime dateTime = value.atZone(ZoneOffset.UTC);
+        if (dateTime.getNano() > 0) {
+            DATE_TIME_MILLISECONDS_LITERAL_FORMAT.formatTo(dateTime, sb);
+        } else if (dateTime.getSecond() > 0 || dateTime.getMinute() > 0 || dateTime.getHour() > 0) {
+            DATE_TIME_LITERAL_FORMAT.formatTo(dateTime, sb);
+        } else {
+            DATE_LITERAL_FORMAT.formatTo(dateTime, sb);
+        }
     }
 
     public ResolvedLiteral ofNumericString(String numericString) {
@@ -185,10 +238,18 @@ public class LiteralFactory {
         return numericLiteralResolver.resolveLiteral(domainModel, bigDecimal);
     }
 
-    public ResolvedLiteral ofBoolean(Boolean value) {
+    public void appendNumeric(StringBuilder sb, Number value) {
+        sb.append(value);
+    }
+
+    public ResolvedLiteral ofBoolean(boolean value) {
         if (booleanLiteralResolver == null) {
             throw new DomainModelException("No literal resolver for boolean literals defined");
         }
         return booleanLiteralResolver.resolveLiteral(domainModel, value);
+    }
+
+    public void appendBoolean(StringBuilder sb, boolean value) {
+        sb.append(value);
     }
 }

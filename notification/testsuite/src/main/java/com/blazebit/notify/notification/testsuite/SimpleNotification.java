@@ -21,6 +21,7 @@ import com.blazebit.notify.notification.memory.model.AbstractNotification;
 public class SimpleNotification extends AbstractNotification<SimpleNotificationId, SimpleNotificationRecipient, SimpleNotificationJobInstance> {
 
     public SimpleNotification() {
+        super(new SimpleNotificationId());
     }
 
     public SimpleNotification(SimpleNotificationId id) {
@@ -28,10 +29,12 @@ public class SimpleNotification extends AbstractNotification<SimpleNotificationI
     }
 
     public SimpleNotification(SimpleNotificationJobTrigger trigger) {
+        this();
         setNotificationJobInstance(new SimpleNotificationJobInstance(trigger));
     }
 
     public SimpleNotification(SimpleNotificationJobInstance jobInstance) {
+        this();
         setNotificationJobInstance(jobInstance);
     }
 }

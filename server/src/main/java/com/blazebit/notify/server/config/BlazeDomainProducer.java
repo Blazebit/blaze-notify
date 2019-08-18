@@ -36,13 +36,6 @@ public class BlazeDomainProducer {
     @ApplicationScoped
     DomainModel createDomainModel(DeclarativeDomainConfiguration configuration) {
         return configuration.createDomainModel();
-//        return Domain.getDefaultProvider()
-//                .createDefaultBuilder()
-//                    .createEntityType("EmailNotificationRecipient", EmailNotificationRecipient.class)
-//                        // TODO: currently this must be a BigDecimal to be able to support the equality predicate with a literal?!
-//                        .addAttribute("id", BigDecimal.class)
-//                    .build()
-//                .build();
     }
 
     @Produces

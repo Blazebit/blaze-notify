@@ -15,6 +15,7 @@
 
     <modules>
         <module>model</module>
+        <module>storage</module>
     </modules>
 
 </project>

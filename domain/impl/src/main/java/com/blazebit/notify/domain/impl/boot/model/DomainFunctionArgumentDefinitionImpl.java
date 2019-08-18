@@ -56,7 +56,7 @@ public class DomainFunctionArgumentDefinitionImpl extends MetadataDefinitionHold
                 typeDefinition = domainBuilder.getDomainTypeDefinition(javaType);
                 if (typeDefinition == null) {
                     String name = this.name == null || this.name.isEmpty() ? "" : "(" + this.name + ")";
-                    context.addError("The argument type '" + typeName + "' defined for the function argument index " + index + name + " of function " + owner.getName() + " is unknown!");
+                    context.addError("The argument type '" + (typeName == null ? javaType.getName() : typeName) + "' defined for the function argument index " + index + name + " of function " + owner.getName() + " is unknown!");
                 }
             }
             if (collection) {

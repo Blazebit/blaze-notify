@@ -32,4 +32,6 @@ public @interface DomainAttribute {
     Class<?> value() default void.class;
 
     String typeName() default "";
+
+    boolean collection() default false;
 }

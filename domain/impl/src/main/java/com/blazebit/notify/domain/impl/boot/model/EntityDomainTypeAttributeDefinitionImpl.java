@@ -78,7 +78,7 @@ public class EntityDomainTypeAttributeDefinitionImpl extends MetadataDefinitionH
         if (typeDefinition == null) {
             typeDefinition = domainBuilder.getDomainTypeDefinition(javaType);
             if (typeDefinition == null) {
-                context.addError("The type '" + typeName + "' defined for the attribute " + owner.getName() + "#" + name + " is unknown!");
+                context.addError("The type '" + (typeName == null ? javaType.getName() : typeName) + "' defined for the attribute " + owner.getName() + "#" + name + " is unknown!");
             }
         }
         if (collection) {

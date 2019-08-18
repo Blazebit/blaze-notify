@@ -36,9 +36,6 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	private Instant creationTime;
 	private Set<TimeFrame> publishTimeFrames = new HashSet<>(0);
 
-	public AbstractNotification() {
-	}
-
 	public AbstractNotification(ID id) {
 		super(id);
 	}

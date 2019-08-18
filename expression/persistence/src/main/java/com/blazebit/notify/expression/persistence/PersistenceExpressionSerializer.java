@@ -17,18 +17,23 @@
 package com.blazebit.notify.expression.persistence;
 
 import com.blazebit.notify.domain.persistence.EntityAttribute;
+import com.blazebit.notify.expression.spi.FunctionRenderer;
+import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainModel;
 import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
 import com.blazebit.notify.expression.*;
 import com.blazebit.persistence.WhereBuilder;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class PersistenceExpressionSerializer implements Expression.Visitor, ExpressionSerializer<WhereBuilder<?>> {
 
     private final DomainModel domainModel;
-    private final StringBuilder sb;
+    private StringBuilder sb;
     private WhereBuilder<?> whereBuilder;
     private Context context;
 
@@ -73,11 +78,36 @@ public class PersistenceExpressionSerializer implements Expression.Visitor, Expr
 
     @Override
     public void visit(FunctionInvocation e) {
-        throw new UnsupportedOperationException("Not yet implemented!");
+        FunctionRenderer renderer = e.getFunction().getMetadata(FunctionRenderer.class);
+        if (renderer == null) {
+            throw new IllegalStateException("The domain function '" + e.getFunction().getName() + "' has no registered persistence function renderer!");
+        }
+        Map<DomainFunctionArgument, Expression> arguments = e.getArguments();
+        Map<DomainFunctionArgument, Consumer<StringBuilder>> argumentRenderers;
+
+        if (arguments.isEmpty()) {
+            argumentRenderers = Collections.emptyMap();
+        } else {
+            argumentRenderers = new LinkedHashMap<>(arguments.size());
+            for (Map.Entry<DomainFunctionArgument, Expression> entry : arguments.entrySet()) {
+                argumentRenderers.put(entry.getKey(), sb -> {
+                    StringBuilder oldSb = this.sb;
+                    this.sb = sb;
+                    try {
+                        entry.getValue().accept(PersistenceExpressionSerializer.this);
+                    } finally {
+                        this.sb = oldSb;
+                    }
+                });
+            }
+        }
+
+        renderer.render(e.getFunction(), e.getType(), argumentRenderers, sb);
     }
 
     @Override
     public void visit(Literal e) {
+        // TODO: fix this
         if (e.getType().getJavaType() == String.class) {
             sb.append('\'').append(e.getValue()).append('\'');
         } else {
@@ -166,49 +196,32 @@ public class PersistenceExpressionSerializer implements Expression.Visitor, Expr
     }
 
     @Override
-    public void visit(ConjunctivePredicate e) {
+    public void visit(CompoundPredicate e) {
         boolean negated = e.isNegated();
         if (negated) {
             sb.append("NOT(");
         }
-        List<Predicate> conjuncts = e.getConjuncts();
-        int size = conjuncts.size();
-        Predicate predicate = conjuncts.get(0);
-        if (predicate instanceof DisjunctivePredicate) {
+        List<Predicate> predicates = e.getPredicates();
+        int size = predicates.size();
+        Predicate predicate = predicates.get(0);
+        if (predicate instanceof CompoundPredicate && e.isConjunction() != ((CompoundPredicate) predicate).isConjunction()) {
             sb.append('(');
             predicate.accept(this);
             sb.append(')');
         } else {
             predicate.accept(this);
         }
+        String connector = e.isConjunction() ? " AND " : " OR ";
         for (int i = 1; i < size; i++) {
-            predicate = conjuncts.get(i);
-            sb.append(" AND ");
-            if (predicate instanceof DisjunctivePredicate && !predicate.isNegated()) {
+            predicate = predicates.get(i);
+            sb.append(connector);
+            if (predicate instanceof CompoundPredicate && !predicate.isNegated() && e.isConjunction() != ((CompoundPredicate) predicate).isConjunction()) {
                 sb.append('(');
                 predicate.accept(this);
                 sb.append(')');
             } else {
                 predicate.accept(this);
             }
-        }
-        if (negated) {
-            sb.append(')');
-        }
-    }
-
-    @Override
-    public void visit(DisjunctivePredicate e) {
-        boolean negated = e.isNegated();
-        if (negated) {
-            sb.append("NOT(");
-        }
-        List<Predicate> conjuncts = e.getDisjuncts();
-        int size = conjuncts.size();
-        conjuncts.get(0).accept(this);
-        for (int i = 1; i < size; i++) {
-            sb.append(" OR ");
-            conjuncts.get(i).accept(this);
         }
         if (negated) {
             sb.append(')');

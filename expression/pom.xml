@@ -17,6 +17,7 @@
         <module>api</module>
         <module>impl</module>
         <module>persistence</module>
+        <module>declarative</module>
     </modules>
 
 </project>

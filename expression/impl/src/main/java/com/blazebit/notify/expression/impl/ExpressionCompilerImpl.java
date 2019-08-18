@@ -48,9 +48,9 @@ public class ExpressionCompilerImpl implements ExpressionCompiler {
     private final DomainModel domainModel;
     private final LiteralFactory literalFactory;
 
-    public ExpressionCompilerImpl(DomainModel domainModel) {
+    public ExpressionCompilerImpl(DomainModel domainModel, LiteralFactory literalFactory) {
         this.domainModel = domainModel;
-        this.literalFactory = new LiteralFactory(domainModel);
+        this.literalFactory = literalFactory;
     }
 
     @Override
@@ -84,6 +84,9 @@ public class ExpressionCompilerImpl implements ExpressionCompiler {
         parser.addErrorListener(errorListener);
 
         ParserRuleContext ctx = ruleInvoker.invokeRule(parser);
+        if (input.length() != ctx.getStop().getStopIndex() + 1) {
+            throw new SyntaxErrorException("Parsing stopped at index " + ctx.getStop().getStopIndex() + "! Illegal unexpected suffix: '" + input.substring(ctx.getStop().getStopIndex() + 1) + "'");
+        }
 
         PredicateModelGenerator visitor = new PredicateModelGenerator(domainModel, literalFactory, compileContext);
         return (T) visitor.visit(ctx);

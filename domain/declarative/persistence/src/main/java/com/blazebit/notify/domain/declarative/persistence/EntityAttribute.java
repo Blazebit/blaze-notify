@@ -16,8 +16,6 @@
 
 package com.blazebit.notify.domain.declarative.persistence;
 
-import com.blazebit.notify.domain.declarative.Metadata;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -27,7 +25,6 @@ import java.lang.annotation.Target;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@Metadata
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
 public @interface EntityAttribute {

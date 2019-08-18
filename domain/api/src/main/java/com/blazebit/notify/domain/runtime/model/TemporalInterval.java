@@ -15,9 +15,12 @@
  */
 package com.blazebit.notify.domain.runtime.model;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 public class TemporalInterval {
+
     private final int years;
     private final int months;
     private final int days;
@@ -26,6 +29,24 @@ public class TemporalInterval {
     private final int seconds;
 
     public TemporalInterval(int years, int months, int days, int hours, int minutes, int seconds) {
+        if (years < 0) {
+            throw new IllegalArgumentException("Invalid negative years: " + years);
+        }
+        if (months < 0) {
+            throw new IllegalArgumentException("Invalid negative months: " + months);
+        }
+        if (days < 0) {
+            throw new IllegalArgumentException("Invalid negative days: " + days);
+        }
+        if (hours < 0) {
+            throw new IllegalArgumentException("Invalid negative hours: " + hours);
+        }
+        if (minutes < 0) {
+            throw new IllegalArgumentException("Invalid negative minutes: " + minutes);
+        }
+        if (seconds < 0) {
+            throw new IllegalArgumentException("Invalid negative seconds: " + seconds);
+        }
         this.years = years;
         this.months = months;
         this.days = days;
@@ -74,5 +95,71 @@ public class TemporalInterval {
     @Override
     public int hashCode() {
         return Objects.hash(years, months, days, hours, minutes, seconds);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (years != 0) {
+            sb.append(years).append(" YEARS ");
+        }
+        if (months != 0) {
+            sb.append(months).append(" MONTHS ");
+        }
+        if (days != 0) {
+            sb.append(days).append(" DAYS ");
+        }
+        if (hours != 0) {
+            sb.append(hours).append(" HOURS ");
+        }
+        if (minutes != 0) {
+            sb.append(minutes).append(" MINUTES ");
+        }
+        sb.append(seconds).append(" SECONDS");
+        return sb.toString();
+    }
+
+    public TemporalInterval add(TemporalInterval interval2) {
+        return new TemporalInterval(
+                this.years + interval2.years,
+                this.months + interval2.months,
+                this.days + interval2.days,
+                this.hours + interval2.hours,
+                this.minutes + interval2.minutes,
+                this.seconds + interval2.seconds
+        );
+    }
+
+    public TemporalInterval subtract(TemporalInterval interval2) {
+        return new TemporalInterval(
+                this.years - interval2.years,
+                this.months - interval2.months,
+                this.days - interval2.days,
+                this.hours - interval2.hours,
+                this.minutes - interval2.minutes,
+                this.seconds - interval2.seconds
+        );
+    }
+
+    public Instant add(Instant instant) {
+        return instant.atZone(ZoneOffset.UTC)
+                .plusYears(years)
+                .plusMonths(months)
+                .plusDays(days)
+                .plusHours(hours)
+                .plusMinutes(minutes)
+                .plusSeconds(seconds)
+                .toInstant();
+    }
+
+    public Instant subtract(Instant instant) {
+        return instant.atZone(ZoneOffset.UTC)
+                .minusYears(years)
+                .minusMonths(months)
+                .minusDays(days)
+                .minusHours(hours)
+                .minusMinutes(minutes)
+                .minusSeconds(seconds)
+                .toInstant();
     }
 }

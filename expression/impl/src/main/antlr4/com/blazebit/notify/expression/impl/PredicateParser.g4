@@ -35,6 +35,8 @@ conditional_factor
 
 conditional_primary
     : expr=comparison_expression	    #SimplePredicate
+    | boolean_literal                   #BooleanLiteralPredicate
+    | function_invocation               #BooleanFunction
     | LP expr=conditional_expression RP #NestedPredicate
     ;
 
@@ -42,7 +44,7 @@ comparison_expression
     : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		                                        #ComparisonPredicate
     | left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression                                        #BetweenPredicate
     | arithmetic_expression 	(not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP         #InPredicate
-	| arithmetic_expression 	(not=NOT)? IN 			enum_literal_or_path			                                                                #InCollectionPredicate
+	| arithmetic_expression 	(not=NOT)? IN 			enum_literal_or_path			                                                    #InCollectionPredicate
     | left=arithmetic_expression		kind=(IS_NULL | IS_NOT_NULL)                                                                        #IsNullPredicate
     ;
 
@@ -98,9 +100,22 @@ enum_literal_or_path
     ;
 
 entity_literal_or_function_invocation
+    : entity_literal
+    | function_invocation
+    ;
+
+entity_literal
     : name=identifier                                                                                                                                                                                   #RootPathOrNoArgFunctionInvocation
-    | name=identifier LP ((args+=conditional_expression|arithmetic_expression) COMMA)* RP                                                                                                               #IndexedFunctionInvocation
-    | name=identifier LP (argNames+=identifier OP_EQ args+=conditional_expression|arithmetic_expression) (COMMA (argNames+=identifier OP_EQ args+=conditional_expression|arithmetic_expression))* RP    #NamedInvocation
+    ;
+
+function_invocation
+    : name=identifier LP ((args+=function_argument COMMA)* args+=function_argument)? RP                                                          #IndexedFunctionInvocation
+    | name=identifier LP ((argNames+=identifier OP_EQ args+=function_argument COMMA)* argNames+=identifier OP_EQ args+=function_argument)? RP    #NamedInvocation
+    ;
+
+function_argument
+    : conditional_expression
+    | arithmetic_expression
     ;
 
 datetime_literal
@@ -109,6 +124,10 @@ datetime_literal
 
 temporal_interval_literal
     : INTERVAL content=TEMPORAL_INTERVAL_LITERAL_CONTENT #TemporalIntervalLiteral
+    ;
+
+boolean_literal
+    : BOOLEAN_LITERAL   #BooleanLiteral
     ;
 
 string_literal

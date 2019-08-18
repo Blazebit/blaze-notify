@@ -72,7 +72,7 @@ public class CollectionDomainTypeDefinitionImpl extends MetadataDefinitionHolder
         if (elementTypeDefinition == null) {
             elementTypeDefinition = domainBuilder.getDomainTypeDefinition(elementTypeClass);
             if (elementTypeDefinition == null) {
-                context.addError("The element type '" + elementTypeName + "' defined for the collection type " + name + " is unknown!");
+                context.addError("The element type '" + (elementTypeName == null ? elementTypeClass.getName() : elementTypeName) + "' defined for the collection type " + name + " is unknown!");
             }
         }
     }

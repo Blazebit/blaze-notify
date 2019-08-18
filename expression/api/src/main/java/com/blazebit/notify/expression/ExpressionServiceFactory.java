@@ -27,4 +27,11 @@ public interface ExpressionServiceFactory {
     public ExpressionInterpreter createInterpreter();
 
     public <T> ExpressionSerializer<T> createSerializer(Class<T> serializationTarget);
+
+    public default String serialize(Expression expression) {
+        ExpressionSerializer<StringBuilder> serializer = createSerializer(StringBuilder.class);
+        StringBuilder sb = new StringBuilder();
+        serializer.serializeTo(expression, sb);
+        return sb.toString();
+    }
 }

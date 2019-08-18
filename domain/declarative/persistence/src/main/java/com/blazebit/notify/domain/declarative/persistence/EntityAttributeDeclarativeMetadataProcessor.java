@@ -17,10 +17,12 @@
 package com.blazebit.notify.domain.declarative.persistence;
 
 import com.blazebit.notify.domain.boot.model.MetadataDefinition;
-import com.blazebit.notify.domain.boot.model.MetadataDefinitionHolder;
+import com.blazebit.notify.domain.declarative.spi.DeclarativeAttributeMetadataProcessor;
 import com.blazebit.notify.domain.declarative.spi.DeclarativeMetadataProcessor;
 
-public class EntityAttributeDeclarativeMetadataProcessor implements DeclarativeMetadataProcessor<EntityAttribute> {
+import java.lang.reflect.Method;
+
+public class EntityAttributeDeclarativeMetadataProcessor implements DeclarativeAttributeMetadataProcessor<EntityAttribute> {
 
     @Override
     public Class<EntityAttribute> getProcessingAnnotation() {
@@ -28,35 +30,8 @@ public class EntityAttributeDeclarativeMetadataProcessor implements DeclarativeM
     }
 
     @Override
-    public MetadataDefinition<?> process(EntityAttribute annotation) {
-        return new EntityTypeImpl(annotation);
+    public MetadataDefinition<?> process(Class<?> annotatedClass, Method method, EntityAttribute annotation) {
+        return new EntityAttributeImpl(annotation);
     }
 
-    private static class EntityTypeImpl implements com.blazebit.notify.domain.persistence.EntityAttribute, MetadataDefinition<com.blazebit.notify.domain.persistence.EntityAttribute> {
-
-        private final String expression;
-
-        public EntityTypeImpl(EntityAttribute entityAttribute) {
-            this(entityAttribute.value());
-        }
-
-        public EntityTypeImpl(String expression) {
-            this.expression = expression;
-        }
-
-        @Override
-        public String getExpression() {
-            return expression;
-        }
-
-        @Override
-        public Class<com.blazebit.notify.domain.persistence.EntityAttribute> getJavaType() {
-            return com.blazebit.notify.domain.persistence.EntityAttribute.class;
-        }
-
-        @Override
-        public com.blazebit.notify.domain.persistence.EntityAttribute build(MetadataDefinitionHolder<?> definitionHolder) {
-            return this;
-        }
-    }
 }

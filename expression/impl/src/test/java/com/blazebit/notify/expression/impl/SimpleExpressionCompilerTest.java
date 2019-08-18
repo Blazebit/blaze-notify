@@ -75,7 +75,6 @@ public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest
         );
     }
 
-    @Ignore("Requires DomainPredicateTypeResolver")
     @Test
     public void testAttributeBetween() {
         Predicate predicate = parsePredicate("user.id BETWEEN 3 AND 5");
@@ -85,7 +84,6 @@ public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest
         );
     }
 
-    @Ignore("Requires DomainPredicateTypeResolver")
     @Test
     public void testNumericAttribute() {
         Predicate predicate = parsePredicate("1 BETWEEN user.age AND 5");
@@ -140,7 +138,6 @@ public class SimpleExpressionCompilerTest extends AbstractExpressionCompilerTest
         );
     }
 
-    @Ignore("Requires DomainPredicateTypeResolver")
     @Test
     public void testAttributeInLiterals() {
         Predicate predicate = parsePredicate("user.age IN (1)");

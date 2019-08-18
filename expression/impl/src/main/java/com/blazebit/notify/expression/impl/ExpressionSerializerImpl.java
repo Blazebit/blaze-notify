@@ -16,21 +16,31 @@
 
 package com.blazebit.notify.expression.impl;
 
+import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
+import com.blazebit.notify.domain.runtime.model.DomainModel;
+import com.blazebit.notify.domain.runtime.model.EntityDomainTypeAttribute;
+import com.blazebit.notify.domain.runtime.model.EnumDomainTypeValue;
 import com.blazebit.notify.expression.*;
+import com.blazebit.notify.expression.spi.LiteralRenderer;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionSerializer<StringBuilder> {
 
+    private final DomainModel domainModel;
+    private final LiteralFactory literalFactory;
     private StringBuilder sb;
     private Context context;
 
-    public ExpressionSerializerImpl() {
-        this(new StringBuilder());
+    public ExpressionSerializerImpl(DomainModel domainModel, LiteralFactory literalFactory) {
+        this(domainModel, literalFactory, new StringBuilder());
     }
 
-    public ExpressionSerializerImpl(StringBuilder sb) {
+    public ExpressionSerializerImpl(DomainModel domainModel, LiteralFactory literalFactory, StringBuilder sb) {
+        this.domainModel = domainModel;
+        this.literalFactory = literalFactory;
         this.sb = sb;
     }
 
@@ -65,17 +75,63 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
 
     @Override
     public void visit(FunctionInvocation e) {
+        sb.append(e.getFunction().getName()).append('(');
+        if (!e.getArguments().isEmpty()) {
+            for (Map.Entry<DomainFunctionArgument, Expression> entry : e.getArguments().entrySet()) {
+                String name = entry.getKey().getName();
+                if (name != null) {
+                    sb.append(name).append(" = ");
+                }
 
+                entry.getValue().accept(this);
+                sb.append(", ");
+            }
+
+            sb.setLength(sb.length() - 2);
+        }
+        sb.append(')');
     }
 
     @Override
     public void visit(Literal e) {
+        Object value = e.getValue();
+        switch (e.getType().getKind()) {
+            case ENUM:
+                literalFactory.appendEnumValue(sb, (EnumDomainTypeValue) value);
+                break;
+            case BASIC:
+                if (e.getType() == domainModel.getType(Boolean.class)) {
+                    literalFactory.appendBoolean(sb, (Boolean) value);
+                } else if (value instanceof Number) {
+                    literalFactory.appendNumeric(sb, (Number) value);
+                } else if (value instanceof String) {
+                    literalFactory.appendString(sb, (String) value);
+                } else if (value instanceof Instant) {
+                    literalFactory.appendInstant(sb, (Instant) value);
+                }
+            case ENTITY:
+            case COLLECTION:
+                LiteralRenderer literalRenderer = e.getType().getMetadata(LiteralRenderer.class);
+                if (literalRenderer == null) {
+                    throw new IllegalArgumentException("No literal renderer registered for the literal type: " + e.getType());
+                }
 
+                // TODO: maybe the resolved literal should allow structural access so we can render this here?
+                literalRenderer.render(value, sb);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported domain type kind: " + e.getType().getKind());
+        }
     }
 
     @Override
     public void visit(Path e) {
-
+        sb.append(e.getAlias());
+        List<EntityDomainTypeAttribute> attributes = e.getAttributes();
+        for (int i = 0; i < attributes.size(); i++) {
+            sb.append('.');
+            sb.append(attributes.get(i).getName());
+        }
     }
 
     @Override
@@ -132,49 +188,32 @@ public class ExpressionSerializerImpl implements Expression.Visitor, ExpressionS
     }
 
     @Override
-    public void visit(ConjunctivePredicate e) {
+    public void visit(CompoundPredicate e) {
         boolean negated = e.isNegated();
         if (negated) {
             sb.append("NOT(");
         }
-        List<Predicate> conjuncts = e.getConjuncts();
-        int size = conjuncts.size();
-        Predicate predicate = conjuncts.get(0);
-        if (predicate instanceof DisjunctivePredicate) {
+        List<Predicate> predicates = e.getPredicates();
+        int size = predicates.size();
+        Predicate predicate = predicates.get(0);
+        if (predicate instanceof CompoundPredicate && e.isConjunction() != ((CompoundPredicate) predicate).isConjunction()) {
             sb.append('(');
             predicate.accept(this);
             sb.append(')');
         } else {
             predicate.accept(this);
         }
+        String connector = e.isConjunction() ? " AND " : " OR ";
         for (int i = 1; i < size; i++) {
-            predicate = conjuncts.get(i);
-            sb.append(" AND ");
-            if (predicate instanceof DisjunctivePredicate && !predicate.isNegated()) {
+            predicate = predicates.get(i);
+            sb.append(connector);
+            if (predicate instanceof CompoundPredicate && !predicate.isNegated() && e.isConjunction() != ((CompoundPredicate) predicate).isConjunction()) {
                 sb.append('(');
                 predicate.accept(this);
                 sb.append(')');
             } else {
                 predicate.accept(this);
             }
-        }
-        if (negated) {
-            sb.append(')');
-        }
-    }
-
-    @Override
-    public void visit(DisjunctivePredicate e) {
-        boolean negated = e.isNegated();
-        if (negated) {
-            sb.append("NOT(");
-        }
-        List<Predicate> conjuncts = e.getDisjuncts();
-        int size = conjuncts.size();
-        conjuncts.get(0).accept(this);
-        for (int i = 1; i < size; i++) {
-            sb.append(" OR ");
-            conjuncts.get(i).accept(this);
         }
         if (negated) {
             sb.append(')');

@@ -46,6 +46,8 @@ public abstract class AbstractConfigurationTest<R extends NotificationRecipient<
         this.jobContext = NotificationJobContext.Builder.create()
                 .withJobProcessorFactory(jobProcessorFactory)
                 .withJobInstanceProcessorFactory(jobInstanceProcessorFactory)
+                .withNotificationProcessorFactory(new SimpleNotificationProcessorFactory())
+                .withMessageResolverFactory(new SimpleMessageResolverFactory())
                 .withChannelFactory(new SimpleChannelFactory())
                 .withChannelResolver((notification, notificationJobContext) -> channelKey)
                 .withRecipientResolver((jobInstance, jobProcessingContext) -> ((SimpleNotificationJobInstance) jobInstance).getTrigger().getJob().getRecipientResolver().resolveNotificationRecipients(jobInstance, jobProcessingContext))
@@ -137,6 +139,26 @@ public abstract class AbstractConfigurationTest<R extends NotificationRecipient<
         @Override
         public Schedule createSchedule(String cronExpression) {
             return new SimpleSchedule();
+        }
+    }
+
+    private static class SimpleNotificationProcessorFactory implements NotificationProcessorFactory {
+
+        @Override
+        public <N extends Notification<?>> NotificationProcessor<N> createNotificationProcessor(NotificationJobContext jobContext, N notification) {
+            return null;
+        }
+    }
+
+    private static class SimpleMessageResolverFactory implements NotificationMessageResolverFactory {
+        @Override
+        public Class getNotificationMessageType() {
+            return null;
+        }
+
+        @Override
+        public NotificationMessageResolver createNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
+            return null;
         }
     }
 }

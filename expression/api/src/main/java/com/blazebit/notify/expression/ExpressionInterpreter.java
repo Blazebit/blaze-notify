@@ -18,17 +18,30 @@ package com.blazebit.notify.expression;
 
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
+import java.util.Collections;
 import java.util.Map;
 
 public interface ExpressionInterpreter {
 
     public Context createContext(Map<String, DomainType> rootDomainTypes, Map<String, Object> rootObjects);
 
+    public default <T> T evaluate(Expression expression) {
+        return evaluate(expression, createContext(Collections.emptyMap(), Collections.emptyMap()));
+    }
+
     public <T> T evaluate(Expression expression, Context interpreterContext);
+
+    public default Boolean evaluate(Predicate expression) {
+        return evaluate(expression, createContext(Collections.emptyMap(), Collections.emptyMap()));
+    }
 
     public Boolean evaluate(Predicate expression, Context interpreterContext);
 
     public interface Context {
+
+        public Object getProperty(String key);
+
+        public void setProperty(String key, Object value);
 
         public Object getRoot(String alias);
 

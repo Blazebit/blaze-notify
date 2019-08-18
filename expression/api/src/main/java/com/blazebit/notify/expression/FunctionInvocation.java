@@ -15,6 +15,7 @@
  */
 package com.blazebit.notify.expression;
 
+import com.blazebit.notify.domain.runtime.model.DomainFunction;
 import com.blazebit.notify.domain.runtime.model.DomainFunctionArgument;
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
@@ -23,18 +24,18 @@ import java.util.Map;
 import java.util.Objects;
 
 public class FunctionInvocation implements ArithmeticExpression {
-    private final String functionName;
+    private final DomainFunction function;
     private final Map<DomainFunctionArgument, Expression> arguments;
     private final DomainType type;
 
-    public FunctionInvocation(String functionName, Map<DomainFunctionArgument, Expression> arguments, DomainType type) {
-        this.functionName = functionName;
+    public FunctionInvocation(DomainFunction function, Map<DomainFunctionArgument, Expression> arguments, DomainType type) {
+        this.function = function;
         this.arguments = arguments;
         this.type = type;
     }
 
-    public String getFunctionName() {
-        return functionName;
+    public DomainFunction getFunction() {
+        return function;
     }
 
     public Map<DomainFunctionArgument, Expression> getArguments() {
@@ -61,13 +62,13 @@ public class FunctionInvocation implements ArithmeticExpression {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FunctionInvocation that = (FunctionInvocation) o;
-        return functionName.equals(that.functionName) &&
+        return function.equals(that.function) &&
                 arguments.equals(that.arguments) &&
                 type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(functionName, arguments, type);
+        return Objects.hash(function, arguments, type);
     }
 }

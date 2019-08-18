@@ -13,6 +13,12 @@
     <artifactId>blaze-notify-domain-declarative-persistence</artifactId>
 
     <dependencies>
+        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-domain-declarative-api</artifactId>

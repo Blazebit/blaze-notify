@@ -21,6 +21,7 @@ import com.blazebit.notify.expression.Expression;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
@@ -32,9 +33,9 @@ public class FunctionExpressionCompilerTest extends AbstractExpressionCompilerTe
     @BeforeClass
     public static void defineTestDomainModel() {
         testDomainModel = new DomainBuilderImpl()
-                .createBasicType("timestamp", Calendar.class)
+                .createBasicType("timestamp", Instant.class)
                 .createFunction("CURRENT_TIMESTAMP")
-                    .withResultType(Calendar.class)
+                    .withResultType(Instant.class)
                     .build()
                 .build();
     }

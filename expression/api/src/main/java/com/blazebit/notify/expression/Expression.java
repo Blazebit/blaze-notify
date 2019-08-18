@@ -28,9 +28,7 @@ public interface Expression {
 
         void visit(ChainingArithmeticExpression e);
 
-        void visit(ConjunctivePredicate e);
-
-        void visit(DisjunctivePredicate e);
+        void visit(CompoundPredicate e);
 
         void visit(ComparisonPredicate e);
 
@@ -52,9 +50,7 @@ public interface Expression {
 
         T visit(ChainingArithmeticExpression e);
 
-        T visit(ConjunctivePredicate e);
-
-        T visit(DisjunctivePredicate e);
+        T visit(CompoundPredicate e);
 
         T visit(ComparisonPredicate e);
 

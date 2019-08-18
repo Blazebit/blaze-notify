@@ -28,6 +28,8 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     private final LiteralFactory literalFactory;
     private final ExpressionCompiler.Context compileContext;
     private DomainType cachedBooleanDomainType;
+    private Literal cachedBooleanTrueLiteral;
+    private Literal cachedBooleanFalseLiteral;
 
     public PredicateModelGenerator(DomainModel domainModel, LiteralFactory literalFactory, ExpressionCompiler.Context compileContext) {
         this.domainModel = domainModel;
@@ -42,17 +44,17 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Predicate visitOrPredicate(PredicateParser.OrPredicateContext ctx) {
-        Predicate leftExpression = (Predicate) ctx.left.accept(this);
+        Predicate leftTerm = (Predicate) ctx.left.accept(this);
         Predicate rightTerm = (Predicate) ctx.term.accept(this);
 
-        DisjunctivePredicate disjunctivePredicate;
-        if (leftExpression instanceof DisjunctivePredicate && !leftExpression.isNegated()) {
-            disjunctivePredicate = (DisjunctivePredicate) leftExpression;
-            disjunctivePredicate.getDisjuncts().add(rightTerm);
+        CompoundPredicate disjunctivePredicate;
+        if (leftTerm instanceof CompoundPredicate && !((CompoundPredicate) leftTerm).isConjunction() && !leftTerm.isNegated()) {
+            disjunctivePredicate = (CompoundPredicate) leftTerm;
+            disjunctivePredicate.getPredicates().add(rightTerm);
         } else {
-            disjunctivePredicate = new DisjunctivePredicate(getBooleanDomainType(), new ArrayList<Predicate>(2));
-            disjunctivePredicate.getDisjuncts().add(leftExpression);
-            disjunctivePredicate.getDisjuncts().add(rightTerm);
+            disjunctivePredicate = new CompoundPredicate(getBooleanDomainType(), new ArrayList<>(2), false);
+            disjunctivePredicate.getPredicates().add(leftTerm);
+            disjunctivePredicate.getPredicates().add(rightTerm);
         }
         return disjunctivePredicate;
     }
@@ -62,14 +64,14 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         Predicate leftTerm = (Predicate) ctx.left.accept(this);
         Predicate rightFactor = (Predicate) ctx.factor.accept(this);
 
-        ConjunctivePredicate conjunctivePredicate;
-        if (leftTerm instanceof ConjunctivePredicate && !leftTerm.isNegated()) {
-            conjunctivePredicate = (ConjunctivePredicate) leftTerm;
-            conjunctivePredicate.getConjuncts().add(rightFactor);
+        CompoundPredicate conjunctivePredicate;
+        if (leftTerm instanceof CompoundPredicate && ((CompoundPredicate) leftTerm).isConjunction() && !leftTerm.isNegated()) {
+            conjunctivePredicate = (CompoundPredicate) leftTerm;
+            conjunctivePredicate.getPredicates().add(rightFactor);
         } else {
-            conjunctivePredicate = new ConjunctivePredicate(getBooleanDomainType(), new ArrayList<Predicate>(2));
-            conjunctivePredicate.getConjuncts().add(leftTerm);
-            conjunctivePredicate.getConjuncts().add(rightFactor);
+            conjunctivePredicate = new CompoundPredicate(getBooleanDomainType(), new ArrayList<>(2), true);
+            conjunctivePredicate.getPredicates().add(leftTerm);
+            conjunctivePredicate.getPredicates().add(rightFactor);
         }
         return conjunctivePredicate;
     }
@@ -94,10 +96,18 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         ArithmeticExpression right = (ArithmeticExpression) ctx.right.accept(this);
         ComparisonOperator comparisonOperator = ComparisonOperator.valueOfOperator(ctx.comparison_operator().getText());
 
-        if (left.getType() == right.getType() && left.getType().getEnabledPredicates().contains(comparisonOperator.getDomainPredicateType())) {
-            return new ComparisonPredicate(getBooleanDomainType(), left, right, comparisonOperator);
+        List<DomainType> operandTypes = Arrays.asList(left.getType(), right.getType());
+        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), comparisonOperator.getDomainPredicateType());
+
+        if (predicateTypeResolver == null) {
+            throw missingPredicateTypeResolver(left.getType(), comparisonOperator.getDomainPredicateType());
         } else {
-            throw typeError(left.getType(), right.getType(), comparisonOperator.getDomainPredicateType());
+            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
+            if (domainType == null) {
+                throw cannotResolvePredicateType(comparisonOperator.getDomainPredicateType(), operandTypes);
+            } else {
+                return new ComparisonPredicate(domainType, left, right, comparisonOperator);
+            }
         }
     }
 
@@ -106,16 +116,24 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_expression().accept(this);
         List<ArithmeticExpression> inItems = getLiteralList(ArithmeticExpression.class, ctx.in_items);
 
-        if (!left.getType().getEnabledPredicates().contains(DomainPredicateType.EQUALITY)) {
-            throw new TypeErrorException(String.format("Type %s does not support predicate type %s", left.getType(), DomainPredicateType.EQUALITY));
-        }
-        for (ArithmeticExpression inItem : inItems) {
-            if (left.getType() != inItem.getType()) {
-                throw new TypeErrorException(String.format("Types %s and %s do not match", left.getType(), inItem.getType()));
+        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.EQUALITY);
+
+        if (predicateTypeResolver == null) {
+            throw missingPredicateTypeResolver(left.getType(), DomainPredicateType.EQUALITY);
+        } else {
+            List<DomainType> operandTypes = new ArrayList<>(inItems.size() + 1);
+            operandTypes.add(left.getType());
+            for (int i = 0; i < inItems.size(); i++) {
+                ArithmeticExpression inItem = inItems.get(i);
+                operandTypes.add(inItem.getType());
+            }
+            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
+            if (domainType == null) {
+                throw cannotResolvePredicateType(DomainPredicateType.EQUALITY, operandTypes);
+            } else {
+                return new InPredicate(domainType, left, inItems, ctx.not != null);
             }
         }
-
-        return new InPredicate(getBooleanDomainType(), left, inItems, ctx.not != null);
     }
 
     @Override
@@ -124,10 +142,18 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         ArithmeticExpression lower = (ArithmeticExpression) ctx.lower.accept(this);
         ArithmeticExpression upper = (ArithmeticExpression) ctx.upper.accept(this);
 
-        if (left.getType() == lower.getType() && left.getType() == upper.getType() && left.getType().getEnabledPredicates().contains(DomainPredicateType.RELATIONAL)) {
-            return new BetweenPredicate(getBooleanDomainType(), left, upper, lower);
+        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.RELATIONAL);
+
+        if (predicateTypeResolver == null) {
+            throw missingPredicateTypeResolver(left.getType(), DomainPredicateType.RELATIONAL);
         } else {
-            throw new TypeErrorException(String.format("%s BETWEEN %s AND %s", left.getType(), lower.getType(), upper.getType()));
+            List<DomainType> operandTypes = Arrays.asList(left.getType(), lower.getType(), upper.getType());
+            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
+            if (domainType == null) {
+                throw cannotResolvePredicateType(DomainPredicateType.RELATIONAL, operandTypes);
+            } else {
+                return new BetweenPredicate(domainType, left, upper, lower);
+            }
         }
     }
 
@@ -139,10 +165,19 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     @Override
     public Predicate visitIsNullPredicate(PredicateParser.IsNullPredicateContext ctx) {
         ArithmeticExpression left = (ArithmeticExpression) ctx.left.accept(this);
-        if (left.getType().getEnabledPredicates().contains(DomainPredicateType.NULLNESS)) {
-            return new IsNullPredicate(getBooleanDomainType(), left, ctx.kind.getType() == PredicateParser.IS_NOT_NULL);
+
+        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.NULLNESS);
+
+        if (predicateTypeResolver == null) {
+            throw missingPredicateTypeResolver(left.getType(), DomainPredicateType.NULLNESS);
         } else {
-            throw new TypeErrorException(String.format("Type %s does not support predicate type %s", left.getType(), DomainPredicateType.NULLNESS));
+            List<DomainType> operandTypes = Collections.singletonList(left.getType());
+            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
+            if (domainType == null) {
+                throw cannotResolvePredicateType(DomainPredicateType.NULLNESS, operandTypes);
+            } else {
+                return new IsNullPredicate(domainType, left, ctx.kind.getType() == PredicateParser.IS_NOT_NULL);
+            }
         }
     }
 
@@ -155,7 +190,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         List<DomainType> operandTypes = Arrays.asList(left.getType(), right.getType());
         DomainOperationTypeResolver operationTypeResolver = domainModel.getOperationTypeResolver(left.getType().getName(), operator.getDomainOperator());
         if (operationTypeResolver == null) {
-            throw cannotResolveOperationType(operator.getDomainOperator(), operandTypes);
+            throw missingOperationTypeResolver(left.getType(), operator.getDomainOperator());
         } else {
             DomainType domainType = operationTypeResolver.resolveType(domainModel, operandTypes);
             if (domainType == null) {
@@ -188,18 +223,22 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Expression visitArithmeticPrimary(PredicateParser.ArithmeticPrimaryContext ctx) {
-        return new ArithmeticFactor((ArithmeticExpression) ctx.arithmetic_primary().accept(this), ctx.sign != null && ctx.sign.getType() == PredicateParser.OP_MINUS);
+        Expression accept = ctx.arithmetic_primary().accept(this);
+        if (ctx.sign == null) {
+            return accept;
+        }
+        return new ArithmeticFactor((ArithmeticExpression) accept, ctx.sign.getType() == PredicateParser.OP_MINUS);
     }
 
     @Override
     public Expression visitArithmeticInItem(PredicateParser.ArithmeticInItemContext ctx) {
         ArithmeticExpression atom = (ArithmeticExpression) ctx.atom().accept(this);
 
-        if (ctx.sign == null) {
-            return new ArithmeticFactor(atom, false);
+        if (ctx.sign == null || ctx.sign.getType() == PredicateParser.OP_PLUS) {
+            return atom;
         } else {
             if (atom.getType().getEnabledOperators().contains(DomainOperator.UNARY_MINUS)) {
-                return new ArithmeticFactor(atom, ctx.sign.getType() == PredicateParser.OP_MINUS);
+                return new ArithmeticFactor(atom, true);
             } else {
                 throw new TypeErrorException(String.format("%s not enabled for type %s", DomainOperator.UNARY_MINUS, atom.getType()));
             }
@@ -229,6 +268,13 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     @Override
     public Expression visitNumericLiteral(PredicateParser.NumericLiteralContext ctx) {
         return new Literal(literalFactory.ofNumericString(ctx.NUMERIC_LITERAL().getText()));
+    }
+
+    @Override
+    public Expression visitBooleanLiteral(PredicateParser.BooleanLiteralContext ctx) {
+        char c = ctx.BOOLEAN_LITERAL().getText().charAt(0);
+        boolean value = c == 't' || c == 'T';
+        return getBooleanLiteral(value);
     }
 
     @Override
@@ -282,6 +328,22 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
+    public Expression visitBooleanLiteralPredicate(PredicateParser.BooleanLiteralPredicateContext ctx) {
+        Literal literal = (Literal) ctx.boolean_literal().accept(this);
+        return new ComparisonPredicate(getBooleanDomainType(), literal, getBooleanTrueLiteral(), ComparisonOperator.EQUAL);
+    }
+
+    @Override
+    public Expression visitBooleanFunction(PredicateParser.BooleanFunctionContext ctx) {
+        Expression expression = super.visitBooleanFunction(ctx);
+        if (expression.getType() == getBooleanDomainType()) {
+            return expression;
+        }
+
+        throw new TypeErrorException("Invalid use of non-boolean returning function: " + ctx.getText());
+    }
+
+    @Override
     public Expression visitRootPathOrNoArgFunctionInvocation(PredicateParser.RootPathOrNoArgFunctionInvocationContext ctx) {
         String aliasOrFunctionName = ctx.name.getText();
         DomainFunction function = domainModel.getFunction(aliasOrFunctionName);
@@ -293,8 +355,8 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             return new Path(aliasOrFunctionName, Path.empty(), domainType);
         } else {
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(aliasOrFunctionName);
-            DomainType functionType = functionTypeResolver.resolveType(domainModel, function, Collections.<DomainFunctionArgument, DomainType>emptyMap());
-            return new FunctionInvocation(aliasOrFunctionName, Collections.<DomainFunctionArgument, Expression>emptyMap(), functionType);
+            DomainType functionType = functionTypeResolver.resolveType(domainModel, function, Collections.emptyMap());
+            return new FunctionInvocation(function, Collections.emptyMap(), functionType);
         }
     }
 
@@ -322,7 +384,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             }
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(functionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
-            return new FunctionInvocation(functionName, arguments, functionType);
+            return new FunctionInvocation(function, arguments, functionType);
         }
     }
 
@@ -364,7 +426,7 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             }
             DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(entityOrFunctionName);
             DomainType functionType = functionTypeResolver.resolveType(domainModel, function, argumentTypes);
-            return new FunctionInvocation(entityOrFunctionName, arguments, functionType);
+            return new FunctionInvocation(function, arguments, functionType);
         }
     }
 //    @Override
@@ -381,10 +443,6 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         return literals;
     }
 
-    private String unquote(String quotedString) {
-        return quotedString.substring(1, quotedString.length() - 1);
-    }
-
     private DomainType getBooleanDomainType() {
         if (cachedBooleanDomainType == null) {
             cachedBooleanDomainType = domainModel.getType(Boolean.class);
@@ -395,8 +453,30 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         return cachedBooleanDomainType;
     }
 
+    private Literal getBooleanLiteral(boolean value) {
+        return value ? getBooleanTrueLiteral() : getBooleanFalseLiteral();
+    }
+
+    private Literal getBooleanTrueLiteral() {
+        if (cachedBooleanTrueLiteral == null) {
+            cachedBooleanTrueLiteral = new Literal(literalFactory.ofBoolean(true));
+        }
+        return cachedBooleanTrueLiteral;
+    }
+
+    private Literal getBooleanFalseLiteral() {
+        if (cachedBooleanFalseLiteral == null) {
+            cachedBooleanFalseLiteral = new Literal(literalFactory.ofBoolean(false));
+        }
+        return cachedBooleanFalseLiteral;
+    }
+
     private TypeErrorException typeError(DomainType t1, DomainType t2, DomainOperator operator) {
         return new TypeErrorException(String.format("%s %s %s", t1, operator, t2));
+    }
+
+    private DomainModelException missingPredicateTypeResolver(DomainType type, DomainPredicateType predicateType) {
+        return new DomainModelException(String.format("Missing predicate type resolver for type %s and predicate %s", type, predicateType));
     }
 
     private DomainModelException missingOperationTypeResolver(DomainType type, DomainOperator operator) {
@@ -421,6 +501,10 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     private TypeErrorException unsupportedType(String typeName) {
         return new TypeErrorException(String.format("Resolved type for identifier %s is not supported", typeName));
+    }
+
+    private TypeErrorException cannotResolvePredicateType(DomainPredicateType predicateType, List<DomainType> operandTypes) {
+        return new TypeErrorException(String.format("Cannot resolve predicate type for predicate %s and operand types %s", predicateType, operandTypes));
     }
 
     private TypeErrorException cannotResolveOperationType(DomainOperator operator, List<DomainType> operandTypes) {

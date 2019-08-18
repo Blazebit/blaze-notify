@@ -32,7 +32,7 @@ import java.util.List;
 public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<DomainFunctionDefinition> implements DomainFunctionDefinition {
 
     private final String name;
-    private int minArgumentCount;
+    private int minArgumentCount = -1;
     private int argumentCount = -1;
     private String resultTypeName;
     private Class<?> resultJavaType;
@@ -53,7 +53,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
 
     @Override
     public int getMinArgumentCount() {
-        return minArgumentCount;
+        return minArgumentCount == -1 ? argumentDefinitions.size() : minArgumentCount;
     }
 
     public void setMinArgumentCount(int minArgumentCount) {
@@ -62,7 +62,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
 
     @Override
     public int getArgumentCount() {
-        return argumentCount;
+        return argumentCount == -1 ? argumentDefinitions.size() : argumentCount;
     }
 
     public void setArgumentCount(int argumentCount) {
@@ -130,7 +130,7 @@ public class DomainFunctionDefinitionImpl extends MetadataDefinitionHolderImpl<D
             if (resultTypeDefinition == null) {
                 resultTypeDefinition = domainBuilder.getDomainTypeDefinition(resultJavaType);
                 if (resultTypeDefinition == null) {
-                    context.addError("The result type '" + resultTypeName + "' defined for the function " + name + " is unknown!");
+                    context.addError("The result type '" + (resultTypeName == null ? resultJavaType.getName() : resultTypeName) + "' defined for the function " + name + " is unknown!");
                 }
             }
             if (collection) {

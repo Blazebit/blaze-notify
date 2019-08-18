@@ -15,9 +15,14 @@
  */
 package com.blazebit.notify.domain.runtime.model;
 
+import java.math.BigDecimal;
+
 public class DefaultNumericLiteralResolver implements NumericLiteralResolver {
     @Override
     public ResolvedLiteral resolveLiteral(DomainModel domainModel, Number value) {
-        return new DefaultResolvedLiteral(domainModel.getType(value.getClass()), value);
+        if (value instanceof BigDecimal && ((BigDecimal) value).scale() > 0) {
+            return new DefaultResolvedLiteral(domainModel.getType(value.getClass()), value);
+        }
+        return new DefaultResolvedLiteral(domainModel.getType(Integer.class), value.intValue());
     }
 }

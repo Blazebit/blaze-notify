@@ -18,13 +18,22 @@ package com.blazebit.notify.expression;
 
 import com.blazebit.notify.domain.runtime.model.DomainType;
 
+import java.util.Collections;
 import java.util.Map;
 
 public interface ExpressionCompiler {
 
     public Context createContext(Map<String, DomainType> rootDomainTypes);
 
+    public default Expression createExpression(String expressionString) {
+        return createExpression(expressionString, createContext(Collections.emptyMap()));
+    }
+
     public Expression createExpression(String expressionString, Context compileContext);
+
+    public default Predicate createPredicate(String expressionString) {
+        return createPredicate(expressionString, createContext(Collections.emptyMap()));
+    }
 
     public Predicate createPredicate(String expressionString, Context compileContext);
 

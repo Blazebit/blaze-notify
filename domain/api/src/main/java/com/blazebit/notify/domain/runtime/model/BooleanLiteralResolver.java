@@ -22,6 +22,6 @@ package com.blazebit.notify.domain.runtime.model;
  */
 public interface BooleanLiteralResolver {
 
-    public ResolvedLiteral resolveLiteral(DomainModel domainModel, Boolean value);
+    public ResolvedLiteral resolveLiteral(DomainModel domainModel, boolean value);
 
 }

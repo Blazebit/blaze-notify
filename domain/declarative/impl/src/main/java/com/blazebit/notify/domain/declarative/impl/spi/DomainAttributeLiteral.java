@@ -27,6 +27,21 @@ import java.lang.annotation.Annotation;
 public class DomainAttributeLiteral implements DomainAttribute {
 
     @Override
+    public Class<?> value() {
+        return void.class;
+    }
+
+    @Override
+    public String typeName() {
+        return "";
+    }
+
+    @Override
+    public boolean collection() {
+        return false;
+    }
+
+    @Override
     public Class<? extends Annotation> annotationType() {
         return DomainAttribute.class;
     }

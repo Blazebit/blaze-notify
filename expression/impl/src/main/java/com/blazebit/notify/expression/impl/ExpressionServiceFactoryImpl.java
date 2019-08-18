@@ -28,10 +28,12 @@ import java.util.Map;
 public class ExpressionServiceFactoryImpl implements ExpressionServiceFactory {
 
     private final DomainModel domainModel;
+    private final LiteralFactory literalFactory;
     private final Map<Class<?>, ExpressionSerializerFactory> expressionSerializers;
 
     public ExpressionServiceFactoryImpl(DomainModel domainModel, Map<Class<?>, ExpressionSerializerFactory> expressionSerializers) {
         this.domainModel = domainModel;
+        this.literalFactory = new LiteralFactory(domainModel);
         this.expressionSerializers = expressionSerializers;
     }
 
@@ -42,18 +44,18 @@ public class ExpressionServiceFactoryImpl implements ExpressionServiceFactory {
 
     @Override
     public ExpressionCompiler createCompiler() {
-        return new ExpressionCompilerImpl(domainModel);
+        return new ExpressionCompilerImpl(domainModel, literalFactory);
     }
 
     @Override
     public ExpressionInterpreter createInterpreter() {
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return new ExpressionInterpreterImpl(domainModel);
     }
 
     @Override
     public <T> ExpressionSerializer<T> createSerializer(Class<T> serializationTarget) {
         if (serializationTarget == StringBuilder.class) {
-            return (ExpressionSerializer<T>) new ExpressionSerializerImpl();
+            return (ExpressionSerializer<T>) new ExpressionSerializerImpl(domainModel, literalFactory);
         }
         return (ExpressionSerializer<T>) expressionSerializers.get(serializationTarget).createSerializer(domainModel);
     }

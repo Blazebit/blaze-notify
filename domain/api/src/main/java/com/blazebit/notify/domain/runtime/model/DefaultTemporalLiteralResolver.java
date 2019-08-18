@@ -15,12 +15,12 @@
  */
 package com.blazebit.notify.domain.runtime.model;
 
-import java.util.Calendar;
+import java.time.Instant;
 
 public class DefaultTemporalLiteralResolver implements TemporalLiteralResolver {
     @Override
-    public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Calendar value) {
-        return new DefaultResolvedLiteral(domainModel.getType(Calendar.class), value);
+    public ResolvedLiteral resolveTimestampLiteral(DomainModel domainModel, Instant value) {
+        return new DefaultResolvedLiteral(domainModel.getType(Instant.class), value);
     }
 
     @Override

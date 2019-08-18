@@ -1,2 +1,2 @@
 com.blazebit.notify.domain.declarative.persistence.EntityTypeDeclarativeMetadataProcessor
-com.blazebit.notify.domain.declarative.persistence.EntityAttributeDeclarativeMetadataProcessor
+com.blazebit.notify.domain.declarative.persistence.EntityDeclarativeMetadataProcessor

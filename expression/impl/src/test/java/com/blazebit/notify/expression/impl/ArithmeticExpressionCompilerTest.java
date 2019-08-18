@@ -24,8 +24,20 @@ import static org.junit.Assert.assertEquals;
 public class ArithmeticExpressionCompilerTest extends AbstractExpressionCompilerTest {
 
     @Test
-    public void comparisonWithLiteralTest() {
+    public void arithmeticWithLiteralTest() {
         Expression expr = parseArithmeticExpression("1 + 2");
         assertEquals(plus(pos(number(1)), pos(number(2))), expr);
+    }
+
+    @Test
+    public void arithmeticWithLiteralWideningTest() {
+        Expression expr = parseArithmeticExpression("1.1 + 2");
+        assertEquals(plus(pos(number("1.1")), pos(number(2))), expr);
+    }
+
+    @Test
+    public void comparisonWithLiteralWideningTest() {
+        Expression expr = parsePredicate("1.1 = 2");
+        assertEquals(eq(pos(number("1.1")), pos(number(2))), expr);
     }
 }
