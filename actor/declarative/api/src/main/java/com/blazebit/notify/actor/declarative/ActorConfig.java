@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.actor.spi;
 
-import com.blazebit.notify.actor.ActorContext;
+package com.blazebit.notify.actor.declarative;
 
-public interface ActorSchedulerFactory {
+import java.lang.annotation.*;
+import java.util.concurrent.TimeUnit;
 
-    ActorScheduler createActorScheduler(ActorContext actorContext);
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE })
+public @interface ActorConfig {
+
+	String name() default "";
+
+	long initialDelay() default 0L;
+	
+	TimeUnit unit() default TimeUnit.SECONDS;
+
 }

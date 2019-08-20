@@ -19,13 +19,16 @@ package com.blazebit.notify.actor.impl;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.notify.actor.ActorContext;
 import com.blazebit.notify.actor.ActorManager;
+import com.blazebit.notify.actor.ScheduledActor;
 import com.blazebit.notify.actor.spi.ActorManagerFactory;
+
+import java.util.Map;
 
 @ServiceProvider(ActorManagerFactory.class)
 public class ActorManagerFactoryImpl implements ActorManagerFactory {
 
     @Override
-    public ActorManager createActorManager(ActorContext actorContext) {
-        return new ActorManagerImpl(actorContext);
+    public ActorManager createActorManager(ActorContext actorContext, Map<String, ScheduledActor> initialActors) {
+        return new ActorManagerImpl(actorContext, initialActors);
     }
 }

@@ -20,6 +20,7 @@ import com.blazebit.notify.actor.spi.ClusterStateManager;
 import com.blazebit.notify.actor.spi.Scheduler;
 import com.blazebit.notify.actor.spi.SchedulerFactory;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,10 +41,15 @@ public class ActorManagerImpl implements ActorManager {
     private final ClusterStateManager clusterStateManager;
     private final ConcurrentMap<String, ActorEntry> registeredActors = new ConcurrentHashMap<>();
 
-    public ActorManagerImpl(ActorContext actorContext) {
+    public ActorManagerImpl(ActorContext actorContext, Map<String, ScheduledActor> initialActors) {
         this.actorContext = actorContext;
         this.schedulerFactory = actorContext.getService(SchedulerFactory.class);
         this.clusterStateManager = actorContext.getService(ClusterStateManager.class);
+
+        for (Map.Entry<String, ScheduledActor> entry : initialActors.entrySet()) {
+            getOrRegisterActor(entry.getKey(), entry.getValue());
+        }
+
         this.clusterStateManager.registerListener(ActorRescheduleEvent.class, e -> {
             // Reschedule without delay since this is a cluster event
             if (!rescheduleActorLocally(e.getActorName(), 0)) {

@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.actor.spi;
 
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+package com.blazebit.notify.actor.declarative;
 
-public interface ActorScheduler {
+import com.blazebit.notify.actor.ActorContext;
+import com.blazebit.notify.actor.ScheduledActor;
 
-    ScheduledFuture<?> schedule(Runnable task, long schedule);
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public interface DeclarativeActorContextBuilder {
 
-    boolean supportsStop();
+    DeclarativeActorContextBuilder addActor(ScheduledActor actor);
 
-    void stop();
+    ActorContext.Builder createBuilder();
 
-    void stop(long timeout, TimeUnit unit) throws InterruptedException;
+    void apply(ActorContext.Builder builder);
 }

@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.actor.spi;
 
-import com.blazebit.notify.actor.ActorManager;
-import com.blazebit.notify.actor.ActorContext;
-import com.blazebit.notify.actor.ScheduledActor;
+package com.blazebit.notify.actor.declarative.spi;
 
-import java.util.Map;
+import com.blazebit.notify.actor.declarative.DeclarativeActorContextBuilder;
 
-public interface ActorManagerFactory {
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public interface DeclarativeActorContextBuilderProvider {
 
-    ActorManager createActorManager(ActorContext actorContext, Map<String, ScheduledActor> initialActors);
+    public DeclarativeActorContextBuilder createDefaultBuilder();
+
 }

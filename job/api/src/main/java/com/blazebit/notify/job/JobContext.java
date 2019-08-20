@@ -17,6 +17,7 @@
 package com.blazebit.notify.job;
 
 import com.blazebit.notify.actor.ActorContext;
+import com.blazebit.notify.actor.ScheduledActor;
 import com.blazebit.notify.job.event.JobInstanceListener;
 import com.blazebit.notify.job.event.JobInstanceScheduleListener;
 import com.blazebit.notify.job.event.JobTriggerListener;
@@ -66,6 +67,7 @@ public interface JobContext extends ConfigurationSource {
 
         private TransactionSupport transactionSupport;
         private ActorContext actorContext;
+        private ActorContext.Builder actorContextBuilder;
         private JobManagerFactory jobManagerFactory;
         private ScheduleFactory scheduleFactory;
         private JobSchedulerFactory jobSchedulerFactory;
@@ -156,11 +158,14 @@ public interface JobContext extends ConfigurationSource {
             );
         }
 
-        public ActorContext getOrCreateActorContext() {
+        protected ActorContext getOrCreateActorContext() {
             ActorContext actorContext = getActorContext();
             if (actorContext == null) {
-                ActorContext.Builder builder = ActorContext.Builder.create()
-                        .withProperties(properties);
+                ActorContext.Builder builder = getActorContextBuilder();
+                if (builder == null) {
+                    builder = ActorContext.Builder.create();
+                }
+                builder.withProperties(properties);
                 for (Map.Entry<Class<?>, Object> entry : serviceMap.entrySet()) {
                     builder.withService((Class<Object>) entry.getKey(), entry.getValue());
                 }
@@ -194,6 +199,15 @@ public interface JobContext extends ConfigurationSource {
 
         public T withActorContext(ActorContext actorContext) {
             this.actorContext = actorContext;
+            return (T) this;
+        }
+
+        public ActorContext.Builder getActorContextBuilder() {
+            return actorContextBuilder;
+        }
+
+        public T withActorContextBuilder(ActorContext.Builder actorContextBuilder) {
+            this.actorContextBuilder = actorContextBuilder;
             return (T) this;
         }
 
@@ -323,7 +337,6 @@ public interface JobContext extends ConfigurationSource {
         protected static class DefaultJobContext implements JobContext {
 
             private final TransactionSupport transactionSupport;
-            private final ActorContext actorContext;
             private final JobManager jobManager;
             private final ScheduleFactory scheduleFactory;
             private final JobProcessorFactory jobProcessorFactory;
@@ -342,7 +355,6 @@ public interface JobContext extends ConfigurationSource {
                                         List<JobTriggerListener> jobTriggerListeners, List<JobInstanceListener> jobInstanceListeners,
                                         Map<String, Object> properties, Map<Class<?>, Object> serviceMap) {
                 this.transactionSupport = transactionSupport;
-                this.actorContext = actorContext;
                 this.scheduleFactory = scheduleFactory;
                 this.jobProcessorFactory = jobProcessorFactory;
                 this.jobInstanceProcessorFactory = jobInstanceProcessorFactory;
@@ -365,9 +377,6 @@ public interface JobContext extends ConfigurationSource {
 
             @Override
             public <T> T getService(Class<T> serviceClass) {
-                if (serviceClass == ActorContext.class) {
-                    return (T) actorContext;
-                }
                 return (T) serviceMap.get(serviceClass);
             }
 

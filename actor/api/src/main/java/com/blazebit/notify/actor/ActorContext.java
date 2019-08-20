@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface ActorContext {
 
@@ -49,12 +50,13 @@ public interface ActorContext {
 
         private SchedulerFactory schedulerFactory;
         private ActorManagerFactory actorManagerFactory;
-        private ActorSchedulerFactory actorSchedulerFactory;
         private ConsumerListenerFactory consumerListenerFactory;
         private ClusterStateManager clusterStateManager;
+        private final Map<String, ActorEntry> initialActors = new HashMap<>();
         private final Map<Consumer<?>, ConsumingActor<?>> consumers = new HashMap<>();
         private final Map<String, Object> properties = new HashMap<>();
         private final Map<Class<?>, Object> serviceMap = new HashMap<>();
+        private final AtomicBoolean built = new AtomicBoolean();
 
         protected void loadDefaults() {
             schedulerFactory = loadFirstServiceOrNone(SchedulerFactory.class);
@@ -156,16 +158,13 @@ public interface ActorContext {
             return list;
         }
 
-        protected void checkCreateContext() {
+        private void checkCreateContext() {
             if (getActorManagerFactory() == null) {
                 throw new ActorException("No actor manager factory given!");
             }
             if (getSchedulerFactory() == null) {
                 throw new ActorException("No scheduler factory given!");
             }
-//            if (getActorSchedulerFactory() == null) {
-//                throw new ActorException("No actor scheduler factory given!");
-//            }
             if (getConsumerListenerFactory() == null) {
                 throw new ActorException("No consumer listener factory given!");
             }
@@ -176,11 +175,14 @@ public interface ActorContext {
 
         public ActorContext createContext() {
             checkCreateContext();
+            if (!built.compareAndSet(false, true)) {
+                throw new IllegalStateException("ActorContext was already built!");
+            }
             return new DefaultActorContext(
                     getActorManagerFactory(),
                     getSchedulerFactory(),
-                    getActorSchedulerFactory(),
                     getConsumers(),
+                    getInitialActors(),
                     getConsumerListenerFactory(),
                     getClusterStateManager(),
                     properties,
@@ -203,15 +205,6 @@ public interface ActorContext {
 
         public T withSchedulerFactory(SchedulerFactory schedulerFactory) {
             this.schedulerFactory = schedulerFactory;
-            return (T) this;
-        }
-
-        public ActorSchedulerFactory getActorSchedulerFactory() {
-            return actorSchedulerFactory;
-        }
-
-        public T withActorSchedulerFactory(ActorSchedulerFactory actorSchedulerFactory) {
-            this.actorSchedulerFactory = actorSchedulerFactory;
             return (T) this;
         }
 
@@ -251,6 +244,23 @@ public interface ActorContext {
             return (T) this;
         }
 
+        protected Map<String, ActorEntry> getInitialActors() {
+            return initialActors;
+        }
+
+        public <X> T withInitialActor(String name, ScheduledActor actor) {
+            this.initialActors.put(name, new ActorEntry(actor, -1L));
+            return (T) this;
+        }
+
+        public <X> T withInitialActor(String name, ScheduledActor actor, long initialDelayMillis) {
+            if (initialDelayMillis < 0) {
+                throw new IllegalArgumentException("Illegal negative initial delay: " + initialDelayMillis);
+            }
+            this.initialActors.put(name, new ActorEntry(actor, initialDelayMillis));
+            return (T) this;
+        }
+
         protected Map<String, Object> getProperties() {
             return properties;
         }
@@ -285,21 +295,31 @@ public interface ActorContext {
         protected static class DefaultActorContext implements ActorContext {
 
             private final ActorManager actorManager;
-            private final ActorScheduler actorScheduler;
             private final CapturingSchedulerFactory schedulerFactory;
             private final ClusterStateManager clusterStateManager;
             private final Map<String, Object> properties;
             private final Map<Class<?>, Object> serviceMap;
 
-            protected DefaultActorContext(ActorManagerFactory actorManagerFactory, SchedulerFactory schedulerFactory, ActorSchedulerFactory actorSchedulerFactory, Map<Consumer<?>, ConsumingActor<?>> consumers,
+            protected DefaultActorContext(ActorManagerFactory actorManagerFactory, SchedulerFactory schedulerFactory, Map<Consumer<?>, ConsumingActor<?>> consumers, Map<String, ActorEntry> initialActors,
                                           ConsumerListenerFactory consumerListenerFactory, ClusterStateManager clusterStateManager, Map<String, Object> properties, Map<Class<?>, Object> serviceMap) {
                 this.properties = new HashMap<>(properties);
                 this.serviceMap = new HashMap<>(serviceMap);
                 this.schedulerFactory = new CapturingSchedulerFactory(schedulerFactory);
                 this.clusterStateManager = clusterStateManager;
-                this.actorManager = actorManagerFactory.createActorManager(this);
-                this.actorScheduler = null;//actorSchedulerFactory.createActorScheduler(this);
 
+                Map<String, ScheduledActor> actors = new HashMap<>(initialActors.size());
+                for (Map.Entry<String, ActorEntry> entry : initialActors.entrySet()) {
+                    actors.put(entry.getKey(), entry.getValue().actor);
+                }
+
+                this.actorManager = actorManagerFactory.createActorManager(this, actors);
+
+                for (Map.Entry<String, ActorEntry> entry : initialActors.entrySet()) {
+                    long initialDelayMillis = entry.getValue().initialDelayMillis;
+                    if (initialDelayMillis != -1L) {
+                        this.actorManager.rescheduleActor(entry.getKey(), initialDelayMillis);
+                    }
+                }
                 for (Map.Entry<Consumer<?>, ConsumingActor<?>> entry : consumers.entrySet()) {
                     ((Consumer) entry.getKey()).registerListener(consumerListenerFactory.createConsumerListener(this, entry.getValue()));
                 }
@@ -380,6 +400,16 @@ public interface ActorContext {
                         started = next;
                     }
                 }
+            }
+        }
+
+        private static class ActorEntry {
+            private final ScheduledActor actor;
+            private final long initialDelayMillis;
+
+            public ActorEntry(ScheduledActor actor, long initialDelayMillis) {
+                this.actor = actor;
+                this.initialDelayMillis = initialDelayMillis;
             }
         }
     }

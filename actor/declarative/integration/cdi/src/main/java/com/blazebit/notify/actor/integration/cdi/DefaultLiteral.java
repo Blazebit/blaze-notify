@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.actor.spi;
 
-import com.blazebit.notify.actor.ActorManager;
-import com.blazebit.notify.actor.ActorContext;
-import com.blazebit.notify.actor.ScheduledActor;
+package com.blazebit.notify.actor.integration.cdi;
 
-import java.util.Map;
+import javax.enterprise.inject.Default;
+import javax.enterprise.util.AnnotationLiteral;
 
-public interface ActorManagerFactory {
+/**
+ * Literal for {@link Default}
+ *
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public class DefaultLiteral extends AnnotationLiteral<Default> implements Default {
 
-    ActorManager createActorManager(ActorContext actorContext, Map<String, ScheduledActor> initialActors);
+    private static final long serialVersionUID = 3240069236025230401L;
 }
