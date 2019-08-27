@@ -15,9 +15,11 @@
  */
 package com.blazebit.notify.notification.channel.smtp;
 
+import com.blazebit.notify.notification.email.message.EmailNotificationMessage;
+import com.blazebit.notify.notification.email.message.EmailNotificationRecipient;
 import com.sun.mail.smtp.SMTPMessage;
 
 public interface SmtpChannelFilter {
 
-    boolean filterSmtpMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage);
+    boolean filterSmtpMessage(EmailNotificationRecipient<?> recipient, EmailNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage);
 }

@@ -20,10 +20,10 @@ import com.blazebit.notify.job.JobInstanceProcessingContext;
 
 public interface JobInstanceListener {
 
-    void onJobInstanceChunkSuccess(JobInstance jobInstance, JobInstanceProcessingContext<?> context);
+    void onJobInstanceChunkSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context);
 
-    void onJobInstanceError(JobInstance jobInstance, JobInstanceProcessingContext<?> context);
+    void onJobInstanceError(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context);
 
-    void onJobInstanceSuccess(JobInstance jobInstance, JobInstanceProcessingContext<?> context);
+    void onJobInstanceSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context);
 
 }

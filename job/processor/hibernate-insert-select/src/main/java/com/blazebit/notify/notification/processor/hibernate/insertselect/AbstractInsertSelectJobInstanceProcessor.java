@@ -24,7 +24,7 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 
 import javax.persistence.EntityManager;
 
-public abstract class AbstractInsertSelectJobInstanceProcessor<ID, T, I extends JobInstance> implements JobInstanceProcessor<ID, I> {
+public abstract class AbstractInsertSelectJobInstanceProcessor<ID, T, I extends JobInstance<?>> implements JobInstanceProcessor<ID, I> {
 
     @Override
     public ID process(I jobInstance, JobInstanceProcessingContext<ID> context) {

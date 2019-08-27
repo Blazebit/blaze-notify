@@ -38,6 +38,12 @@ public class EmailNotification extends AbstractNotification<EmailNotificationId,
         super(id);
     }
 
+    @EmbeddedId
+    @Override
+    public EmailNotificationId getId() {
+        return id();
+    }
+
     @Column(name = "recipient_id", nullable = false, insertable = false, updatable = false)
     public Long getRecipientId() {
         return recipientId;

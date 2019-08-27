@@ -20,10 +20,13 @@ import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.jpa.model.AbstractJobInstance;
 import com.blazebit.notify.notification.NotificationJobInstance;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
-public abstract class AbstractNotificationJobInstance<R, J extends AbstractNotificationJob, T extends AbstractNotificationJobTrigger<J>> extends AbstractJobInstance<T> implements NotificationJobInstance<R> {
+public abstract class AbstractNotificationJobInstance<R> extends AbstractJobInstance<Long> implements NotificationJobInstance<Long, R> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,6 +37,12 @@ public abstract class AbstractNotificationJobInstance<R, J extends AbstractNotif
 
 	public AbstractNotificationJobInstance(Long id) {
 		super(id);
+	}
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+	public Long getId() {
+		return id();
 	}
 
 	@Override

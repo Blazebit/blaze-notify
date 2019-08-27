@@ -23,7 +23,7 @@ import com.blazebit.notify.job.JobInstanceProcessor;
  * @param <ID> JobInstance id type
  * @param <J> The job type
  */
-public interface NotificationJobInstanceProcessor<ID, J extends NotificationJobInstance<?>> extends JobInstanceProcessor<ID, J> {
+public interface NotificationJobInstanceProcessor<ID, J extends NotificationJobInstance<?, ?>> extends JobInstanceProcessor<ID, J> {
     @Override
     ID process(J jobInstance, JobInstanceProcessingContext<ID> context);
 }

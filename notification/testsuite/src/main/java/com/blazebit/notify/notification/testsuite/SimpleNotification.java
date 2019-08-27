@@ -37,4 +37,9 @@ public class SimpleNotification extends AbstractNotification<SimpleNotificationI
         this();
         setNotificationJobInstance(jobInstance);
     }
+
+    @Override
+    public Long getPartitionKey() {
+        return getRecipient().getId();
+    }
 }

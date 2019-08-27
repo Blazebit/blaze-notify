@@ -48,13 +48,12 @@ public class TestEndpointImpl implements TestEndpoint {
         EmailNotificationJob emailJob = new EmailNotificationJob();
         emailJob.setName("test");
         emailJob.setRecipientExpression("user.id = " + recipient.getId());
-        jobContext.getJobManager().addJob(emailJob);
 
         EmailNotificationJobTrigger emailNotificationJobTrigger = new EmailNotificationJobTrigger();
         emailNotificationJobTrigger.setName("test");
         emailNotificationJobTrigger.setJob(emailJob);
         emailNotificationJobTrigger.setScheduleCronExpression(jobContext.getScheduleFactory().asCronExpression(Instant.now()));
-        jobContext.getJobManager().addJobTrigger(emailNotificationJobTrigger);
+        jobContext.getJobManager().addJobInstance(emailNotificationJobTrigger);
 
         /*
 

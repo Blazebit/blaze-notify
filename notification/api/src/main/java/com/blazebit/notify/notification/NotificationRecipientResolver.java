@@ -23,14 +23,14 @@ import java.util.List;
 
 public interface NotificationRecipientResolver {
 
-    List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext);
+    List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext);
 
     static <X extends NotificationRecipient<?>> NotificationRecipientResolver of(X... recipients) {
         final List<X> list = new ArrayList<>(recipients.length);
         Collections.addAll(list, recipients);
         return new NotificationRecipientResolver() {
             @Override
-            public List<X> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext) {
+            public List<X> resolveNotificationRecipients(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobProcessingContext) {
                 return list;
             }
         };

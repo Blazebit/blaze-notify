@@ -15,6 +15,10 @@
  */
 package com.blazebit.notify.notification.channel.smtp;
 
+import com.blazebit.notify.notification.email.message.Attachment;
+import com.blazebit.notify.notification.email.message.EmailBody;
+import com.blazebit.notify.notification.email.message.EmailNotificationMessage;
+import com.blazebit.notify.notification.email.message.EmailSubject;
 import org.junit.Test;
 
 import javax.mail.Message;
@@ -41,8 +45,8 @@ public class SmtpChannelIntegrationTest extends AbstractSmtpChannelIntegrationTe
         String attachmentMimeType = "text/plain; charset=UTF-8";
         List<Attachment> attachments = Collections.singletonList(new Attachment(attachmentName, new ByteArrayDataSource(attachmentContent, attachmentMimeType)));
         smtpChannel.sendNotificationMessage(
-                new DefaultSmtpNotificationRecipient(TEST_MAIL_USER),
-                new SmtpNotificationMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
+                new DefaultEmailNotificationRecipient(TEST_MAIL_USER),
+                new EmailNotificationMessage(from, null, null, null, null, new EmailSubject(subject), new EmailBody(textBody), null, attachments)
         );
 
         Message[] receivedEmails = mailClient.awaitIncomingEmails(5000, 1);

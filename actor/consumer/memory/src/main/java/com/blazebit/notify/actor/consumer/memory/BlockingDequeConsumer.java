@@ -58,7 +58,6 @@ public class BlockingDequeConsumer<T> implements Consumer<T>, Runnable {
                 // When we found one element, drain the rest that is available
                 payloadQueue.drainTo(messages);
                 try {
-                    messages.clear();
                     try {
                         listeners.forEach(l -> l.consume(unmodifiableList));
                     } catch (Throwable t) {

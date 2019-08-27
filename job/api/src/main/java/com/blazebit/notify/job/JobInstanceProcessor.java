@@ -19,7 +19,11 @@ package com.blazebit.notify.job;
  *
  * @param <ID> The cursor value that allows the processor to work incrementally
  */
-public interface JobInstanceProcessor<ID, J extends JobInstance> {
+public interface JobInstanceProcessor<ID, J extends JobInstance<?>> {
+
+    default boolean isTransactional() {
+        return false;
+    }
 
     /**
      * Processes the job instance with the given job instance context. If the job instance works incrementally,

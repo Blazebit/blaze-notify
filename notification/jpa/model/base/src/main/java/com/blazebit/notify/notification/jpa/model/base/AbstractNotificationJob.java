@@ -26,4 +26,10 @@ public abstract class AbstractNotificationJob extends AbstractJob implements Not
 
 	private static final long serialVersionUID = 1L;
 
+	public AbstractNotificationJob() {
+	}
+
+	public AbstractNotificationJob(Long id) {
+		super(id);
+	}
 }

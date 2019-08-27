@@ -22,7 +22,7 @@ import com.blazebit.notify.job.JobInstanceProcessor;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-public abstract class AbstractMemoryJobInstanceProcessor<T, I, J extends JobInstance> implements JobInstanceProcessor<T, J> {
+public abstract class AbstractMemoryJobInstanceProcessor<T, I, J extends JobInstance<?>> implements JobInstanceProcessor<T, J> {
 
     private static final Logger LOG = Logger.getLogger(AbstractMemoryJobInstanceProcessor.class.getName());
 

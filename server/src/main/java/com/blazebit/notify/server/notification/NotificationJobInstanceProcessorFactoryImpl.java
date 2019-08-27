@@ -25,7 +25,7 @@ import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 public class NotificationJobInstanceProcessorFactoryImpl implements NotificationJobInstanceProcessorFactory {
 
     @Override
-    public <T extends NotificationJobInstance<?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
+    public <T extends NotificationJobInstance<?, ?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
         if (jobInstance instanceof EmailNotificationJobInstance) {
             return (NotificationJobInstanceProcessor<?, T>) EmailNotificationJobInstanceProcessor.INSTANCE;
         }

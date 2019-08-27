@@ -18,7 +18,9 @@ package com.blazebit.notify.job.impl;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.notify.actor.ActorContext;
+import com.blazebit.notify.actor.spi.SchedulerFactory;
 import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.PartitionKey;
 import com.blazebit.notify.job.spi.JobScheduler;
 import com.blazebit.notify.job.spi.JobSchedulerFactory;
 
@@ -26,7 +28,7 @@ import com.blazebit.notify.job.spi.JobSchedulerFactory;
 public class JobSchedulerFactoryImpl implements JobSchedulerFactory {
 
     @Override
-    public JobScheduler createJobScheduler(JobContext context, ActorContext actorContext) {
-        return new JobSchedulerImpl(context, actorContext);
+    public JobScheduler createJobScheduler(JobContext context, ActorContext actorContext, String actorName, int processCount, PartitionKey partitionKey) {
+        return new JobSchedulerImpl(context, actorContext, actorContext.getService(SchedulerFactory.class), actorName, processCount, partitionKey);
     }
 }

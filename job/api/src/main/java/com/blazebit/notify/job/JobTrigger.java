@@ -18,21 +18,24 @@ package com.blazebit.notify.job;
 
 import java.time.Instant;
 
-public interface JobTrigger {
+public interface JobTrigger extends JobInstance<Long> {
 
-    Long getId();
+    @Override
+    default Long getPartitionKey() {
+        return getId();
+    }
 
     String getName();
 
-    JobConfiguration getJobConfiguration();
-
     Job getJob();
 
-    Instant getCreationTime();
-
-    Instant getLastExecutionTime();
-
-    void setLastExecutionTime(Instant lastExecutionTime);
+    /**
+     * When <code>true</code>, multiple executions of the same job for this trigger are allowed.
+     * Otherwise, the new executions will be deferred and maybe dropped due to the deferring.
+     *
+     * @return Whether overlapping executions are allowed
+     */
+    boolean isAllowOverlap();
 
     /**
      * The schedule according to which to execute this job.
@@ -40,5 +43,9 @@ public interface JobTrigger {
      * @return The schedule
      */
     Schedule getSchedule(JobContext jobContext);
+
+    default Instant nextSchedule(JobContext jobContext, ScheduleContext scheduleContext) {
+        return getSchedule(jobContext).nextSchedule(scheduleContext);
+    }
 
 }

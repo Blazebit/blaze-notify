@@ -17,8 +17,9 @@ package com.blazebit.notify.job.spi;
 
 import com.blazebit.notify.actor.ActorContext;
 import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.PartitionKey;
 
 public interface JobSchedulerFactory {
 
-    JobScheduler createJobScheduler(JobContext context, ActorContext actorContext);
+    JobScheduler createJobScheduler(JobContext context, ActorContext actorContext, String actorName, int processCount, PartitionKey partitionKey);
 }

@@ -17,17 +17,15 @@
 package com.blazebit.notify.job.memory.model;
 
 import com.blazebit.notify.job.JobInstance;
-import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobInstanceState;
 
 import java.time.Instant;
 
-public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends AbstractJob>> extends BaseEntity<Long> implements JobInstance {
+public abstract class AbstractJobInstance<ID> extends BaseEntity<ID> implements JobInstance<ID> {
 
 	private static final long serialVersionUID = 1L;
 
-	private T trigger;
-	private JobInstanceState state;
+	private JobInstanceState state = JobInstanceState.NEW;
 
 	private int deferCount;
 	private Instant scheduleTime;
@@ -37,23 +35,8 @@ public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends
 	protected AbstractJobInstance() {
 	}
 
-	protected AbstractJobInstance(Long id) {
+	protected AbstractJobInstance(ID id) {
 		super(id);
-	}
-
-	public abstract void onChunkSuccess(JobInstanceProcessingContext<?> context);
-
-	public Long getId() {
-		return id();
-	}
-
-	@Override
-	public T getTrigger() {
-		return trigger;
-	}
-
-	public void setTrigger(T trigger) {
-		this.trigger = trigger;
 	}
 
 	@Override
@@ -69,6 +52,16 @@ public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends
 	@Override
 	public void markDropped() {
 		setState(JobInstanceState.DROPPED);
+	}
+
+	@Override
+	public void markDone(Object result) {
+		setState(JobInstanceState.DONE);
+	}
+
+	@Override
+	public void markFailed(Throwable t) {
+		setState(JobInstanceState.FAILED);
 	}
 
 	public JobInstanceState getState() {

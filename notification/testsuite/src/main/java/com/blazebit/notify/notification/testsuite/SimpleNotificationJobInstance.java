@@ -16,14 +16,20 @@
 
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.memory.model.AbstractNotificationJobInstance;
+import com.blazebit.notify.job.JobConfiguration;
+import com.blazebit.notify.notification.memory.model.AbstractTriggerBasedNotificationJobInstance;
 
-public class SimpleNotificationJobInstance extends AbstractNotificationJobInstance<Long, SimpleNotificationJob, SimpleNotificationJobTrigger> {
+public class SimpleNotificationJobInstance extends AbstractTriggerBasedNotificationJobInstance<Long, SimpleNotificationJob, SimpleNotificationJobTrigger> {
 
     public SimpleNotificationJobInstance() {
     }
 
     public SimpleNotificationJobInstance(SimpleNotificationJobTrigger trigger) {
         setTrigger(trigger);
+    }
+
+    @Override
+    public JobConfiguration getJobConfiguration() {
+        return getTrigger().getJobConfiguration();
     }
 }

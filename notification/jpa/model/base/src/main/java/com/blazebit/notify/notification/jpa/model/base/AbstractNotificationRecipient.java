@@ -19,12 +19,11 @@ package com.blazebit.notify.notification.jpa.model.base;
 import com.blazebit.notify.job.jpa.model.BaseEntity;
 import com.blazebit.notify.notification.NotificationRecipient;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.util.Locale;
 
 @MappedSuperclass
-public abstract class AbstractNotificationRecipient extends BaseEntity implements NotificationRecipient<Long> {
+public abstract class AbstractNotificationRecipient extends BaseEntity<Long> implements NotificationRecipient<Long> {
 
     private Locale locale;
 
@@ -33,6 +32,12 @@ public abstract class AbstractNotificationRecipient extends BaseEntity implement
 
     public AbstractNotificationRecipient(Long id) {
         super(id);
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+    public Long getId() {
+        return id();
     }
 
     @Override

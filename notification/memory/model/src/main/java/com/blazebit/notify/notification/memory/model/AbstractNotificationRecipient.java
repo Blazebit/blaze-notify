@@ -33,11 +33,6 @@ public class AbstractNotificationRecipient extends BaseEntity<Long> implements N
     }
 
     @Override
-    public Long getId() {
-        return id();
-    }
-
-    @Override
     public Locale getLocale() {
         return locale;
     }

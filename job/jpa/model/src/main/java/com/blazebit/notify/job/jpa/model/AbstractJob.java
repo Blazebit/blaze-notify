@@ -24,7 +24,7 @@ import java.time.Instant;
 
 @MappedSuperclass
 @Table(name = "job")
-public abstract class AbstractJob extends BaseEntity implements Job {
+public abstract class AbstractJob extends BaseEntity<Long> implements Job {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -40,6 +40,12 @@ public abstract class AbstractJob extends BaseEntity implements Job {
 
 	protected AbstractJob(Long id) {
 		super(id);
+	}
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+	public Long getId() {
+		return id();
 	}
 
 	@Override

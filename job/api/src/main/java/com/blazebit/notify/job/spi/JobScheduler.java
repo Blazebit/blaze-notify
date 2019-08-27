@@ -15,16 +15,17 @@
  */
 package com.blazebit.notify.job.spi;
 
-import com.blazebit.notify.job.JobInstance;
-import com.blazebit.notify.job.JobTrigger;
-
 import java.util.concurrent.TimeUnit;
 
 public interface JobScheduler {
 
-    void add(JobTrigger jobTrigger);
+    void start();
 
-    void add(JobInstance jobInstance);
+    default void refreshSchedules() {
+        refreshSchedules(0L);
+    }
+
+    void refreshSchedules(long earliestNewSchedule);
 
     void stop();
 

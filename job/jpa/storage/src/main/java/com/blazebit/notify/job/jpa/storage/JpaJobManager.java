@@ -17,61 +17,38 @@
 package com.blazebit.notify.job.jpa.storage;
 
 import com.blazebit.notify.job.*;
-import com.blazebit.notify.job.jpa.model.AbstractJob;
-import com.blazebit.notify.job.jpa.model.AbstractJobInstance;
-import com.blazebit.notify.job.jpa.model.AbstractJobTrigger;
+import com.blazebit.notify.job.event.JobInstanceListener;
+import com.blazebit.notify.job.event.JobTriggerListener;
+import com.blazebit.notify.job.jpa.model.JpaJobInstance;
+import com.blazebit.notify.job.jpa.model.JpaJobTrigger;
+import com.blazebit.notify.job.jpa.model.JpaPartitionKey;
+import com.blazebit.notify.job.jpa.model.JpaTriggerBasedJobInstance;
 import com.blazebit.notify.job.spi.TransactionSupport;
 
-import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
-import java.util.Collections;
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 
-public class JpaJobManager implements JobManager {
-
-    private static final String JOB_TRIGGER_ID_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_id_attribute_name";
-    private static final String JOB_TRIGGER_JOB_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_job_attribute_name";
-    private static final String JOB_TRIGGER_STATE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_state_attribute_name";
-    private static final String JOB_TRIGGER_STATE_READY_VALUE_PROPERTY = "job.jpa.storage.job_trigger_state_ready_value";
-    private static final String JOB_INSTANCE_ID_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_id_attribute_name";
-    private static final String JOB_INSTANCE_TRIGGER_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_trigger_attribute_name";
-    private static final String JOB_INSTANCE_SCHEDULE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_schedule_attribute_name";
-    private static final String JOB_INSTANCE_STATE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_state_attribute_name";
-    private static final String JOB_INSTANCE_STATE_READY_VALUE_PROPERTY = "job.jpa.storage.job_instance_state_ready_value";
+public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanceListener {
 
     private final JobContext jobContext;
     private final EntityManager entityManager;
-    private final String jobTriggerIdAttributeName;
-    private final String jobTriggerJobAttributeName;
-    private final String jobTriggerStateAttributeName;
-    private final Object jobTriggerStateReadyValue;
-    private final String jobInstanceIdAttributeName;
-    private final String jobInstanceTriggerAttributeName;
-    private final String jobInstanceScheduleAttributeName;
-    private final String jobInstanceStateAttributeName;
-    private final Object jobInstanceStateReadyValue;
+    private final Set<Class<?>> entityClasses;
 
     public JpaJobManager(JobContext jobContext) {
         this(
                 jobContext,
-                jobContext.getService(EntityManager.class),
-                jobContext.getPropertyOrDefault(JOB_TRIGGER_ID_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
-                jobContext.getPropertyOrDefault(JOB_TRIGGER_JOB_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "job"),
-                jobContext.getPropertyOrDefault(JOB_TRIGGER_STATE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "jobConfiguration.done"),
-                jobContext.getPropertyOrDefault(JOB_TRIGGER_STATE_READY_VALUE_PROPERTY, Object.class, null, o -> false),
-                jobContext.getPropertyOrDefault(JOB_INSTANCE_ID_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
-                jobContext.getPropertyOrDefault(JOB_INSTANCE_TRIGGER_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "trigger"),
-                jobContext.getPropertyOrDefault(JOB_INSTANCE_SCHEDULE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "scheduleTime"),
-                jobContext.getPropertyOrDefault(JOB_INSTANCE_STATE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "state"),
-                jobContext.getPropertyOrDefault(JOB_INSTANCE_STATE_READY_VALUE_PROPERTY, Object.class, null, o -> JobInstanceState.NEW)
+                jobContext.getService(EntityManager.class)
         );
     }
 
-    public JpaJobManager(JobContext jobContext, EntityManager entityManager, String jobTriggerIdAttributeName, String jobTriggerJobAttributeName, String jobTriggerStateAttributeName, Object jobTriggerStateReadyValue, String jobInstanceIdAttributeName, String jobInstanceTriggerAttributeName, String jobInstanceScheduleAttributeName, String jobInstanceStateAttributeName, Object jobInstanceStateReadyValue) {
-        this.jobInstanceTriggerAttributeName = jobInstanceTriggerAttributeName;
+    public JpaJobManager(JobContext jobContext, EntityManager entityManager) {
         if (entityManager == null) {
             throw new JobException("No entity manager given!");
         }
@@ -80,34 +57,35 @@ public class JpaJobManager implements JobManager {
         }
         this.jobContext = jobContext;
         this.entityManager = entityManager;
-        this.jobTriggerIdAttributeName = jobTriggerIdAttributeName;
-        this.jobTriggerJobAttributeName = jobTriggerJobAttributeName;
-        this.jobTriggerStateAttributeName = jobTriggerStateAttributeName;
-        this.jobTriggerStateReadyValue = jobTriggerStateReadyValue;
-        this.jobInstanceIdAttributeName = jobInstanceIdAttributeName;
-        this.jobInstanceScheduleAttributeName = jobInstanceScheduleAttributeName;
-        this.jobInstanceStateAttributeName = jobInstanceStateAttributeName;
-        this.jobInstanceStateReadyValue = jobInstanceStateReadyValue;
+        Set<Class<?>> entityClasses = new HashSet<>();
+        for (EntityType<?> entity : entityManager.getMetamodel().getEntities()) {
+            if (entity.getJavaType() != null) {
+                entityClasses.add(entity.getJavaType());
+            }
+        }
+        this.entityClasses = entityClasses;
     }
 
-    @Override
-    public long addJob(Job job) {
-        entityManager.persist(job);
-        return job.getId();
+    protected JpaJobTrigger getJobTrigger(JobTrigger jobTrigger) {
+        if (!(jobTrigger instanceof JpaJobTrigger)) {
+            throw new IllegalArgumentException("The job trigger does not implement the JpaJobTrigger interface from blaze-notify-job-jpa-model!");
+        }
+        return (JpaJobTrigger) jobTrigger;
+    }
+
+    protected JpaJobInstance<?> getJobInstance(JobInstance<?> jobInstance) {
+        if (!(jobInstance instanceof JpaJobInstance<?>)) {
+            throw new IllegalArgumentException("The job instance does not implement the JpaJobInstance interface from blaze-notify-job-jpa-model!");
+        }
+        return (JpaJobInstance<?>) jobInstance;
     }
 
     protected void setJob(JobTrigger jobTrigger, Job job) {
-        if (!(jobTrigger instanceof AbstractJobTrigger<?>) || !(job instanceof AbstractJob)) {
-            throw new IllegalArgumentException("Only models from blaze-notify-job-jpa-model are supported!");
-        }
-        ((AbstractJobTrigger<AbstractJob>) jobTrigger).setJob((AbstractJob) job);
+        getJobTrigger(jobTrigger).setJob(job);
     }
 
-    protected void setTrigger(JobInstance jobInstance, JobTrigger jobTrigger) {
-        if (!(jobTrigger instanceof AbstractJobTrigger<?>) || !(jobInstance instanceof AbstractJobInstance<?>)) {
-            throw new IllegalArgumentException("Only models from blaze-notify-job-jpa-model are supported!");
-        }
-        ((AbstractJobInstance<AbstractJobTrigger<AbstractJob>>) jobInstance).setTrigger((AbstractJobTrigger<AbstractJob>) jobTrigger);
+    protected void setTrigger(JpaTriggerBasedJobInstance<?> jpaTriggerBasedJobInstance, JobTrigger jobTrigger) {
+        jpaTriggerBasedJobInstance.setTrigger(jobTrigger);
     }
 
     protected Job findJob(Class<?> entityClass, long jobId) {
@@ -115,13 +93,7 @@ public class JpaJobManager implements JobManager {
     }
 
     protected JobTrigger findJobTrigger(Class<?> entityClass, long triggerId) {
-        EntityGraph<?> entityGraph = entityManager.createEntityGraph(entityClass);
-        entityGraph.addSubgraph(jobTriggerJobAttributeName);
-        Map<String, Object> properties = Collections.singletonMap("javax.persistence.loadgraph", entityGraph);
-        JobTrigger jobTrigger = (JobTrigger) entityManager.find(entityClass, triggerId, properties);
-        // Make sure the job is initialized
-        jobTrigger.getJob().getName();
-        return jobTrigger;
+        return (JobTrigger) entityManager.find(entityClass, triggerId);
     }
 
     protected Class<?> getEntityClass(Job job) {
@@ -133,103 +105,141 @@ public class JpaJobManager implements JobManager {
     }
 
     protected Class<?> getEntityClass(Class<?> clazz) {
-        while (clazz.getName().contains("javassist")) {
+        while (clazz != Object.class && !entityClasses.contains(clazz)) {
             clazz = clazz.getSuperclass();
         }
 
         return clazz;
     }
 
-    @Override
-    public long addJobTrigger(JobTrigger jobTrigger) {
+    private void addJobTrigger(JobTrigger jobTrigger) {
         if (jobTrigger.getJob().getId() == null) {
-            addJob(jobTrigger.getJob());
+            entityManager.persist(jobTrigger.getJob());
             setJob(jobTrigger, jobTrigger.getJob());
         } else if (!entityManager.contains(jobTrigger.getJob())) {
             setJob(jobTrigger, findJob(getEntityClass(jobTrigger.getJob()), jobTrigger.getJob().getId()));
         }
         JobConfiguration jobConfiguration = jobTrigger.getJob().getJobConfiguration();
         JobConfiguration triggerJobConfiguration = jobTrigger.getJobConfiguration();
-        if (jobConfiguration != null && triggerJobConfiguration != null && jobConfiguration.getJobParameters() != null) {
-            Map<String, Serializable> jobParameters = triggerJobConfiguration.getJobParameters();
-            for (Map.Entry<String, Serializable> entry : jobConfiguration.getJobParameters().entrySet()) {
+        if (jobConfiguration != null && triggerJobConfiguration != null && jobConfiguration.getParameters() != null) {
+            Map<String, Serializable> jobParameters = triggerJobConfiguration.getParameters();
+            for (Map.Entry<String, Serializable> entry : jobConfiguration.getParameters().entrySet()) {
                 jobParameters.putIfAbsent(entry.getKey(), entry.getValue());
             }
         }
+        if (jobTrigger.getScheduleTime() == null) {
+            jobTrigger.setScheduleTime(jobTrigger.getSchedule(jobContext).nextSchedule());
+        }
         entityManager.persist(jobTrigger);
-        if (!jobTrigger.getJobConfiguration().isDone()) {
+        if (jobTrigger.getState() == JobInstanceState.NEW) {
             jobContext.getTransactionSupport().registerPostCommitListener(() -> {
-                jobContext.notifyJobTriggerScheduleListeners(jobTrigger);
+                jobContext.refreshJobInstanceSchedules(jobTrigger);
             });
         }
-        return jobTrigger.getId();
     }
 
     @Override
-    public long addJobInstance(JobInstance jobInstance) {
-        if (jobInstance.getTrigger().getJob().getId() == null) {
-            addJobTrigger(jobInstance.getTrigger());
-        } else if (!entityManager.contains(jobInstance.getTrigger())) {
-            setTrigger(jobInstance, findJobTrigger(getEntityClass(jobInstance.getTrigger()), jobInstance.getTrigger().getId()));
+    public void addJobInstance(JobInstance<?> jobInstance) {
+        if (jobInstance instanceof JpaJobTrigger) {
+            addJobTrigger((JobTrigger) jobInstance);
+            return;
+        }
+        JpaJobInstance<?> jpaJobInstance = getJobInstance(jobInstance);
+        if (jpaJobInstance instanceof JpaTriggerBasedJobInstance<?>) {
+            JpaTriggerBasedJobInstance<?> jpaTriggerBasedJobInstance = (JpaTriggerBasedJobInstance<?>) jpaJobInstance;
+            JobTrigger trigger = (jpaTriggerBasedJobInstance).getTrigger();
+            if (trigger.getJob().getId() == null) {
+                addJobTrigger(trigger);
+            } else if (!entityManager.contains(trigger)) {
+                setTrigger(jpaTriggerBasedJobInstance, findJobTrigger(getEntityClass(trigger), trigger.getId()));
+            }
         }
         entityManager.persist(jobInstance);
         if (jobInstance.getState() == JobInstanceState.NEW) {
             jobContext.getTransactionSupport().registerPostCommitListener(() -> {
-                jobContext.notifyJobInstanceScheduleListeners(jobInstance);
+                jobContext.refreshJobInstanceSchedules(jobInstance);
             });
         }
-        return jobInstance.getId();
     }
 
     @Override
-    public List<JobTrigger> getUndoneJobTriggers(int partition, int partitionCount) {
-        return (List<JobTrigger>) (List) entityManager.createQuery(
-                "SELECT e FROM " + JobTrigger.class.getName() + " e " +
-                        "JOIN FETCH e." + jobTriggerJobAttributeName + " " +
-                        "WHERE e." + jobTriggerStateAttributeName + " = :readyState " +
-                        (partitionCount > 1 ? "AND MOD(e." + jobTriggerIdAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
-                        "ORDER BY e." + jobTriggerIdAttributeName + " ASC",
-                JobTrigger.class
-        ).setParameter("readyState", jobTriggerStateReadyValue).getResultList();
+    public List<JobInstance<?>> getJobInstancesToProcess(int partition, int partitionCount, int limit, PartitionKey partitionKey) {
+        if (!(partitionKey instanceof JpaPartitionKey)) {
+            throw new IllegalArgumentException("The given partition key does not implement JpaPartitionKey: " + partitionKey);
+        }
+        Class<? extends JobInstance<?>> jobInstanceType = partitionKey.getJobInstanceType();
+        JpaPartitionKey jpaPartitionKey = (JpaPartitionKey) partitionKey;
+        String partitionPredicate = jpaPartitionKey.getPartitionPredicate("e");
+        String idAttributeName = jpaPartitionKey.getIdAttributeName();
+        String partitionKeyAttributeName = jpaPartitionKey.getPartitionKeyAttributeName();
+        String scheduleAttributeName = jpaPartitionKey.getScheduleAttributeName();
+        String statePredicate = jpaPartitionKey.getStatePredicate("e");
+        Object readyStateValue = jpaPartitionKey.getReadyStateValue();
+        String joinFetches = jpaPartitionKey.getJoinFetches("e");
+        TypedQuery<? extends JobInstance<?>> typedQuery = entityManager.createQuery(
+                "SELECT e FROM " + jobInstanceType.getName() + " e " +
+                        joinFetches + " " +
+                        "WHERE " + statePredicate + " " +
+                        (partitionPredicate.isEmpty() ? "" : "AND " + partitionPredicate + " ") +
+                        (partitionCount > 1 ? "AND MOD(e." + partitionKeyAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
+                        "AND e." + scheduleAttributeName + " <= CURRENT_TIMESTAMP " +
+                        "ORDER BY e." + scheduleAttributeName + " ASC, e." + idAttributeName + " ASC",
+                jobInstanceType
+        );
+        if (readyStateValue != null) {
+            typedQuery.setParameter("readyState", readyStateValue);
+        }
+        return (List<JobInstance<?>>) (List) typedQuery
+                // TODO: lockMode for update? advisory locks?
+                // TODO: PostgreSQL 9.5 supports the skip locked clause, but since then, we have to use advisory locks
+//                .where("FUNCTION('pg_try_advisory_xact_lock', id.userId)").eqExpression("true")
+                .setHint("org.hibernate.lockMode.e", "UPGRADE_SKIPLOCKED")
+                .setMaxResults(limit)
+                .getResultList();
     }
 
     @Override
-    public List<JobInstance> getUndoneJobInstances(int partition, int partitionCount) {
-        return (List<JobInstance>) (List) entityManager.createQuery(
-                "SELECT e FROM " + JobInstance.class.getName() + " e " +
-                        "JOIN FETCH e." + jobInstanceTriggerAttributeName + " t " +
-                        "JOIN FETCH t." + jobTriggerJobAttributeName + " " +
-                        "WHERE e." + jobInstanceStateAttributeName + " = :readyState " +
-                        (partitionCount > 1 ? "AND MOD(e." + jobInstanceIdAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
-                        "ORDER BY e." + jobInstanceScheduleAttributeName + " ASC, e." + jobInstanceIdAttributeName + " ASC",
-                JobInstance.class
-        ).setParameter("readyState", jobInstanceStateReadyValue).getResultList();
+    public Instant getNextSchedule(int partition, int partitionCount, PartitionKey partitionKey) {
+        Class<? extends JobInstance<?>> jobInstanceType = partitionKey.getJobInstanceType();
+        JpaPartitionKey jpaPartitionKey = (JpaPartitionKey) partitionKey;
+        String partitionPredicate = jpaPartitionKey.getPartitionPredicate("e");
+        String idAttributeName = jpaPartitionKey.getIdAttributeName();
+        String partitionKeyAttributeName = jpaPartitionKey.getPartitionKeyAttributeName();
+        String scheduleAttributeName = jpaPartitionKey.getScheduleAttributeName();
+        String statePredicate = jpaPartitionKey.getStatePredicate("e");
+        Object readyStateValue = jpaPartitionKey.getReadyStateValue();
+        TypedQuery<Instant> typedQuery = entityManager.createQuery(
+                "SELECT e." + scheduleAttributeName + " FROM " + jobInstanceType.getName() + " e " +
+                        "WHERE " + statePredicate + " " +
+                        (partitionPredicate.isEmpty() ? "" : "AND " + partitionPredicate + " ") +
+                        (partitionCount > 1 ? "AND MOD(e." + partitionKeyAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
+                        "AND e." + scheduleAttributeName + " <= CURRENT_TIMESTAMP " +
+                        "ORDER BY e." + scheduleAttributeName + " ASC, e." + idAttributeName + " ASC",
+                Instant.class
+        );
+        if (readyStateValue != null) {
+            typedQuery.setParameter("readyState", readyStateValue);
+        }
+
+        List<Instant> nextSchedule = typedQuery.setMaxResults(1).getResultList();
+        return nextSchedule.size() == 0 ? null : nextSchedule.get(0);
     }
 
     @Override
-    public JobTrigger getJobTrigger(long id) {
-        return entityManager.createQuery(
-                "SELECT e FROM " + JobTrigger.class.getName() + " e " +
-                "JOIN FETCH e." + jobTriggerJobAttributeName + " " +
-                "WHERE e." + jobTriggerIdAttributeName + " = :id ",
-                JobTrigger.class
-        ).setParameter("id", id).getSingleResult();
+    public void updateJobInstance(JobInstance<?> jobInstance) {
+        if (jobInstance.getJobConfiguration().getMaximumDeferCount() > jobInstance.getDeferCount()) {
+            jobInstance.markDropped();
+        }
+        if (!entityManager.isJoinedToTransaction()) {
+            entityManager.joinTransaction();
+        }
+        if (!entityManager.contains(jobInstance)) {
+            entityManager.merge(jobInstance);
+        }
     }
 
     @Override
-    public JobInstance getJobInstance(long id) {
-        return entityManager.createQuery(
-                "SELECT e FROM " + JobInstance.class.getName() + " e " +
-                "JOIN FETCH e." + jobInstanceTriggerAttributeName + " t " +
-                "JOIN FETCH t." + jobTriggerJobAttributeName + " " +
-                "WHERE e." + jobInstanceIdAttributeName + " = :id ",
-                JobInstance.class
-        ).setParameter("id", id).getSingleResult();
-    }
-
-    @Override
-    public void onJobInstanceChunkSuccess(JobInstance jobInstance, JobInstanceProcessingContext<?> context) {
-        jobInstance.onChunkSuccess(context);
+    public void onJobInstanceChunkSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
         if (!entityManager.isJoinedToTransaction()) {
             entityManager.joinTransaction();
         }
@@ -237,8 +247,7 @@ public class JpaJobManager implements JobManager {
     }
 
     @Override
-    public void onJobInstanceError(JobInstance jobInstance, JobInstanceProcessingContext<?> context) {
-        setState(jobInstance, JobInstanceState.FAILED);
+    public void onJobInstanceError(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
         if (!entityManager.isJoinedToTransaction()) {
             entityManager.joinTransaction();
         }
@@ -246,8 +255,7 @@ public class JpaJobManager implements JobManager {
     }
 
     @Override
-    public void onJobInstanceSuccess(JobInstance jobInstance, JobInstanceProcessingContext<?> context) {
-        setState(jobInstance, JobInstanceState.DONE);
+    public void onJobInstanceSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
         if (!entityManager.isJoinedToTransaction()) {
             entityManager.joinTransaction();
         }
@@ -274,24 +282,9 @@ public class JpaJobManager implements JobManager {
 
     @Override
     public void onJobTriggerEnded(JobTrigger jobTrigger, JobContext context) {
-        setDone(jobTrigger, true);
         if (!entityManager.isJoinedToTransaction()) {
             entityManager.joinTransaction();
         }
         entityManager.merge(jobTrigger);
-    }
-
-    protected void setState(JobInstance jobInstance, JobInstanceState state) {
-        if (!(jobInstance instanceof AbstractJobInstance<?>)) {
-            throw new IllegalArgumentException("Only models from blaze-notify-job-jpa-model are supported!");
-        }
-        ((AbstractJobInstance<?>) jobInstance).setState(state);
-    }
-
-    protected void setDone(JobTrigger jobTrigger, boolean done) {
-        if (!(jobTrigger instanceof AbstractJobTrigger<?>)) {
-            throw new IllegalArgumentException("Only models from blaze-notify-job-jpa-model are supported!");
-        }
-        ((AbstractJobTrigger<?>) jobTrigger).getJobConfiguration().setDone(done);
     }
 }

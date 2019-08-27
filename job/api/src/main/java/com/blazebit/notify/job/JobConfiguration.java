@@ -24,22 +24,6 @@ import java.util.Set;
 public interface JobConfiguration {
 
     /**
-     * When <code>true</code>, the trigger is done and shouldn't be considered in scheduling anymore.
-     * Otherwise, this trigger will be further checked for a new schedule execution.
-     *
-     * @return Whether the trigger is done
-     */
-    boolean isDone();
-
-    /**
-     * When <code>true</code>, multiple executions of the same job for this trigger are allowed.
-     * Otherwise, the new executions will be deferred and maybe dropped due to the deferring.
-     *
-     * @return Whether overlapping executions are allowed
-     */
-    boolean isAllowOverlap();
-
-    /**
      * When <code>true</code> the job execution will not be attempted if the maximum defer count is reached
      * and the constraints(time frame) do not allow the execution.
      *
@@ -72,6 +56,6 @@ public interface JobConfiguration {
      */
     Set<? extends TimeFrame> getExecutionTimeFrames();
 
-    Map<String, Serializable> getJobParameters();
+    Map<String, Serializable> getParameters();
 
 }

@@ -37,7 +37,7 @@ public class SimpleNotificationJobTrigger extends AbstractNotificationJobTrigger
         this.messageResolver = messageResolver;
         this.schedule = schedule;
         this.notificationSchedule = notificationSchedule;
-        getJobConfiguration().setJobParameters(jobParameters);
+        getJobConfiguration().setParameters(jobParameters);
     }
 
     @Override

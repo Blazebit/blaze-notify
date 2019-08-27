@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.notification.jpa.model.base;
 
+import javax.persistence.Column;
 import java.io.Serializable;
 
 public abstract class AbstractNotificationId<I, R> implements Serializable {
@@ -33,6 +34,7 @@ public abstract class AbstractNotificationId<I, R> implements Serializable {
         this.recipientId = recipientId;
     }
 
+    @Column(name = "notification_job_instance_id", nullable = false)
     public I getNotificationJobInstanceId() {
         return notificationJobInstanceId;
     }
@@ -41,6 +43,7 @@ public abstract class AbstractNotificationId<I, R> implements Serializable {
         this.notificationJobInstanceId = notificationJobInstanceId;
     }
 
+    @Column(name = "recipient_id", nullable = false)
     public R getRecipientId() {
         return recipientId;
     }

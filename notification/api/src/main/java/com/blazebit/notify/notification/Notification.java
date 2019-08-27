@@ -15,6 +15,7 @@
  */
 package com.blazebit.notify.notification;
 
+import com.blazebit.notify.job.JobInstance;
 import com.blazebit.notify.job.TimeFrame;
 
 import java.io.Serializable;
@@ -22,50 +23,12 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 
-public interface Notification<ID> {
+public interface Notification<ID> extends JobInstance<ID> {
 
-    ID getId();
-
-    NotificationJobInstance<?> getNotificationJobInstance();
+    String getChannelType();
 
     NotificationRecipient<?> getRecipient();
 
-    NotificationState getState();
-
-    int getDeferCount();
-
-    void incrementDeferCount();
-
-    Instant getScheduleTime();
-
-    void setScheduleTime(Instant scheduleTime);
-
-    Instant getCreationTime();
-
     Set<? extends TimeFrame> getPublishTimeFrames();
 
-    default Map<String, Serializable> getParameters() {
-        return getNotificationJobInstance().getJobConfiguration().getJobParameters();
-    }
-
-    default int getMaximumDeferCount() {
-        return getNotificationJobInstance().getJobConfiguration().getMaximumDeferCount();
-    }
-
-    default Instant getDeadline() {
-        return getNotificationJobInstance().getJobConfiguration().getDeadline();
-    }
-
-    void markDone(Object result);
-
-    void markFailed(Throwable t);
-
-    default void markDeferred(Instant newScheduleTime) {
-        incrementDeferCount();
-        setScheduleTime(newScheduleTime);
-    }
-
-    void markDeadlineReached();
-
-    void markDropped();
 }

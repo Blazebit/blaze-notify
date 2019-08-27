@@ -43,6 +43,11 @@ public class MemoryChannel<R extends NotificationRecipient<?>, T extends Notific
     }
 
     @Override
+    public Class<T> getNotificationMessageType() {
+        return (Class<T>) NotificationMessage.class;
+    }
+
+    @Override
     public Object sendNotificationMessage(R recipient, T message) {
         queue.add(message);
         return null;

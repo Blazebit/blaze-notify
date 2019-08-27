@@ -23,9 +23,9 @@ import com.blazebit.notify.job.spi.JobInstanceProcessorFactory;
 public interface NotificationJobInstanceProcessorFactory extends JobInstanceProcessorFactory {
 
     @Override
-    default <T extends JobInstance> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance) {
-        return (JobInstanceProcessor<?, T>) createJobInstanceProcessor((NotificationJobContext) jobContext, (NotificationJobInstance<?>) jobInstance);
+    default <T extends JobInstance<?>> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance) {
+        return (JobInstanceProcessor<?, T>) createJobInstanceProcessor((NotificationJobContext) jobContext, (NotificationJobInstance<?, ?>) jobInstance);
     }
 
-    <T extends NotificationJobInstance<?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance);
+    <T extends NotificationJobInstance<?, ?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance);
 }

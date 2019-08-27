@@ -40,7 +40,7 @@ public class NotificationRecipientResolverImpl extends AbstractPredicatingExpres
     }
 
     @Override
-    protected String getRecipientPredicateExpression(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
+    protected String getRecipientPredicateExpression(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
         if (jobInstance instanceof EmailNotificationJobInstance) {
             return ((EmailNotificationJobInstance) jobInstance).getTrigger().getJob().getRecipientExpression();
         }

@@ -17,9 +17,11 @@
 package com.blazebit.notify.server.config;
 
 import com.blazebit.notify.expression.ExpressionServiceFactory;
+import com.blazebit.notify.job.jpa.storage.JpaPartitionKeyProvider;
 import com.blazebit.notify.notification.NotificationJobContext;
+import com.blazebit.notify.notification.email.message.EmailNotificationMessageResolver;
 import com.blazebit.notify.notification.channel.smtp.SmtpChannel;
-import com.blazebit.notify.notification.channel.smtp.SmtpNotificationMessageResolver;
+import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.notification.*;
 import com.blazebit.notify.template.api.TemplateContext;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -56,21 +58,20 @@ public class JobManagerProducer {
                 .withService(ScheduledExecutorService.class, scheduledExecutorService)
                 .withJobProcessorFactory(new NotificationJobProcessorFactoryImpl())
                 .withJobInstanceProcessorFactory(new NotificationJobInstanceProcessorFactoryImpl())
-                .withNotificationProcessorFactory(new NotificationProcessorFactoryImpl())
-                .withChannelResolver(new ChannelResolverImpl())
                 .withRecipientResolver(new NotificationRecipientResolverImpl())
+                .withProperty(JpaPartitionKeyProvider.JOB_INSTANCE_ENTITY_CLASS_PROPERTY, EmailNotificationJobInstance.class)
                 .withProperty(SmtpChannel.SMTP_HOST_PROPERTY, "192.168.99.100")
                 .withProperty(SmtpChannel.SMTP_PORT_PROPERTY, 25)
 //                .withProperty(SmtpChannel.SMTP_USER_PROPERTY, "test")
 //                .withProperty(SmtpChannel.SMTP_PASSWORD_PROPERTY, "test")
-                .withProperty(SmtpNotificationMessageResolver.SMTP_TEMPLATE_CONTEXT_PROPERTY, TemplateContext.Builder.create().createContext())
-                .withProperty(SmtpNotificationMessageResolver.SMTP_TEMPLATE_PROCESSOR_FACTORY_PROPERTY, "freemarker")
-                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_FROM_PROPERTY, "christian@blazebit.com")
-                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_FROM_NAME_PROPERTY, "Christian Beikov")
-//                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_REPLY_TO_PROPERTY, "christian@blazebit.com")
-//                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_REPLY_TO_NAME_PROPERTY, "Christian Beikov")
-                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_SUBJECT_PROPERTY, "subject.ftl")
-                .withProperty(SmtpNotificationMessageResolver.SMTP_MESSAGE_TEXT_PROPERTY, "text.ftl")
+                .withProperty(EmailNotificationMessageResolver.EMAIL_TEMPLATE_CONTEXT_PROPERTY, TemplateContext.Builder.create().createContext())
+                .withProperty(EmailNotificationMessageResolver.EMAIL_TEMPLATE_PROCESSOR_FACTORY_PROPERTY, "freemarker")
+                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_FROM_PROPERTY, "christian@blazebit.com")
+                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_FROM_NAME_PROPERTY, "Christian Beikov")
+//                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_REPLY_TO_PROPERTY, "christian@blazebit.com")
+//                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_REPLY_TO_NAME_PROPERTY, "Christian Beikov")
+                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_PROPERTY, "subject.ftl")
+                .withProperty(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_PROPERTY, "text.ftl")
                 .createContext();
     }
 

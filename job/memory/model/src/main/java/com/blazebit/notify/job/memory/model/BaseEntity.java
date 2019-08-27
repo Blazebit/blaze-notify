@@ -18,23 +18,23 @@ package com.blazebit.notify.job.memory.model;
 
 import java.io.Serializable;
 
-public abstract class BaseEntity<I extends Serializable> implements Serializable {
+public abstract class BaseEntity<ID> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private I id;
+	private ID id;
 
 	public BaseEntity() {
 	}
 
-	public BaseEntity(I id) {
+	public BaseEntity(ID id) {
 		this.id = id;
 	}
 
-	protected I id(){
+	public ID getId(){
 		return id;
 	}
 	
-	public void setId(I id){
+	public void setId(ID id){
 		this.id = id;
 	}
 	

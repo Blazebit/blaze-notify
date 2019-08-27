@@ -16,135 +16,153 @@
 
 package com.blazebit.notify.notification.jpa.model.base;
 
-import com.blazebit.notify.job.jpa.model.EmbeddedIdEntity;
-import com.blazebit.notify.job.jpa.model.TimeFrame;
-import com.blazebit.notify.notification.*;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.TimeFrame;
+import com.blazebit.notify.job.jpa.model.AbstractJobInstance;
+import com.blazebit.notify.job.jpa.model.JobConfiguration;
+import com.blazebit.notify.notification.Notification;
+import com.blazebit.notify.notification.NotificationJobInstance;
+import com.blazebit.notify.notification.NotificationRecipient;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @MappedSuperclass
 @Table(name = "notification")
-public abstract class AbstractNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long>> extends EmbeddedIdEntity<ID> implements Notification<ID> {
+public abstract class AbstractNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long, Long>> extends AbstractJobInstance<ID> implements Notification<ID>, com.blazebit.notify.job.JobConfiguration {
 
 	private static final long serialVersionUID = 1L;
 
+	private String channelType;
 	private R recipient;
 	private I notificationJobInstance;
-	private NotificationState state;
-	private int deferCount;
-	private Instant scheduleTime;
-	private Instant creationTime;
-	private Set<TimeFrame> publishTimeFrames = new HashSet<>(0);
-
-	public AbstractNotification() {
-	}
+	private JobConfiguration jobConfiguration = new JobConfiguration();
 
 	public AbstractNotification(ID id) {
 		super(id);
 	}
 
-	@EmbeddedId
 	@Override
-	public ID getId() {
-		return id();
+	@Transient
+	public Long getPartitionKey() {
+		return (Long) getRecipient().getId();
+	}
+
+	@Override
+	@Column(nullable = false)
+	public String getChannelType() {
+		return channelType;
+	}
+
+	public void setChannelType(String channelType) {
+		this.channelType = channelType;
 	}
 
 	@Override
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "recipient_id", insertable = false, updatable = false, nullable = false)
 	public R getRecipient() {
 		return recipient;
 	}
 
 	public void setRecipient(R recipient) {
 		this.recipient = recipient;
+		if (recipient == null) {
+			id().setRecipientId(null);
+		} else {
+			((AbstractNotificationId) id()).setRecipientId(recipient.getId());
+		}
 	}
 
-	@Override
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "notification_job_instance_id", insertable = false, updatable = false, nullable = false)
 	public I getNotificationJobInstance() {
 		return notificationJobInstance;
 	}
 
 	public void setNotificationJobInstance(I notificationJobInstance) {
 		this.notificationJobInstance = notificationJobInstance;
+		if (notificationJobInstance == null) {
+			id().setNotificationJobInstanceId(null);
+		} else {
+			((AbstractNotificationId) id()).setNotificationJobInstanceId(notificationJobInstance.getId());
+		}
 	}
 
-	@Override
-	public void markDone(Object result) {
-		setState(NotificationState.DONE);
-	}
+	/*
+	 * We need to implement the JobConfiguration interface here to be able to make use of the insert-select strategy because Hibernate can't bind properties of embeddables.
+	 */
 
 	@Override
-	public void markFailed(Throwable t) {
-		setState(NotificationState.FAILED);
+	@Column(nullable = false)
+	public boolean isDropable() {
+		return jobConfiguration.isDropable();
 	}
 
-	@Override
-	public void incrementDeferCount() {
-		setDeferCount(getDeferCount() + 1);
-	}
-
-	@Override
-	public void markDeadlineReached() {
-		setState(NotificationState.DEADLINE_REACHED);
-	}
-
-	@Override
-	public void markDropped() {
-		setState(NotificationState.DROPPED);
+	public void setDropable(boolean dropable) {
+		jobConfiguration.setDropable(dropable);
 	}
 
 	@Override
 	@Column(nullable = false)
-	public NotificationState getState() {
-		return state;
+	public int getMaximumDeferCount() {
+		return jobConfiguration.getMaximumDeferCount();
 	}
 
-	public void setState(NotificationState state) {
-		this.state = state;
-	}
-
-	@Override
-	@Column(nullable = false)
-	public int getDeferCount() {
-		return deferCount;
-	}
-
-	public void setDeferCount(int deferCount) {
-		this.deferCount = deferCount;
+	public void setMaximumDeferCount(int maximumDeferCount) {
+		jobConfiguration.setMaximumDeferCount(maximumDeferCount);
 	}
 
 	@Override
-	@Column(nullable = false)
-	public Instant getScheduleTime() {
-		return scheduleTime;
+	public Instant getDeadline() {
+		return jobConfiguration.getDeadline();
 	}
 
-	@Override
-	public void setScheduleTime(Instant scheduleTime) {
-		this.scheduleTime = scheduleTime;
+	public void setDeadline(Instant deadline) {
+		jobConfiguration.setDeadline(deadline);
 	}
 
-	@Override
-	@Column(nullable = false)
-	public Instant getCreationTime() {
-		return creationTime;
+	@ElementCollection
+	@CollectionTable(name = "notification_publish_time_frames", foreignKey = @ForeignKey(name = "notification_publish_time_frames_fk_notification"))
+	// TODO: Use string encoding to avoid joins
+	public Set<com.blazebit.notify.job.jpa.model.TimeFrame> getExecutionTimeFrames() {
+		return jobConfiguration.getExecutionTimeFrames();
 	}
 
-	public void setCreationTime(Instant creationTime) {
-		this.creationTime = creationTime;
+	public void setExecutionTimeFrames(Set<com.blazebit.notify.job.jpa.model.TimeFrame> executionTimeFrames) {
+		jobConfiguration.setExecutionTimeFrames(executionTimeFrames);
 	}
 
 	@Override
 	@ElementCollection
-	public Set<TimeFrame> getPublishTimeFrames() {
-		return publishTimeFrames;
+	@Column(name = "value")
+	@MapKeyColumn(name = "name")
+	@CollectionTable(name = "notification_parameter", foreignKey = @ForeignKey(name = "notification_parameter_fk_notification"))
+	// TODO: Use string encoding to avoid joins
+	public Map<String, Serializable> getParameters() {
+		return jobConfiguration.getParameters();
 	}
 
-	public void setPublishTimeFrames(Set<TimeFrame> publishTimeFrames) {
-		this.publishTimeFrames = publishTimeFrames;
+	public void setParameters(Map<String, Serializable> jobParameters) {
+		jobConfiguration.setParameters(jobParameters);
+	}
+
+	@Override
+	@Transient
+	public com.blazebit.notify.job.JobConfiguration getJobConfiguration() {
+		return this;
+	}
+
+	@Override
+	@Transient
+	public Set<? extends TimeFrame> getPublishTimeFrames() {
+		return getJobConfiguration().getExecutionTimeFrames();
+	}
+
+	@Override
+	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 }

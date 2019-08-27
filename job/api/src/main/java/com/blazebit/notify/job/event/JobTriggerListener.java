@@ -16,9 +16,32 @@
 package com.blazebit.notify.job.event;
 
 import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.JobInstance;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobTrigger;
 
-public interface JobTriggerListener {
+public interface JobTriggerListener extends JobInstanceListener {
+
+    @Override
+    default void onJobInstanceChunkSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
+        if (jobInstance instanceof JobTrigger) {
+            onJobTriggerSuccess((JobTrigger) jobInstance, context.getJobContext());
+        }
+    }
+
+    @Override
+    default void onJobInstanceError(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
+        if (jobInstance instanceof JobTrigger) {
+            onJobTriggerError((JobTrigger) jobInstance, context.getJobContext());
+        }
+    }
+
+    @Override
+    default void onJobInstanceSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
+        if (jobInstance instanceof JobTrigger) {
+            onJobTriggerEnded((JobTrigger) jobInstance, context.getJobContext());
+        }
+    }
 
     void onJobTriggerError(JobTrigger jobTrigger, JobContext context);
 

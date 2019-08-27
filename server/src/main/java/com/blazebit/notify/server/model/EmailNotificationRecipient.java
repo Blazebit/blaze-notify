@@ -20,8 +20,6 @@ import com.blazebit.notify.domain.declarative.DiscoverMode;
 import com.blazebit.notify.domain.declarative.DomainAttribute;
 import com.blazebit.notify.domain.declarative.DomainType;
 import com.blazebit.notify.domain.declarative.persistence.EntityAttribute;
-import com.blazebit.notify.domain.declarative.persistence.EntityType;
-import com.blazebit.notify.notification.channel.smtp.SmtpNotificationRecipient;
 import com.blazebit.notify.notification.jpa.model.base.AbstractNotificationRecipient;
 
 import javax.persistence.*;
@@ -30,7 +28,7 @@ import javax.persistence.*;
 @SequenceGenerator(name = "idGenerator", sequenceName = "email_notification_recipient_seq", allocationSize = 1)
 @Table(name = "email_notification_recipient")
 @DomainType(discoverMode = DiscoverMode.EXPLICIT)
-public class EmailNotificationRecipient extends AbstractNotificationRecipient implements SmtpNotificationRecipient<Long> {
+public class EmailNotificationRecipient extends AbstractNotificationRecipient implements com.blazebit.notify.notification.email.message.EmailNotificationRecipient<Long> {
 
     private String email;
 

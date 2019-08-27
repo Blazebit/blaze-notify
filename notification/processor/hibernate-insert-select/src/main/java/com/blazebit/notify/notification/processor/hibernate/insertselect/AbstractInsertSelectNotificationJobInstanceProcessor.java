@@ -35,7 +35,7 @@ import java.util.Map;
  * @param <I> The job instance type
  * @param <R> The recipient type
  */
-public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T, I extends NotificationJobInstance<?>, R extends NotificationRecipient<?>> extends AbstractInsertSelectJobInstanceProcessor<ID, T, I> implements NotificationJobInstanceProcessor<ID, I> {
+public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T, I extends NotificationJobInstance<Long, ?>, R extends NotificationRecipient<?>> extends AbstractInsertSelectJobInstanceProcessor<ID, T, I> implements NotificationJobInstanceProcessor<ID, I> {
 
     @Override
     protected void bindTargetAttributes(InsertCriteriaBuilder<T> insertCriteriaBuilder, I jobInstance, JobInstanceProcessingContext<ID> context, String jobInstanceAlias) {
@@ -64,9 +64,19 @@ public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T
         }
 
         Instant earliestNewNotificationSchedule = bindNotificationAttributes(insertCriteriaBuilder, jobInstance, context, recipientAlias, jobInstanceAlias);
-
+        String channelType = getTargetChannelType();
         NotificationJobContext notificationJobContext = (NotificationJobContext) context.getJobContext();
-        notificationJobContext.getTransactionSupport().registerPostCommitListener(() -> notificationJobContext.triggerNotificationScan(earliestNewNotificationSchedule.toEpochMilli()));
+        notificationJobContext.getTransactionSupport().registerPostCommitListener(() -> {
+            if (channelType == null) {
+                notificationJobContext.triggerNotificationScan(earliestNewNotificationSchedule.toEpochMilli());
+            } else {
+                notificationJobContext.triggerNotificationScan(channelType, earliestNewNotificationSchedule.toEpochMilli());
+            }
+        });
+    }
+
+    protected String getTargetChannelType() {
+        return null;
     }
 
     protected abstract Map<String, Object> getSerializerContext(I jobInstance, JobInstanceProcessingContext<ID> context, String recipientAlias, String jobInstanceAlias);

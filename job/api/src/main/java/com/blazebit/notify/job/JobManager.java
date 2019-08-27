@@ -16,24 +16,16 @@
 
 package com.blazebit.notify.job;
 
-import com.blazebit.notify.job.event.JobInstanceListener;
-import com.blazebit.notify.job.event.JobTriggerListener;
-
+import java.time.Instant;
 import java.util.List;
 
-public interface JobManager extends JobTriggerListener, JobInstanceListener {
+public interface JobManager {
 
-    long addJob(Job job);
+    void addJobInstance(JobInstance<?> jobInstance);
 
-    long addJobTrigger(JobTrigger jobTrigger);
+    void updateJobInstance(JobInstance<?> jobInstance);
 
-    long addJobInstance(JobInstance jobInstance);
+    List<JobInstance<?>> getJobInstancesToProcess(int partition, int partitionCount, int limit, PartitionKey channelKey);
 
-    List<JobTrigger> getUndoneJobTriggers(int partition, int partitionCount);
-
-    List<JobInstance> getUndoneJobInstances(int partition, int partitionCount);
-
-    JobTrigger getJobTrigger(long id);
-
-    JobInstance getJobInstance(long id);
+    Instant getNextSchedule(int partition, int partitionCount, PartitionKey channelKey);
 }

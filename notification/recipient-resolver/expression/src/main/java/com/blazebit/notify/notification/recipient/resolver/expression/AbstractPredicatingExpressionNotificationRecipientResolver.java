@@ -30,11 +30,11 @@ import java.util.Map;
 public abstract class AbstractPredicatingExpressionNotificationRecipientResolver implements NotificationRecipientResolver {
 
     @Override
-    public List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
+    public List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
         throw new UnsupportedOperationException("Please resolve a predicate with the method " + AbstractPredicatingExpressionNotificationRecipientResolver.class.getName() + "#resolveNotificationRecipientPredicate");
     }
 
-    public Predicate resolveNotificationRecipientPredicate(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
+    public Predicate resolveNotificationRecipientPredicate(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
         ExpressionServiceFactory expressionServiceFactory = jobContext.getJobContext().getService(ExpressionServiceFactory.class);
         ExpressionCompiler compiler = expressionServiceFactory.createCompiler();
         Map<String, DomainType> rootDomainTypes = getRootDomainTypes(jobContext);
@@ -48,5 +48,5 @@ public abstract class AbstractPredicatingExpressionNotificationRecipientResolver
 
     protected abstract Map<String, DomainType> getRootDomainTypes(JobInstanceProcessingContext<?> jobContext);
 
-    protected abstract String getRecipientPredicateExpression(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobContext);
+    protected abstract String getRecipientPredicateExpression(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext);
 }

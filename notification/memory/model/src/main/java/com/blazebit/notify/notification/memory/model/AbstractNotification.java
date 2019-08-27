@@ -16,33 +16,39 @@
 
 package com.blazebit.notify.notification.memory.model;
 
-import com.blazebit.notify.job.memory.model.EmbeddedIdEntity;
-import com.blazebit.notify.job.memory.model.TimeFrame;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.TimeFrame;
+import com.blazebit.notify.job.memory.model.AbstractJobInstance;
+import com.blazebit.notify.job.memory.model.JobConfiguration;
 import com.blazebit.notify.notification.*;
 
-import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
 
-public abstract class AbstractNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long>> extends EmbeddedIdEntity<ID> implements Notification<ID> {
+public abstract class AbstractNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long, Long>> extends AbstractJobInstance<ID> implements Notification<ID> {
 
 	private static final long serialVersionUID = 1L;
 
+	private String channelType;
 	private R recipient;
 	private I notificationJobInstance;
-	private NotificationState state;
-	private int deferCount;
-	private Instant scheduleTime;
-	private Instant creationTime;
-	private Set<TimeFrame> publishTimeFrames = new HashSet<>(0);
+	private JobConfiguration jobConfiguration = new JobConfiguration();
 
 	public AbstractNotification(ID id) {
 		super(id);
 	}
 
 	@Override
-	public ID getId() {
-		return id();
+	public Long getPartitionKey() {
+		return (Long) getRecipient().getId();
+	}
+
+	@Override
+	public String getChannelType() {
+		return channelType;
+	}
+
+	public void setChannelType(String channelType) {
+		this.channelType = channelType;
 	}
 
 	@Override
@@ -53,13 +59,12 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	public void setRecipient(R recipient) {
 		this.recipient = recipient;
 		if (recipient == null) {
-			id().setRecipientId(null);
+			getId().setRecipientId(null);
 		} else {
-			((AbstractNotificationId) id()).setRecipientId(recipient.getId());
+			((AbstractNotificationId) getId()).setRecipientId(recipient.getId());
 		}
 	}
 
-	@Override
 	public I getNotificationJobInstance() {
 		return notificationJobInstance;
 	}
@@ -67,80 +72,25 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	public void setNotificationJobInstance(I notificationJobInstance) {
 		this.notificationJobInstance = notificationJobInstance;
 		if (notificationJobInstance == null) {
-			id().setNotificationJobInstanceId(null);
+			getId().setNotificationJobInstanceId(null);
 		} else {
-			((AbstractNotificationId) id()).setNotificationJobInstanceId(notificationJobInstance.getId());
+			((AbstractNotificationId) getId()).setNotificationJobInstanceId(notificationJobInstance.getId());
 		}
 	}
+	public JobConfiguration getJobConfiguration() {
+		return jobConfiguration;
+	}
 
-	@Override
-	public void markDone(Object result) {
-		setState(NotificationState.DONE);
+	public void setJobConfiguration(JobConfiguration jobConfiguration) {
+		this.jobConfiguration = jobConfiguration;
 	}
 
 	@Override
-	public void markFailed(Throwable t) {
-		setState(NotificationState.FAILED);
+	public Set<? extends TimeFrame> getPublishTimeFrames() {
+		return getJobConfiguration().getExecutionTimeFrames();
 	}
 
 	@Override
-	public void incrementDeferCount() {
-		setDeferCount(getDeferCount() + 1);
-	}
-
-	@Override
-	public void markDeadlineReached() {
-		setState(NotificationState.DEADLINE_REACHED);
-	}
-
-	@Override
-	public void markDropped() {
-		setState(NotificationState.DROPPED);
-	}
-
-	@Override
-	public NotificationState getState() {
-		return state;
-	}
-
-	public void setState(NotificationState state) {
-		this.state = state;
-	}
-
-	@Override
-	public int getDeferCount() {
-		return deferCount;
-	}
-
-	public void setDeferCount(int deferCount) {
-		this.deferCount = deferCount;
-	}
-
-	@Override
-	public Instant getScheduleTime() {
-		return scheduleTime;
-	}
-
-	@Override
-	public void setScheduleTime(Instant scheduleTime) {
-		this.scheduleTime = scheduleTime;
-	}
-
-	@Override
-	public Instant getCreationTime() {
-		return creationTime;
-	}
-
-	public void setCreationTime(Instant creationTime) {
-		this.creationTime = creationTime;
-	}
-
-	@Override
-	public Set<TimeFrame> getPublishTimeFrames() {
-		return publishTimeFrames;
-	}
-
-	public void setPublishTimeFrames(Set<TimeFrame> publishTimeFrames) {
-		this.publishTimeFrames = publishTimeFrames;
+	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 }

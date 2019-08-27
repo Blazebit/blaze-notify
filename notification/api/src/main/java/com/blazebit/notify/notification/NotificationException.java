@@ -16,7 +16,9 @@
 
 package com.blazebit.notify.notification;
 
-public class NotificationException extends RuntimeException {
+import com.blazebit.notify.job.JobException;
+
+public class NotificationException extends JobException {
 
     public NotificationException() {
     }

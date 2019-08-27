@@ -18,6 +18,8 @@ package com.blazebit.notify.notification;
 
 public interface Channel<R extends NotificationRecipient<?>, M extends NotificationMessage> extends AutoCloseable {
 
+    Class<M> getNotificationMessageType();
+
     Object sendNotificationMessage(R recipient, M message);
 
 }

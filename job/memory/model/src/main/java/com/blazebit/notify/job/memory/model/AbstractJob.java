@@ -39,11 +39,6 @@ public abstract class AbstractJob extends BaseEntity<Long> implements Job {
 	}
 
 	@Override
-	public Long getId() {
-		return id();
-	}
-
-	@Override
 	public String getName() {
 		return name;
 	}

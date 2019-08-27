@@ -17,7 +17,13 @@ package com.blazebit.notify.notification.channel.smtp;
 
 import com.blazebit.exception.ExceptionUtils;
 import com.blazebit.notify.job.ConfigurationSource;
+import com.blazebit.notify.job.JobRateLimitException;
+import com.blazebit.notify.job.JobTemporaryException;
 import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.email.message.Attachment;
+import com.blazebit.notify.notification.email.message.EmailBody;
+import com.blazebit.notify.notification.email.message.EmailNotificationMessage;
+import com.blazebit.notify.notification.email.message.EmailNotificationRecipient;
 import com.blazebit.notify.notification.security.HostnameVerificationPolicy;
 import com.blazebit.notify.notification.security.JSSETruststoreConfigurator;
 import com.blazebit.notify.notification.security.TruststoreProvider;
@@ -32,14 +38,16 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNotificationMessage> {
+public class SmtpChannel implements Channel<EmailNotificationRecipient<?>, EmailNotificationMessage> {
 
     public static final ChannelKey<SmtpChannel> KEY = ChannelKey.of("smtp", SmtpChannel.class);
 
@@ -157,7 +165,12 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
     }
 
     @Override
-    public Object sendNotificationMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage message) {
+    public Class<EmailNotificationMessage> getNotificationMessageType() {
+        return EmailNotificationMessage.class;
+    }
+
+    @Override
+    public Object sendNotificationMessage(EmailNotificationRecipient<?> recipient, EmailNotificationMessage message) {
         Transport transport;
         try {
             transport = transports.take();
@@ -214,7 +227,6 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             String fromDisplayName = message.getFromDisplayName();
             msg.setFrom(toInternetAddress(from, fromDisplayName));
 
-            msg.setReplyTo(new Address[]{toInternetAddress(from, fromDisplayName)});
             String replyTo = message.getReplyTo();
             if (replyTo != null && !replyTo.isEmpty()) {
                 msg.setReplyTo(new Address[]{toInternetAddress(replyTo, message.getReplyToDisplayName())});
@@ -225,16 +237,21 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             }
 
             msg.setHeader("To", recipient.getEmail());
-            msg.setSubject(message.getSubject().getSubject(), "utf-8");
+            msg.setSubject(message.getSubject().getSubject(), CHARSET_UTF8);
 
             if (config.getFilter() == null || config.getFilter().filterSmtpMessage(recipient, message, msg)) {
                 transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(recipient.getEmail())});
-                Integer responseCode = getResponseCode(transport);
-                String response = getResponse(transport);
-                if (LOG.isLoggable(Level.FINEST)) {
-                    LOG.log(Level.FINEST, "SMTP notification sent to " + recipient + " with response code " + responseCode + " and response: " + response);
+                String messageId;
+                if (config.extractMessageId) {
+                    String response = getResponse(transport);
+                    messageId = response.substring(response.lastIndexOf(' ') + 1).trim();
+                } else {
+                    messageId = msg.getMessageID();
                 }
-                return msg.getMessageID();
+                if (LOG.isLoggable(Level.FINEST)) {
+                    LOG.log(Level.FINEST, "SMTP notification sent to " + recipient + " with message id: " + messageId);
+                }
+                return messageId;
             } else if (LOG.isLoggable(Level.FINEST)) {
                 LOG.log(Level.FINEST, "SMTP notification to " + recipient + " skipped by filter");
             }
@@ -242,9 +259,15 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
         } catch (SendFailedException e) {
             Integer responseCode = getResponseCode(e);
             if (responseCode != null) {
-                if (responseCode == 454) {
-                    LOG.log(Level.FINE, "Rate limit exceeded", e);
-                    throw new NotificationRateLimitException(e);
+                switch (responseCode) {
+                    case 421: // Too many concurrent SMTP connections
+                    case 451: // Temporary service failure
+                        LOG.log(Level.FINE, "Temporary service failure", e);
+                        throw new JobTemporaryException(e);
+                    case 454: // Throttling failure
+                        LOG.log(Level.FINE, "Rate limit exceeded", e);
+                        // TODO: parse if daily or second rate limit and adapt wait time
+                        throw new JobRateLimitException(e);
                 }
             }
             LOG.log(Level.SEVERE, "Failed to send email", e);
@@ -260,13 +283,6 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
     private Integer getResponseCode(SendFailedException e) {
         if (e instanceof SMTPSendFailedException) {
             return ((SMTPSendFailedException) e).getReturnCode();
-        }
-        return null;
-    }
-
-    private Integer getResponseCode(Transport transport) {
-        if (transport instanceof SMTPTransport) {
-            return ((SMTPTransport) transport).getLastReturnCode();
         }
         return null;
     }
@@ -326,13 +342,14 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
         private final String password;
         private final boolean enableSsl;
         private final boolean enableStartTls;
+        private final boolean extractMessageId;
         private final long timeout;
         private final long connectionTimeout;
         private final int connectionPoolSize;
         private final String nodeName;
         private final SmtpChannelFilter filter;
 
-        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, long timeout, long connectionTimeout, int connectionPoolSize, String nodeName, SmtpChannelFilter filter) {
+        Config(String host, Integer port, boolean auth, String user, String password, boolean enableSsl, boolean enableStartTls, boolean extractMessageId, long timeout, long connectionTimeout, int connectionPoolSize, String nodeName, SmtpChannelFilter filter) {
             this.host = host;
             this.port = port;
             this.auth = auth;
@@ -340,6 +357,7 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             this.password = password;
             this.enableSsl = enableSsl;
             this.enableStartTls = enableStartTls;
+            this.extractMessageId = extractMessageId;
             this.timeout = timeout;
             this.connectionTimeout = connectionTimeout;
             this.connectionPoolSize = connectionPoolSize;
@@ -375,6 +393,10 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             return enableStartTls;
         }
 
+        public boolean isExtractMessageId() {
+            return extractMessageId;
+        }
+
         public long getTimeout() {
             return timeout;
         }
@@ -407,6 +429,7 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             private String password;
             private boolean enableSsl;
             private boolean enableStartTls;
+            private boolean extractMessageId;
             private long timeout = 10000;
             private long connectionTimeout = 10000;
             private int connectionPoolSize = 1;
@@ -414,7 +437,7 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
             private SmtpChannelFilter filter;
 
             public Config build() {
-                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, timeout, connectionTimeout, connectionPoolSize, nodeName, filter);
+                return new Config(host, port, auth, user, password, enableSsl, enableStartTls, extractMessageId, timeout, connectionTimeout, connectionPoolSize, nodeName, filter);
             }
 
             public Builder withHost(String host) {
@@ -441,6 +464,11 @@ public class SmtpChannel implements Channel<SmtpNotificationRecipient<?>, SmtpNo
 
             public Builder withEnableStartTls(boolean enableStartTls) {
                 this.enableStartTls = enableStartTls;
+                return this;
+            }
+
+            public Builder withExtractMessageId(boolean extractMessageId) {
+                this.extractMessageId = extractMessageId;
                 return this;
             }
 

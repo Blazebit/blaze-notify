@@ -21,11 +21,18 @@ import com.blazebit.notify.notification.jpa.model.base.AbstractNotificationJob;
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
-public class AbstractExpressionAwareNotificationJob extends AbstractNotificationJob {
+public abstract class AbstractExpressionAwareNotificationJob extends AbstractNotificationJob {
 
 	private static final long serialVersionUID = 1L;
 
 	private String recipientExpression;
+
+	public AbstractExpressionAwareNotificationJob() {
+	}
+
+	public AbstractExpressionAwareNotificationJob(Long id) {
+		super(id);
+	}
 
 	public String getRecipientExpression() {
 		return recipientExpression;

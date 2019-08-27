@@ -20,14 +20,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class ChannelTest<R extends NotificationRecipient<?>, T extends NotificationMessage> extends AbstractConfigurationTest<R, T> {
 
-    public ChannelTest(Channel<R, T> channel, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+    public ChannelTest(Channel<R, T> channel, T defaultMessage, BlockingQueue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
         super(channel, defaultMessage, sink, jobProcessorFactory, jobInstanceProcessorFactory);
     }
 

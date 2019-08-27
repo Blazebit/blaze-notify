@@ -63,7 +63,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-job-jpa-storage</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Notification dependencies -->
@@ -97,7 +96,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-notification-jpa-storage</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Persistence dependencies -->

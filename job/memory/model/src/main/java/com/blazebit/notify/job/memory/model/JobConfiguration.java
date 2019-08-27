@@ -28,14 +28,6 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * True if the job is considered as done
-	 */
-	private boolean done;
-	/**
-	 * True if overlapping executions of the job are allowed
-	 */
-	private boolean allowOverlap;
-	/**
 	 * Whether a job may be dropped when deferred more then maximumDeferCount
 	 */
 	private boolean dropable;
@@ -54,25 +46,7 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 	/**
 	 * The parameter for the job
 	 */
-	private Map<String, Serializable> jobParameters = new HashMap<>(0);
-
-	@Override
-	public boolean isDone() {
-		return done;
-	}
-
-	public void setDone(boolean done) {
-		this.done = done;
-	}
-
-	@Override
-	public boolean isAllowOverlap() {
-		return allowOverlap;
-	}
-
-	public void setAllowOverlap(boolean allowOverlap) {
-		this.allowOverlap = allowOverlap;
-	}
+	private Map<String, Serializable> parameters = new HashMap<>(0);
 
 	@Override
 	public boolean isDropable() {
@@ -110,12 +84,12 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 	}
 
 	@Override
-	public Map<String, Serializable> getJobParameters() {
-		return jobParameters;
+	public Map<String, Serializable> getParameters() {
+		return parameters;
 	}
 
-	public void setJobParameters(Map<String, Serializable> jobParameters) {
-		this.jobParameters = jobParameters;
+	public void setParameters(Map<String, Serializable> jobParameters) {
+		this.parameters = jobParameters;
 	}
 
 	@Override
@@ -129,12 +103,6 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 
 		JobConfiguration that = (JobConfiguration) o;
 
-		if (isDone() != that.isDone()) {
-			return false;
-		}
-		if (isAllowOverlap() != that.isAllowOverlap()) {
-			return false;
-		}
 		if (isDropable() != that.isDropable()) {
 			return false;
 		}
@@ -147,19 +115,17 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 		if (getExecutionTimeFrames() != null ? !getExecutionTimeFrames().equals(that.getExecutionTimeFrames()) : that.getExecutionTimeFrames() != null) {
 			return false;
 		}
-		return getJobParameters() != null ? getJobParameters().equals(that.getJobParameters()) : that.getJobParameters() == null;
+		return getParameters() != null ? getParameters().equals(that.getParameters()) : that.getParameters() == null;
 
 	}
 
 	@Override
 	public int hashCode() {
-		int result = (isDone() ? 1 : 0);
-		result = 31 * result + (isAllowOverlap() ? 1 : 0);
-		result = 31 * result + (isDropable() ? 1 : 0);
+		int result = (isDropable() ? 1 : 0);
 		result = 31 * result + getMaximumDeferCount();
 		result = 31 * result + (getDeadline() != null ? getDeadline().hashCode() : 0);
 		result = 31 * result + (getExecutionTimeFrames() != null ? getExecutionTimeFrames().hashCode() : 0);
-		result = 31 * result + (getJobParameters() != null ? getJobParameters().hashCode() : 0);
+		result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
 		return result;
 	}
 }

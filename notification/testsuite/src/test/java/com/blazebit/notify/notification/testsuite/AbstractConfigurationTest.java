@@ -15,6 +15,7 @@
  */
 package com.blazebit.notify.notification.testsuite;
 
+import com.blazebit.notify.actor.scheduler.executor.ExecutorServiceScheduler;
 import com.blazebit.notify.job.ConfigurationSource;
 import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobInstanceState;
@@ -22,37 +23,36 @@ import com.blazebit.notify.job.Schedule;
 import com.blazebit.notify.job.spi.ScheduleFactory;
 import com.blazebit.notify.notification.*;
 import com.blazebit.notify.notification.channel.memory.MemoryChannel;
-import com.blazebit.notify.notification.NotificationJobProcessorFactory;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.time.Instant;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @RunWith(Parameterized.class)
 public abstract class AbstractConfigurationTest<R extends NotificationRecipient<?>, T extends NotificationMessage> {
 
+    protected static ChannelKey channelKey = ChannelKey.of("default", null);
     protected NotificationJobContext jobContext;
-    protected ChannelKey channelKey = ChannelKey.of(null, null);
     protected Channel<R, T> channel;
     protected T defaultMessage;
-    protected Queue<NotificationMessage> sink;
+    protected BlockingQueue<NotificationMessage> sink;
 
-    public AbstractConfigurationTest(Channel<R, T> channel, T defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+    public AbstractConfigurationTest(Channel<R, T> channel, T defaultMessage, BlockingQueue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
         this.jobContext = NotificationJobContext.Builder.create()
                 .withJobProcessorFactory(jobProcessorFactory)
                 .withJobInstanceProcessorFactory(jobInstanceProcessorFactory)
                 .withNotificationProcessorFactory(new SimpleNotificationProcessorFactory())
                 .withMessageResolverFactory(new SimpleMessageResolverFactory())
                 .withChannelFactory(new SimpleChannelFactory())
-                .withChannelResolver((notification, notificationJobContext) -> channelKey)
                 .withRecipientResolver((jobInstance, jobProcessingContext) -> ((SimpleNotificationJobInstance) jobInstance).getTrigger().getJob().getRecipientResolver().resolveNotificationRecipients(jobInstance, jobProcessingContext))
                 .withScheduleFactory(new SimpleScheduleFactory())
-                .withService(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor())
+                .withProperty(ExecutorServiceScheduler.EXECUTOR_SERVICE_PROPERTY, Executors.newScheduledThreadPool(2))
+                .withProperty(ExecutorServiceScheduler.EXECUTOR_SERVICE_PROPERTY + ".jobInstanceScheduler/jobInstance/processor", Executors.newSingleThreadScheduledExecutor())
                 .createContext();
         this.channel = channel;
         this.defaultMessage = defaultMessage;
@@ -78,7 +78,7 @@ public abstract class AbstractConfigurationTest<R extends NotificationRecipient<
     }
 
     public static Object[][] createCombinations(NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
-        Queue<NotificationMessage> sink;
+        BlockingQueue<NotificationMessage> sink;
         return new Object[][]{
                 {new MemoryChannel(sink = new ArrayBlockingQueue<>(1024)), new SimpleNotificationMessage(), sink, jobProcessorFactory, jobInstanceProcessorFactory}
         };
@@ -117,14 +117,14 @@ public abstract class AbstractConfigurationTest<R extends NotificationRecipient<
 
     private static class SimpleNotificationJobInstanceProcessorFactory implements NotificationJobInstanceProcessorFactory {
         @Override
-        public <T extends NotificationJobInstance<?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
+        public <T extends NotificationJobInstance<?, ?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
             return (NotificationJobInstanceProcessor<?, T>) new SimpleNotificationJobInstanceProcessor();
         }
     }
 
-    private static class SimpleNotificationJobInstanceProcessor implements NotificationJobInstanceProcessor<Object, NotificationJobInstance<?>> {
+    private static class SimpleNotificationJobInstanceProcessor implements NotificationJobInstanceProcessor<Object, NotificationJobInstance<Long, ?>> {
         @Override
-        public Object process(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<Object> context) {
+        public Object process(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<Object> context) {
             return null;
         }
     }

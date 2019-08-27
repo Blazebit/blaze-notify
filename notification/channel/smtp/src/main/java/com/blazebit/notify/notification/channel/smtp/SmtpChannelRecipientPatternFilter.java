@@ -15,6 +15,8 @@
  */
 package com.blazebit.notify.notification.channel.smtp;
 
+import com.blazebit.notify.notification.email.message.EmailNotificationMessage;
+import com.blazebit.notify.notification.email.message.EmailNotificationRecipient;
 import com.sun.mail.smtp.SMTPMessage;
 
 import java.util.Collections;
@@ -32,7 +34,7 @@ public class SmtpChannelRecipientPatternFilter implements SmtpChannelFilter {
     }
 
     @Override
-    public boolean filterSmtpMessage(SmtpNotificationRecipient<?> recipient, SmtpNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
+    public boolean filterSmtpMessage(EmailNotificationRecipient<?> recipient, EmailNotificationMessage blazeNotifySmtpMessage, SMTPMessage constructedSmtpMessage) {
         String recipientEmail = recipient.getEmail();
         if (!includes.isEmpty()) {
             boolean included = false;

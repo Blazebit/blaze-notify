@@ -22,11 +22,13 @@ import com.blazebit.notify.actor.declarative.DeclarativeActor;
 import com.blazebit.notify.actor.declarative.DeclarativeActorContextBuilder;
 
 import javax.enterprise.context.Dependent;
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.*;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -38,12 +40,21 @@ public class DeclarativeActorExtension implements Extension {
     private final DeclarativeActorContextBuilder actorContextBuilder = DeclarativeActor.getDefaultProvider().createDefaultBuilder();
     private final List<RuntimeException> exceptions = new ArrayList<>();
 
-    <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
+    <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat, BeanManager beanManager) {
         if (pat.getAnnotatedType().isAnnotationPresent(ActorConfig.class)) {
-            try {
-                actorContextBuilder.addActor((Class<? extends ScheduledActor>) pat.getAnnotatedType().getJavaClass());
-            } catch (RuntimeException ex) {
-                exceptions.add(new IllegalArgumentException("Exception occurred while reading actor class: " + pat.getAnnotatedType().getJavaClass().getName(), ex));
+            Class<X> javaClass = pat.getAnnotatedType().getJavaClass();
+            if (!ScheduledActor.class.isAssignableFrom(javaClass)) {
+                exceptions.add(new IllegalArgumentException("The actor class: " + javaClass.getName() + " does not implement ScheduledActor!"));
+            } else {
+                try {
+                    Set<Bean<?>> beans = beanManager.getBeans(javaClass);
+                    Bean<?> bean = beanManager.resolve(beans);
+                    CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
+                    ScheduledActor actor = (ScheduledActor) beanManager.getReference(bean, javaClass, creationalContext);
+                    actorContextBuilder.addActor(actor);
+                } catch (RuntimeException ex) {
+                    exceptions.add(new IllegalArgumentException("Exception occurred while registering the actor class: " + javaClass.getName(), ex));
+                }
             }
         }
     }

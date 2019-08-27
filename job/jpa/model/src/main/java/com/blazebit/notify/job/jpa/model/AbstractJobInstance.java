@@ -16,8 +16,6 @@
 
 package com.blazebit.notify.job.jpa.model;
 
-import com.blazebit.notify.job.JobInstance;
-import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobInstanceState;
 
 import javax.persistence.*;
@@ -26,12 +24,11 @@ import java.time.Instant;
 
 @MappedSuperclass
 @Table(name = "job_instance")
-public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends AbstractJob>> extends BaseEntity implements JobInstance {
+public abstract class AbstractJobInstance<ID> extends BaseEntity<ID> implements JpaJobInstance<ID> {
 
 	private static final long serialVersionUID = 1L;
 
-	private T trigger;
-	private JobInstanceState state;
+	private JobInstanceState state = JobInstanceState.NEW;
 
 	private int deferCount;
 	private Instant scheduleTime;
@@ -41,22 +38,8 @@ public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends
 	protected AbstractJobInstance() {
 	}
 
-	protected AbstractJobInstance(Long id) {
+	protected AbstractJobInstance(ID id) {
 		super(id);
-	}
-
-	public abstract void onChunkSuccess(JobInstanceProcessingContext<?> processingContext);
-
-	@NotNull
-	@Override
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "trigger_id", nullable = false, foreignKey = @ForeignKey(name = "job_instance_fk_job_trigger"))
-	public T getTrigger() {
-		return trigger;
-	}
-
-	public void setTrigger(T trigger) {
-		this.trigger = trigger;
 	}
 
 	@Override
@@ -74,12 +57,23 @@ public abstract class AbstractJobInstance<T extends AbstractJobTrigger<? extends
 		setState(JobInstanceState.DROPPED);
 	}
 
+	@Override
+	public void markDone(Object result) {
+		setState(JobInstanceState.DONE);
+	}
+
+	@Override
+	public void markFailed(Throwable t) {
+		setState(JobInstanceState.FAILED);
+	}
+
 	@NotNull
 	@Enumerated(EnumType.ORDINAL)
 	public JobInstanceState getState() {
 		return state;
 	}
 
+	@Override
 	public void setState(JobInstanceState state) {
 		this.state = state;
 	}

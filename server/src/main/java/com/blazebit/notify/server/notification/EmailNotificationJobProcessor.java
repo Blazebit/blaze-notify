@@ -22,6 +22,8 @@ import com.blazebit.notify.notification.NotificationJobProcessor;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 
+import java.time.Instant;
+
 public class EmailNotificationJobProcessor implements NotificationJobProcessor<EmailNotificationJobTrigger> {
 
     public static final EmailNotificationJobProcessor INSTANCE = new EmailNotificationJobProcessor();
@@ -30,11 +32,16 @@ public class EmailNotificationJobProcessor implements NotificationJobProcessor<E
     }
 
     @Override
+    public boolean isTransactional() {
+        return true;
+    }
+
+    @Override
     public void process(EmailNotificationJobTrigger jobTrigger, NotificationJobContext context) {
         EmailNotificationJobInstance jobInstance = new EmailNotificationJobInstance();
         jobInstance.setState(JobInstanceState.NEW);
         jobInstance.setTrigger(jobTrigger);
-        jobInstance.setScheduleTime(jobTrigger.getSchedule(context).nextSchedule());
+        jobInstance.setScheduleTime(Instant.now());
         context.getJobManager().addJobInstance(jobInstance);
     }
 }

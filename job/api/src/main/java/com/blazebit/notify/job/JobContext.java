@@ -17,20 +17,15 @@
 package com.blazebit.notify.job;
 
 import com.blazebit.notify.actor.ActorContext;
-import com.blazebit.notify.actor.ScheduledActor;
 import com.blazebit.notify.job.event.JobInstanceListener;
-import com.blazebit.notify.job.event.JobInstanceScheduleListener;
 import com.blazebit.notify.job.event.JobTriggerListener;
-import com.blazebit.notify.job.event.JobTriggerScheduleListener;
 import com.blazebit.notify.job.spi.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public interface JobContext extends ConfigurationSource {
-
-    <T> T getService(Class<T> serviceClass);
+public interface JobContext extends ServiceProvider, ConfigurationSource {
 
     TransactionSupport getTransactionSupport();
 
@@ -40,13 +35,13 @@ public interface JobContext extends ConfigurationSource {
 
     <T extends JobTrigger> JobProcessor<T> getJobProcessor(T job);
 
-    <T extends JobInstance> JobInstanceProcessor<?, T> getJobInstanceProcessor(T job);
+    <T extends JobInstance<?>> JobInstanceProcessor<?, T> getJobInstanceProcessor(T job);
 
-    void notifyJobTriggerScheduleListeners(JobTrigger jobTrigger);
+    void refreshJobInstanceSchedules(JobInstance<?> jobInstance);
 
-    void notifyJobInstanceScheduleListeners(JobInstance jobInstance);
+    void refreshJobInstanceSchedules(long earliestNewSchedule);
 
-    void forEachJobTriggerListeners(Consumer<JobTriggerListener> listenerConsumer);
+    void refreshJobInstanceSchedules(PartitionKey partitionKey, long earliestNewSchedule);
 
     void forEachJobInstanceListeners(Consumer<JobInstanceListener> jobInstanceListenerConsumer);
 
@@ -73,8 +68,9 @@ public interface JobContext extends ConfigurationSource {
         private JobSchedulerFactory jobSchedulerFactory;
         private JobProcessorFactory jobProcessorFactory;
         private JobInstanceProcessorFactory jobInstanceProcessorFactory;
-        private final List<JobTriggerScheduleListener> jobTriggerScheduleListeners = new ArrayList<>();
-        private final List<JobInstanceScheduleListener> jobInstanceScheduleListeners = new ArrayList<>();
+        private PartitionKeyProviderFactory partitionKeyProviderFactory;
+        private PartitionKeyProvider partitionKeyProvider;
+        private final Map<PartitionKey, Integer> partitionKeys = new HashMap<>();
         private final List<JobTriggerListener> jobTriggerListeners = new ArrayList<>();
         private final List<JobInstanceListener> jobInstanceListeners = new ArrayList<>();
         private final Map<String, Object> properties = new HashMap<>();
@@ -91,9 +87,8 @@ public interface JobContext extends ConfigurationSource {
             jobSchedulerFactory = loadFirstServiceOrNone(JobSchedulerFactory.class);
             jobProcessorFactory = loadFirstServiceOrNone(JobProcessorFactory.class);
             jobInstanceProcessorFactory = loadFirstServiceOrNone(JobInstanceProcessorFactory.class);
+            partitionKeyProviderFactory = loadFirstServiceOrNone(PartitionKeyProviderFactory.class);
 
-            jobTriggerScheduleListeners.addAll(loadServices(JobTriggerScheduleListener.class));
-            jobInstanceScheduleListeners.addAll(loadServices(JobInstanceScheduleListener.class));
             jobTriggerListeners.addAll(loadServices(JobTriggerListener.class));
             jobInstanceListeners.addAll(loadServices(JobInstanceListener.class));
         }
@@ -137,6 +132,9 @@ public interface JobContext extends ConfigurationSource {
             if (getJobInstanceProcessorFactory() == null) {
                 throw new JobException("No job instance processor factory given!");
             }
+            if (getPartitionKeyProviderFactory() == null) {
+                throw new JobException("No job instance partition key provider factory given!");
+            }
         }
 
         public JobContext createContext() {
@@ -149,8 +147,8 @@ public interface JobContext extends ConfigurationSource {
                     getJobSchedulerFactory(),
                     getJobProcessorFactory(),
                     getJobInstanceProcessorFactory(),
-                    getJobTriggerScheduleListeners(),
-                    getJobInstanceScheduleListeners(),
+                    getPartitionKeyMap(),
+                    getPartitionKeyProvider(),
                     getJobTriggerListeners(),
                     getJobInstanceListeners(),
                     properties,
@@ -247,31 +245,41 @@ public interface JobContext extends ConfigurationSource {
             return (T) this;
         }
 
-        public List<JobTriggerScheduleListener> getJobTriggerScheduleListeners() {
-            return jobTriggerScheduleListeners;
+        public Set<PartitionKey> getPartitionKeys() {
+            return partitionKeys.keySet();
         }
 
-        public T withJobTriggerScheduleListener(JobTriggerScheduleListener jobTriggerScheduleListener) {
-            this.jobTriggerScheduleListeners.add(jobTriggerScheduleListener);
+        protected Map<PartitionKey, Integer> getPartitionKeyMap() {
+            return partitionKeys;
+        }
+
+        public T withPartitionKey(PartitionKey partitionKey, int processingCount) {
+            this.partitionKeys.put(partitionKey, processingCount);
             return (T) this;
         }
 
-        public T withJobTriggerScheduleListeners(List<JobTriggerScheduleListener> jobTriggerScheduleListeners) {
-            this.jobTriggerScheduleListeners.addAll(jobTriggerScheduleListeners);
-            return (T) this;
+        protected PartitionKeyProvider getPartitionKeyProvider() {
+            if (partitionKeyProvider == null) {
+                partitionKeyProvider = partitionKeyProviderFactory.createPartitionKeyProvider(
+                        new ServiceProvider() {
+                            @Override
+                            public <T> T getService(Class<T> serviceClass) {
+                                return serviceClass.cast(getServiceMap().get(serviceClass));
+                            }
+                        },
+                        this::getProperty
+                );
+            }
+            return partitionKeyProvider;
         }
 
-        public List<JobInstanceScheduleListener> getJobInstanceScheduleListeners() {
-            return jobInstanceScheduleListeners;
+        public PartitionKeyProviderFactory getPartitionKeyProviderFactory() {
+            return partitionKeyProviderFactory;
         }
 
-        public T withJobInstanceScheduleListener(JobInstanceScheduleListener jobInstanceScheduleListener) {
-            this.jobInstanceScheduleListeners.add(jobInstanceScheduleListener);
-            return (T) this;
-        }
-
-        public T withJobInstanceScheduleListeners(List<JobInstanceScheduleListener> jobInstanceScheduleListeners) {
-            this.jobInstanceScheduleListeners.addAll(jobInstanceScheduleListeners);
+        public T withPartitionKeyProviderFactory(PartitionKeyProviderFactory partitionKeyProviderFactory) {
+            this.partitionKeyProviderFactory = partitionKeyProviderFactory;
+            this.partitionKeyProvider = null;
             return (T) this;
         }
 
@@ -335,24 +343,27 @@ public interface JobContext extends ConfigurationSource {
         }
 
         protected static class DefaultJobContext implements JobContext {
+            private static final String DEFAULT_JOB_INSTANCE_ACTOR_NAME = "jobInstanceScheduler";
+            private static final int DEFAULT_JOB_INSTANCE_PROCESS_COUNT = 1;
+            private static final String DEFAULT_JOB_TRIGGER_ACTOR_NAME = "jobTriggerScheduler";
+            private static final int DEFAULT_JOB_TRIGGER_PROCESS_COUNT = 1;
 
             private final TransactionSupport transactionSupport;
             private final JobManager jobManager;
             private final ScheduleFactory scheduleFactory;
             private final JobProcessorFactory jobProcessorFactory;
             private final JobInstanceProcessorFactory jobInstanceProcessorFactory;
-            private final JobScheduler jobScheduler;
-            private final JobTriggerScheduleListener[] jobTriggerScheduleListeners;
-            private final JobInstanceScheduleListener[] jobInstanceScheduleListeners;
-            private final JobTriggerListener[] jobTriggerListeners;
+            private final PartitionKeyProvider partitionKeyProvider;
+            private final PartitionKey jobTriggerPartitionKey;
+            private final JobScheduler jobTriggerScheduler;
+            private final Map<PartitionKey, JobScheduler> jobSchedulers;
             private final JobInstanceListener[] jobInstanceListeners;
             private final Map<String, Object> properties;
             private final Map<Class<?>, Object> serviceMap;
 
             protected DefaultJobContext(TransactionSupport transactionSupport, JobManagerFactory jobManagerFactory, ActorContext actorContext, ScheduleFactory scheduleFactory,
                                         JobSchedulerFactory jobSchedulerFactory, JobProcessorFactory jobProcessorFactory, JobInstanceProcessorFactory jobInstanceProcessorFactory,
-                                        List<JobTriggerScheduleListener> jobTriggerScheduleListeners, List<JobInstanceScheduleListener> jobInstanceScheduleListeners,
-                                        List<JobTriggerListener> jobTriggerListeners, List<JobInstanceListener> jobInstanceListeners,
+                                        Map<PartitionKey, Integer> partitionKeyEntries, PartitionKeyProvider partitionKeyProvider, List<JobTriggerListener> jobTriggerListeners, List<JobInstanceListener> jobInstanceListeners,
                                         Map<String, Object> properties, Map<Class<?>, Object> serviceMap) {
                 this.transactionSupport = transactionSupport;
                 this.scheduleFactory = scheduleFactory;
@@ -361,13 +372,48 @@ public interface JobContext extends ConfigurationSource {
                 this.properties = new HashMap<>(properties);
                 this.serviceMap = new HashMap<>(serviceMap);
                 this.jobManager = jobManagerFactory.createJobManager(this);
-                this.jobScheduler = jobSchedulerFactory.createJobScheduler(this, actorContext);
-                jobTriggerScheduleListeners.add(jobScheduler::add);
-                jobInstanceScheduleListeners.add(jobScheduler::add);
-                this.jobTriggerScheduleListeners = jobTriggerScheduleListeners.toArray(new JobTriggerScheduleListener[jobTriggerScheduleListeners.size()]);
-                this.jobInstanceScheduleListeners = jobInstanceScheduleListeners.toArray(new JobInstanceScheduleListener[jobInstanceScheduleListeners.size()]);
-                this.jobTriggerListeners = jobTriggerListeners.toArray(new JobTriggerListener[jobTriggerListeners.size()]);
+                if (partitionKeyProvider == null) {
+                    if (jobManager instanceof PartitionKeyProvider) {
+                        this.partitionKeyProvider = (PartitionKeyProvider) jobManager;
+                    } else {
+                        throw new JobException("No PartitionKeyProvider given!");
+                    }
+                } else {
+                    this.partitionKeyProvider = partitionKeyProvider;
+                }
+                this.jobTriggerPartitionKey = this.partitionKeyProvider.getDefaultTriggerPartitionKey();
+                this.jobTriggerScheduler = jobSchedulerFactory.createJobScheduler(this, actorContext, DEFAULT_JOB_TRIGGER_ACTOR_NAME, DEFAULT_JOB_TRIGGER_PROCESS_COUNT, jobTriggerPartitionKey);
+                this.jobSchedulers = new HashMap<>();
+                if (partitionKeyEntries.isEmpty()) {
+                    PartitionKey instancePartitionKey = this.partitionKeyProvider.getDefaultJobInstancePartitionKey();
+                    JobScheduler jobInstanceScheduler = jobSchedulerFactory.createJobScheduler(this, actorContext, DEFAULT_JOB_INSTANCE_ACTOR_NAME, DEFAULT_JOB_INSTANCE_PROCESS_COUNT, instancePartitionKey);
+                    jobSchedulers.put(instancePartitionKey, jobInstanceScheduler);
+                } else {
+                    for (Map.Entry<PartitionKey, Integer> entry : partitionKeyEntries.entrySet()) {
+                        jobSchedulers.put(entry.getKey(), jobSchedulerFactory.createJobScheduler(this, actorContext, DEFAULT_JOB_INSTANCE_ACTOR_NAME + "/" + entry.getKey(), entry.getValue(), entry.getKey()));
+                    }
+                }
+
+                jobInstanceListeners.addAll(jobTriggerListeners);
+                if (jobManager instanceof JobTriggerListener) {
+                    jobTriggerListeners.add((JobTriggerListener) jobManager);
+                }
+                if (jobManager instanceof JobInstanceListener) {
+                    jobInstanceListeners.add((JobInstanceListener) jobManager);
+                }
                 this.jobInstanceListeners = jobInstanceListeners.toArray(new JobInstanceListener[jobInstanceListeners.size()]);
+                afterConstruct();
+            }
+
+            protected void afterConstruct() {
+                start();
+            }
+
+            protected void start() {
+                jobTriggerScheduler.start();
+                for (JobScheduler jobScheduler : jobSchedulers.values()) {
+                    jobScheduler.start();
+                }
             }
 
             @Override
@@ -401,34 +447,46 @@ public interface JobContext extends ConfigurationSource {
             }
 
             @Override
-            public <T extends JobInstance> JobInstanceProcessor<?, T> getJobInstanceProcessor(T jobInstance) {
-                return jobInstanceProcessorFactory.createJobInstanceProcessor(this, jobInstance);
-            }
-
-            @Override
-            public void notifyJobTriggerScheduleListeners(JobTrigger jobTrigger) {
-                if (jobTrigger.getJobConfiguration().isDone()) {
-                    throw new JobException("JobTrigger is already done and can't be scheduled: " + jobTrigger);
-                }
-                for (int i = 0; i < jobTriggerScheduleListeners.length; i++) {
-                    jobTriggerScheduleListeners[i].onJobTriggerSchedule(jobTrigger);
+            public <T extends JobInstance<?>> JobInstanceProcessor<?, T> getJobInstanceProcessor(T jobInstance) {
+                if (jobInstance instanceof JobTrigger) {
+                    return (JobInstanceProcessor<?, T>) jobProcessorFactory.createJobProcessor(this, (JobTrigger) jobInstance);
+                } else {
+                    return jobInstanceProcessorFactory.createJobInstanceProcessor(this, jobInstance);
                 }
             }
 
             @Override
-            public void notifyJobInstanceScheduleListeners(JobInstance jobInstance) {
+            public void refreshJobInstanceSchedules(JobInstance<?> jobInstance) {
                 if (jobInstance.getState() != JobInstanceState.NEW) {
                     throw new JobException("JobInstance is already done and can't be scheduled: " + jobInstance);
                 }
-                for (int i = 0; i < jobInstanceScheduleListeners.length; i++) {
-                    jobInstanceScheduleListeners[i].onJobInstanceSchedule(jobInstance);
+                long earliestNewSchedule = jobInstance.getScheduleTime().toEpochMilli();
+                if (jobInstance instanceof JobTrigger) {
+                    jobTriggerScheduler.refreshSchedules(earliestNewSchedule);
+                } else {
+                    for (JobScheduler jobScheduler : jobSchedulers.values()) {
+                        jobScheduler.refreshSchedules(earliestNewSchedule);
+                    }
                 }
             }
 
             @Override
-            public void forEachJobTriggerListeners(Consumer<JobTriggerListener> listenerConsumer) {
-                for (int i = 0; i < jobTriggerListeners.length; i++) {
-                    listenerConsumer.accept(jobTriggerListeners[i]);
+            public void refreshJobInstanceSchedules(long earliestNewSchedule) {
+                jobTriggerScheduler.refreshSchedules(earliestNewSchedule);
+                for (JobScheduler jobScheduler : jobSchedulers.values()) {
+                    jobScheduler.refreshSchedules(earliestNewSchedule);
+                }
+            }
+
+            @Override
+            public void refreshJobInstanceSchedules(PartitionKey partitionKey, long earliestNewSchedule) {
+                if (partitionKey == jobTriggerPartitionKey) {
+                    jobTriggerScheduler.refreshSchedules(earliestNewSchedule);
+                } else {
+                    JobScheduler jobScheduler = jobSchedulers.get(partitionKey);
+                    if (jobScheduler != null) {
+                        jobScheduler.refreshSchedules(earliestNewSchedule);
+                    }
                 }
             }
 
@@ -441,12 +499,18 @@ public interface JobContext extends ConfigurationSource {
 
             @Override
             public void stop() {
-                jobScheduler.stop();
+                jobTriggerScheduler.stop();
+                for (JobScheduler jobScheduler : jobSchedulers.values()) {
+                    jobScheduler.stop();
+                }
             }
 
             @Override
             public void stop(long timeout, TimeUnit unit) throws InterruptedException {
-                jobScheduler.stop(timeout, unit);
+                jobTriggerScheduler.stop(timeout, unit);
+                for (JobScheduler jobScheduler : jobSchedulers.values()) {
+                    jobScheduler.stop(timeout, unit);
+                }
             }
         }
     }

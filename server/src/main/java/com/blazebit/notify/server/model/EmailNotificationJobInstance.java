@@ -16,19 +16,25 @@
 
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.notification.jpa.model.base.AbstractNotificationJobInstance;
+import com.blazebit.notify.notification.jpa.model.base.AbstractTriggerBasedNotificationJobInstance;
 
-import javax.persistence.Entity;
-import javax.persistence.SequenceGenerator;
+import javax.persistence.*;
 
 @Entity
 @SequenceGenerator(name = "idGenerator", sequenceName = "job_instance_seq", allocationSize = 1)
-public class EmailNotificationJobInstance extends AbstractNotificationJobInstance<Long, EmailNotificationJob, EmailNotificationJobTrigger> {
+public class EmailNotificationJobInstance extends AbstractTriggerBasedNotificationJobInstance<Long, Long, EmailNotificationJob, EmailNotificationJobTrigger> {
 
     public EmailNotificationJobInstance() {
     }
 
     public EmailNotificationJobInstance(Long id) {
         super(id);
+    }
+
+    @Override
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+    public Long getId() {
+        return id();
     }
 }

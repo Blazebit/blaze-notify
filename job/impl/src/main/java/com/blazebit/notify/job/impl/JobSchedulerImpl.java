@@ -18,141 +18,123 @@ package com.blazebit.notify.job.impl;
 import com.blazebit.notify.actor.ActorContext;
 import com.blazebit.notify.actor.ActorRunResult;
 import com.blazebit.notify.actor.ScheduledActor;
-import com.blazebit.notify.actor.spi.ClusterNodeInfo;
-import com.blazebit.notify.actor.spi.ClusterStateListener;
-import com.blazebit.notify.actor.spi.ClusterStateManager;
+import com.blazebit.notify.actor.spi.*;
 import com.blazebit.notify.job.*;
 import com.blazebit.notify.job.spi.JobScheduler;
 import com.blazebit.notify.job.spi.TransactionSupport;
 
 import java.time.Instant;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
 
     private static final Logger LOG = Logger.getLogger(JobSchedulerImpl.class.getName());
-    private static final int DEFAULT_PROCESS_COUNT = 100;
 
     private final JobContext jobContext;
-    private final JobManager jobManager;
     private final ActorContext actorContext;
+    private final Scheduler scheduler;
+    private final JobManager jobManager;
+    private final JobInstanceRunner runner;
+    private final String actorName;
+    private final PartitionKey partitionKey;
     private final int processCount;
-    private final ClusterStateManager clusterStateManager;
-    private final ConcurrentMap<String, Object> registeredJobs = new ConcurrentHashMap<>();
-    private volatile AtomicReference<ClusterNodeInfo> clusterNodeInfo = new AtomicReference<>();
+    private final AtomicLong earliestKnownSchedule = new AtomicLong(Long.MAX_VALUE);
+    private volatile ClusterNodeInfo clusterNodeInfo;
     private volatile boolean closed;
 
-    public JobSchedulerImpl(JobContext jobContext, ActorContext actorContext) {
-        this(jobContext, actorContext, DEFAULT_PROCESS_COUNT);
+    public JobSchedulerImpl(JobContext jobContext, ActorContext actorContext, SchedulerFactory schedulerFactory, String actorName, int processCount, PartitionKey partitionKey) {
+        this.jobContext = jobContext;
+        this.actorContext = actorContext;
+        this.scheduler = schedulerFactory.createScheduler(actorContext, actorName + "/processor");
+        this.jobManager = jobContext.getJobManager();
+        this.runner = new JobInstanceRunner();
+        this.actorName = actorName;
+        this.processCount = processCount;
+        this.partitionKey = partitionKey;
     }
 
-    public JobSchedulerImpl(JobContext jobContext, ActorContext actorContext, int processCount) {
-        this.jobContext = jobContext;
-        this.jobManager = jobContext.getJobManager();
-        this.actorContext = actorContext;
-        this.processCount = processCount;
-        this.clusterStateManager = actorContext.getService(ClusterStateManager.class);
-        this.clusterStateManager.registerListener(JobTriggerAddedEvent.class, e -> {
-            ClusterNodeInfo clusterNodeInfo = this.clusterNodeInfo.get();
-            if (clusterNodeInfo.getClusterSize() == 1 || (e.getId() % clusterNodeInfo.getClusterSize()) == clusterNodeInfo.getClusterPosition()) {
-                addLocally(jobManager.getJobTrigger(e.getId()), clusterNodeInfo);
-            }
-        });
-        this.clusterStateManager.registerListener(JobInstanceAddedEvent.class, e -> {
-            ClusterNodeInfo clusterNodeInfo = this.clusterNodeInfo.get();
-            if (clusterNodeInfo.getClusterSize() == 1 || (e.getId() % clusterNodeInfo.getClusterSize()) == clusterNodeInfo.getClusterPosition()) {
-                addLocally(jobManager.getJobInstance(e.getId()), clusterNodeInfo);
-            }
-        });
+    @Override
+    public void start() {
+        actorContext.getActorManager().registerSuspendedActor(actorName, runner);
         actorContext.getService(ClusterStateManager.class).registerListener(this);
     }
 
     @Override
     public void onClusterStateChanged(ClusterNodeInfo clusterNodeInfo) {
+        this.clusterNodeInfo = clusterNodeInfo;
         if (!closed) {
-            ClusterNodeInfo oldClusterNodeInfo = this.clusterNodeInfo.getAndSet(clusterNodeInfo);
-            if (oldClusterNodeInfo != null) {
-                String prefix = oldClusterNodeInfo.getClusterVersion() + "/";
-
-                // Remove old job versions
-                for (Iterator<String> iterator = registeredJobs.keySet().iterator(); iterator.hasNext(); ) {
-                    String name = iterator.next();
-                    if (name.startsWith(prefix)) {
-                        actorContext.getActorManager().removeActor(name);
-                        iterator.remove();
-                    }
-                }
-
-                // Register new job versions
-                List<JobTrigger> undoneJobTriggers = jobManager.getUndoneJobTriggers(clusterNodeInfo.getClusterPosition(), clusterNodeInfo.getClusterSize());
-                for (int i = 0; i < undoneJobTriggers.size(); i++) {
-                    addLocally(undoneJobTriggers.get(i), clusterNodeInfo);
-                }
-                List<JobInstance> undoneJobInstances = jobManager.getUndoneJobInstances(clusterNodeInfo.getClusterPosition(), clusterNodeInfo.getClusterSize());
-                for (int i = 0; i < undoneJobInstances.size(); i++) {
-                    addLocally(undoneJobInstances.get(i), clusterNodeInfo);
-                }
+            Instant nextSchedule = jobManager.getNextSchedule(clusterNodeInfo.getClusterPosition(), clusterNodeInfo.getClusterSize(), partitionKey);
+            if (nextSchedule == null) {
+                resetEarliestKnownSchedule();
+            } else {
+                refreshSchedules(nextSchedule.toEpochMilli());
             }
         }
     }
 
     @Override
-    public void add(JobTrigger jobTrigger) {
-        if (jobTrigger.getJobConfiguration().isDone()) {
-            throw new JobException("JobTrigger is already done and can't be scheduled: " + jobTrigger);
-        }
-        // Only queue if part of current partition, otherwise inform cluster
-        ClusterNodeInfo clusterNodeInfo = this.clusterNodeInfo.get();
-        if (clusterNodeInfo.getClusterSize() == 1 || (jobTrigger.getId() % clusterNodeInfo.getClusterSize()) == clusterNodeInfo.getClusterPosition()) {
-            addLocally(jobTrigger, clusterNodeInfo);
-        } else {
-            clusterStateManager.fireEventExcludeSelf(new JobTriggerAddedEvent(jobTrigger.getId()));
+    public void refreshSchedules(long earliestNewSchedule) {
+        long delayMillis = rescan(earliestNewSchedule);
+        if (delayMillis != -1L) {
+            actorContext.getActorManager().rescheduleActor(actorName, delayMillis);
         }
     }
 
-    @Override
-    public void add(JobInstance jobInstance) {
-        if (jobInstance.getState() != JobInstanceState.NEW) {
-            throw new JobException("JobInstance is already done and can't be scheduled: " + jobInstance);
-        }
-        // Only queue if part of current partition, otherwise inform cluster
-        ClusterNodeInfo clusterNodeInfo = this.clusterNodeInfo.get();
-        if (clusterNodeInfo.getClusterSize() == 1 || (jobInstance.getId() % clusterNodeInfo.getClusterSize()) == clusterNodeInfo.getClusterPosition()) {
-            addLocally(jobInstance, clusterNodeInfo);
-        } else {
-            clusterStateManager.fireEventExcludeSelf(new JobInstanceAddedEvent(jobInstance.getId()));
-        }
-    }
-
-    private void addLocally(JobTrigger jobTrigger, ClusterNodeInfo clusterNodeInfo) {
-        queue(clusterNodeInfo.getClusterVersion() + "/jobTrigger/" + jobTrigger.getId(), new JobRunner(jobTrigger));
-    }
-
-    private void addLocally(JobInstance jobInstance, ClusterNodeInfo clusterNodeInfo) {
-        queue(clusterNodeInfo.getClusterVersion() + "/jobInstance/" + jobInstance.getId(), new JobInstanceRunner(jobInstance));
-    }
-
-    private boolean queue(String name, AbstractRunner jobRunner) {
+    private long rescan(long earliestNewSchedule) {
         if (!closed) {
-            final long nextSchedule = jobRunner.nextSchedule();
-            jobRunner.onSchedule(nextSchedule);
-            long delayMillis = nextSchedule - System.currentTimeMillis();
-            delayMillis = delayMillis < 0 ? 0 : delayMillis;
-            if (registeredJobs.putIfAbsent(name, name) == null) {
-                actorContext.getActorManager().registerActor(name, jobRunner, delayMillis);
+            if (earliestNewSchedule == 0) {
+                // This is special. We want to recheck schedules, no matter what
+                ClusterNodeInfo clusterNodeInfo = this.clusterNodeInfo;
+                Instant nextSchedule = jobManager.getNextSchedule(clusterNodeInfo.getClusterPosition(), clusterNodeInfo.getClusterSize(), partitionKey);
+                // No new schedules available
+                if (nextSchedule == null) {
+                    resetEarliestKnownSchedule();
+                    return -1L;
+                }
+                earliestNewSchedule = nextSchedule.toEpochMilli();
+            }
+            long earliestKnownSchedule = this.earliestKnownSchedule.get();
+            if (earliestNewSchedule < earliestKnownSchedule) {
+                // There are new job instances that should be scheduled before our known earliest job instance
+
+                // We just reschedule based on the new earliest schedule if it stays that
+                if (!updateEarliestKnownSchedule(earliestKnownSchedule, earliestNewSchedule)) {
+                    // A different thread won the race and apparently has a job instance that should be scheduled earlier
+                    return -1L;
+                }
+                long delayMillis = earliestNewSchedule - System.currentTimeMillis();
+
+                delayMillis = delayMillis < 0 ? 0 : delayMillis;
+                return delayMillis;
+            }
+        }
+
+        return -1L;
+    }
+
+    private boolean updateEarliestKnownSchedule(long oldValue, long newValue) {
+        do {
+            if (earliestKnownSchedule.compareAndSet(oldValue, newValue)) {
                 return true;
             }
-        }
+
+            oldValue = earliestKnownSchedule.get();
+        } while (oldValue < newValue);
 
         return false;
+    }
+
+    private void resetEarliestKnownSchedule() {
+        long earliestKnownSchedule = this.earliestKnownSchedule.get();
+        // Only reset the value if the currently known earliest schedule is in the past
+        if (earliestKnownSchedule < System.currentTimeMillis()) {
+            updateEarliestKnownSchedule(earliestKnownSchedule, Long.MAX_VALUE);
+        }
     }
 
     @Override
@@ -167,272 +149,256 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
         actorContext.stop(timeout, unit);
     }
 
-    private abstract class AbstractRunner implements ScheduledActor {
+    private class JobInstanceRunner implements ScheduledActor {
 
-        protected final MutableScheduleContext scheduleContext = new MutableScheduleContext();
-
-        protected void onSchedule(long nextSchedule) {
-            scheduleContext.setLastScheduledExecutionTime(nextSchedule);
-        }
-
-        protected abstract long nextSchedule();
-
-    }
-
-    private class JobRunner extends AbstractRunner {
-        private final JobTrigger jobTrigger;
-        private final Schedule schedule;
-        private final JobProcessor jobProcessor;
-
-        private JobRunner(JobTrigger jobTrigger) {
-            this.jobTrigger = jobTrigger;
-            this.schedule = jobTrigger.getSchedule(jobContext);
-            if (schedule == null) {
-                throw new JobException("Invalid null schedule for job trigger: " + jobTrigger);
-            }
-            this.jobProcessor = jobContext.getJobProcessor(jobTrigger);
-        }
+        private final long maxBackOff = 10_000L; // 10 seconds by default
+        private final long baseBackOff = 1_000L; // 1 second by default
+        private final long temporaryErrorDeferSeconds = 10;
+        private final long rateLimitDeferSeconds = 10;
+        private int retryAttempt;
 
         @Override
-        protected long nextSchedule() {
-            return schedule.nextEpochSchedule(scheduleContext);
-        }
-
-        @Override
-        @SuppressWarnings({ "rawtypes" })
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public ActorRunResult work() {
+            JobManager jobManager = jobContext.getJobManager();
             TransactionSupport transactionSupport = jobContext.getTransactionSupport();
             // TODO: make configurable
             long transactionTimeout = 60_000L;
-            Instant lastExecutionTime = jobTrigger.getLastExecutionTime();
-            if (lastExecutionTime == null) {
-                lastExecutionTime = Instant.now();
-                jobTrigger.setLastExecutionTime(lastExecutionTime);
-            }
-            scheduleContext.setLastActualExecutionTime(lastExecutionTime.toEpochMilli());
-
+            long earliestKnownNotificationSchedule = JobSchedulerImpl.this.earliestKnownSchedule.get();
             ActorRunResult result = transactionSupport.transactional(jobContext, transactionTimeout, false, () -> {
-                        jobProcessor.process(jobTrigger, jobContext);
-                        jobContext.forEachJobTriggerListeners(listener -> {
-                            listener.onJobTriggerSuccess(jobTrigger, jobContext);
-                        });
-                        jobContext.getJobManager().onJobTriggerSuccess(jobTrigger, jobContext);
-
-                        scheduleContext.setLastCompletionTime(System.currentTimeMillis());
-
-                        if (jobTrigger.getJobConfiguration().isDone()) {
-                            onSuccess();
-                            return ActorRunResult.done();
-                        } else {
-                            final long nextSchedule = nextSchedule();
-                            // This is essential for limited time or fixed time schedules. When these are done, they always return a nextSchedule equal to getLastScheduledExecutionTime()
-                            if (nextSchedule == scheduleContext.getLastScheduledExecutionTime()) {
-                                // We are done with this job
-                                onSuccess();
-                                return ActorRunResult.done();
+                    ClusterNodeInfo clusterNodeInfo = JobSchedulerImpl.this.clusterNodeInfo;
+                    List<JobInstance<?>> jobInstancesToProcess = jobManager.getJobInstancesToProcess(clusterNodeInfo.getClusterPosition(), clusterNodeInfo.getClusterSize(), processCount, partitionKey);
+                    int size = jobInstancesToProcess.size();
+                    if (size == 0) {
+                        return ActorRunResult.suspend();
+                    }
+                    List<JobInstanceExecution> jobInstanceExecutions = new ArrayList<>(size);
+                    for (int i = 0; i < size; i++) {
+                        Instant now = Instant.now();
+                        JobInstance<?> jobInstance = jobInstancesToProcess.get(i);
+                        MutableJobInstanceProcessingContext jobProcessingContext = new MutableJobInstanceProcessingContext(jobContext, partitionKey, processCount);
+                        jobProcessingContext.setPartitionCount(clusterNodeInfo.getClusterSize());
+                        jobProcessingContext.setPartitionId(clusterNodeInfo.getClusterPosition());
+                        MutableScheduleContext scheduleContext = new MutableScheduleContext();
+                        boolean future = false;
+                        Instant lastExecutionTime = jobInstance.getLastExecutionTime();
+                        if (lastExecutionTime == null) {
+                            lastExecutionTime = Instant.now();
+                            jobInstance.setLastExecutionTime(lastExecutionTime);
+                        }
+                        scheduleContext.setLastScheduledExecutionTime(jobInstance.getScheduleTime().toEpochMilli());
+                        scheduleContext.setLastActualExecutionTime(lastExecutionTime.toEpochMilli());
+                        try {
+                            Instant deadline = jobInstance.getJobConfiguration().getDeadline();
+                            if (deadline != null && deadline.isBefore(Instant.now())) {
+                                jobInstance.markDeadlineReached();
                             } else {
-                                // This is a recurring job that needs rescheduling
-                                return ActorRunResult.rescheduleIn(System.currentTimeMillis() - nextSchedule);
+                                Set<? extends TimeFrame> executionTimeFrames = jobInstance.getJobConfiguration().getExecutionTimeFrames();
+                                if (TimeFrame.isContained(executionTimeFrames, now)) {
+                                    int deferCount = jobInstance.getDeferCount();
+                                    JobInstanceProcessor jobInstanceProcessor = jobContext.getJobInstanceProcessor(jobInstance);
+                                    Callable<Object> callable = () -> jobInstanceProcessor.process(jobInstance, jobProcessingContext);
+                                    Future<Object> f;
+                                    if (jobInstanceProcessor.isTransactional()) {
+                                        f = new SyncFuture(callable);
+                                    } else {
+                                        f = scheduler.submit(callable);
+                                    }
+                                    jobInstanceExecutions.add(new JobInstanceExecution(jobInstance, deferCount, scheduleContext, jobProcessingContext, f));
+                                    future = true;
+                                } else {
+                                    Instant nextSchedule = TimeFrame.getNearestTimeFrameSchedule(executionTimeFrames, now);
+                                    if (nextSchedule == Instant.MAX) {
+                                        if (LOG.isLoggable(Level.FINEST)) {
+                                            LOG.log(Level.FINEST, "Dropping job instance: " + jobInstance);
+                                        }
+                                        jobInstance.markDropped();
+                                    } else {
+                                        if (LOG.isLoggable(Level.FINEST)) {
+                                            LOG.log(Level.FINEST, "Deferring job instance to " + nextSchedule);
+                                        }
+                                        jobInstance.markDeferred(nextSchedule);
+                                    }
+                                }
+                            }
+                        } catch (Throwable t) {
+                            LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
+                            jobInstance.markFailed(t);
+                        } finally {
+                            if (!future) {
+                                jobManager.updateJobInstance(jobInstance);
                             }
                         }
-                    },
-                    t -> {
-                        LOG.log(Level.SEVERE, "An error occurred in the job processor", t);
-                        transactionSupport.transactional(jobContext, transactionTimeout, true, () -> {
-                            onError(t);
-                            return null;
-                        }, t2 -> {
-                            LOG.log(Level.SEVERE, "An error occurred in the job error handler", t2);
-                        });
                     }
+
+                    Instant rescheduleRateLimitTime = null;
+                    for (int i = 0; i < jobInstanceExecutions.size(); i++) {
+                        JobInstanceExecution execution = jobInstanceExecutions.get(i);
+                        MutableJobInstanceProcessingContext jobProcessingContext = execution.jobProcessingContext;
+                        MutableScheduleContext scheduleContext = execution.scheduleContext;
+                        JobInstance<?> jobInstance = execution.jobInstance;
+                        int deferCount = execution.deferCount;
+                        Future<Object> future = execution.future;
+                        boolean success = true;
+                        try {
+                            Object lastProcessed = future.get();
+                            jobProcessingContext.setLastProcessed(lastProcessed);
+                            // If the job instance isn't done yet, we report a chunk success
+                            if (jobInstance.getState() == JobInstanceState.NEW && jobInstance.getDeferCount() == deferCount) {
+                                jobInstance.onChunkSuccess(jobProcessingContext);
+                                jobContext.forEachJobInstanceListeners(listener -> {
+                                    listener.onJobInstanceChunkSuccess(jobInstance, jobProcessingContext);
+                                });
+                            }
+
+                            scheduleContext.setLastCompletionTime(System.currentTimeMillis());
+                            if (jobInstance.getState() == JobInstanceState.NEW) {
+                                Instant nextSchedule = jobInstance.nextSchedule(jobContext, scheduleContext);
+                                // This is essential for limited time or fixed time schedules. When these are done, they always return a nextSchedule equal to getLastScheduledExecutionTime()
+                                if (nextSchedule.toEpochMilli() != scheduleContext.getLastScheduledExecutionTime()) {
+                                    // This is a recurring job that needs rescheduling
+                                    jobInstance.setScheduleTime(nextSchedule);
+                                    continue;
+                                }
+                            }
+
+                            jobInstance.markDone(lastProcessed);
+                            jobContext.forEachJobInstanceListeners(listener -> {
+                                listener.onJobInstanceSuccess(jobInstance, jobProcessingContext);
+                            });
+                        } catch (JobRateLimitException t) {
+                            LOG.log(Level.FINEST, "Deferring job instance due to rate limit", t);
+                            if (rescheduleRateLimitTime == null) {
+                                if (t.getDeferMillis() != -1) {
+                                    rescheduleRateLimitTime = Instant.now().plus(t.getDeferMillis(), ChronoUnit.MILLIS);
+                                } else {
+                                    rescheduleRateLimitTime = Instant.now().plus(rateLimitDeferSeconds, ChronoUnit.SECONDS);
+                                }
+                            }
+                            jobInstance.setScheduleTime(rescheduleRateLimitTime);
+                        } catch (JobTemporaryException t) {
+                            LOG.log(Level.FINEST, "Deferring job instance due to temporary error", t);
+                            if (t.getDeferMillis() != -1) {
+                                jobInstance.setScheduleTime(Instant.now().plus(t.getDeferMillis(), ChronoUnit.MILLIS));
+                            } else {
+                                jobInstance.setScheduleTime(Instant.now().plus(temporaryErrorDeferSeconds, ChronoUnit.SECONDS));
+                            }
+                        } catch (Throwable t) {
+                            LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
+                            success = false;
+                            transactionSupport.transactional(jobContext, transactionTimeout, true, () -> {
+                                jobContext.forEachJobInstanceListeners(listener -> {
+                                    listener.onJobInstanceError(jobInstance, jobProcessingContext);
+                                });
+                                jobInstance.markFailed(t);
+                                jobManager.updateJobInstance(jobInstance);
+                                return null;
+                            }, t2 -> {
+                                LOG.log(Level.SEVERE, "An error occurred in the job instance error handler", t2);
+                            });
+                        } finally {
+                            if (success) {
+                                jobManager.updateJobInstance(jobInstance);
+                            }
+                        }
+                    }
+
+                    return ActorRunResult.rescheduleIn(0);
+                },
+                t -> {
+                    LOG.log(Level.SEVERE, "An error occurred in the job instance runner", t);
+                }
             );
 
-            if (result == null || closed) {
+            if (closed) {
                 return ActorRunResult.done();
+            } else if (result == null) {
+                // An error occurred like e.g. a TX timeout or a temporary DB issue. We do exponential back-off
+                return ActorRunResult.rescheduleIn(getWaitTime(maxBackOff, baseBackOff, retryAttempt++));
             }
+
+            retryAttempt = 0;
+            if (result.isSuspend()) {
+                // This will reschedule based on the next schedule
+                updateEarliestKnownSchedule(earliestKnownNotificationSchedule, Long.MAX_VALUE);
+                long delayMillis = rescan(0L);
+                if (delayMillis != -1L) {
+                    return ActorRunResult.rescheduleIn(delayMillis);
+                }
+            }
+            // NOTE: we don't need to update earliestKnownNotificationSchedule when rescheduling immediately
             return result;
-        }
-
-        private void onError(Throwable e) {
-            jobContext.forEachJobTriggerListeners(listener -> {
-                listener.onJobTriggerError(jobTrigger, jobContext);
-            });
-            jobContext.getJobManager().onJobTriggerError(jobTrigger, jobContext);
-        }
-
-        private void onSuccess() {
-            jobContext.forEachJobTriggerListeners(listener -> {
-                listener.onJobTriggerEnded(jobTrigger, jobContext);
-            });
-            jobContext.getJobManager().onJobTriggerEnded(jobTrigger, jobContext);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof JobRunner)) {
-                return false;
-            }
-
-            JobRunner jobRunner = (JobRunner) o;
-
-            return jobTrigger.equals(jobRunner.jobTrigger);
-        }
-
-        @Override
-        public int hashCode() {
-            return jobTrigger.hashCode();
         }
     }
 
-    private class JobInstanceRunner extends AbstractRunner {
-        private final MutableJobInstanceProcessingContext jobProcessingContext;
-        private final JobInstance jobInstance;
-        private final JobInstanceProcessor jobInstanceProcessor;
+    private static long getWaitTime(final long maximum, final long base, final long attempt) {
+        final long expWait = ((long) Math.pow(2, attempt)) * base;
+        return expWait <= 0 ? maximum : Math.min(maximum, expWait);
+    }
 
-        public JobInstanceRunner(JobInstance jobInstance) {
-            this.jobProcessingContext = new MutableJobInstanceProcessingContext(jobContext, processCount);
-            this.jobInstance = jobInstance;
-            if (jobInstance.getScheduleTime() == null) {
-                throw new JobException("Invalid null schedule time for job instance: " + jobInstance);
-            }
-            this.jobInstanceProcessor = jobContext.getJobInstanceProcessor(jobInstance);
+    private static class SyncFuture<T> implements Future<T> {
+
+        private final Callable<T> callable;
+        private boolean done;
+        private T result;
+        private Exception exception;
+
+        public SyncFuture(Callable<T> callable) {
+            this.callable = callable;
         }
 
         @Override
-        protected long nextSchedule() {
-            return jobInstance.getScheduleTime().toEpochMilli();
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return false;
         }
 
         @Override
-        @SuppressWarnings({ "rawtypes" })
-        public ActorRunResult work() {
-            TransactionSupport transactionSupport = jobContext.getTransactionSupport();
-            // TODO: make configurable
-            long transactionTimeout = 60_000L;
-            Instant lastExecutionTime = jobInstance.getLastExecutionTime();
-            if (lastExecutionTime == null) {
-                lastExecutionTime = Instant.now();
-                jobInstance.setLastExecutionTime(lastExecutionTime);
-            }
-            scheduleContext.setLastActualExecutionTime(lastExecutionTime.toEpochMilli());
-
-            ActorRunResult result = transactionSupport.transactional(jobContext, transactionTimeout, false, () -> {
-                        int deferCount = jobInstance.getDeferCount();
-                        Object lastProcessed = process();
-                        if (jobInstance.getState() == JobInstanceState.NEW && jobInstance.getDeferCount() == deferCount) {
-                            onChunkSuccess(lastProcessed);
-                        }
-                        scheduleContext.setLastCompletionTime(System.currentTimeMillis());
-
-                        if (jobInstance.getState() != JobInstanceState.NEW) {
-                            onSuccess();
-                            return ActorRunResult.done();
-                        } else if (lastProcessed == null) {
-                            final long nextSchedule = nextSchedule();
-                            // This is essential for limited time or fixed time schedules. When these are done, they always return a nextSchedule equal to getLastScheduledExecutionTime()
-                            if (nextSchedule == scheduleContext.getLastScheduledExecutionTime()) {
-                                // We are done with this job
-                                onSuccess();
-                                return ActorRunResult.done();
-                            } else {
-                                // This is a recurring job that needs rescheduling
-                                return ActorRunResult.rescheduleIn(System.currentTimeMillis() - nextSchedule);
-                            }
-                        } else {
-                            // Reschedule the next chunk as soon as possible
-                            return ActorRunResult.rescheduleIn(0);
-                        }
-                    },
-                    t -> {
-                        LOG.log(Level.SEVERE, "An error occurred in the job processor", t);
-                        transactionSupport.transactional(jobContext, transactionTimeout, true, () -> {
-                            onError(t);
-                            return null;
-                        }, t2 -> {
-                            LOG.log(Level.SEVERE, "An error occurred in the job error handler", t2);
-                        });
-                    }
-            );
-
-            if (result == null || closed) {
-                return ActorRunResult.done();
-            }
-            return result;
+        public boolean isCancelled() {
+            return false;
         }
 
-        private Object process() {
-            Instant deadline = jobInstance.getJobConfiguration().getDeadline();
-            if (deadline != null && deadline.isBefore(Instant.now())) {
-                jobInstance.markDeadlineReached();
-            } else {
-                Set<? extends TimeFrame> executionTimeFrames = jobInstance.getJobConfiguration().getExecutionTimeFrames();
-                Instant now = Instant.now();
-                if (TimeFrame.isContained(executionTimeFrames, now)) {
-                    ClusterNodeInfo clusterNodeInfo = JobSchedulerImpl.this.clusterNodeInfo.get();
-                    jobProcessingContext.setPartitionCount(clusterNodeInfo.getClusterSize());
-                    jobProcessingContext.setPartitionId(clusterNodeInfo.getClusterPosition());
-                    return jobInstanceProcessor.process(jobInstance, jobProcessingContext);
+        @Override
+        public boolean isDone() {
+            return done;
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            if (done) {
+                if (exception == null) {
+                    return result;
                 } else {
-                    Instant nextSchedule = TimeFrame.getNearestTimeFrameSchedule(executionTimeFrames, now);
-                    if (nextSchedule == Instant.MAX) {
-                        if (LOG.isLoggable(Level.FINEST)) {
-                            LOG.log(Level.FINEST, "Dropping job instance: " + jobInstance);
-                        }
-                        jobInstance.markDropped();
-                    } else {
-                        if (LOG.isLoggable(Level.FINEST)) {
-                            LOG.log(Level.FINEST, "Deferring job instance to " + nextSchedule);
-                        }
-                        jobInstance.markDeferred(nextSchedule);
-                    }
+                    throw new ExecutionException(exception);
                 }
             }
 
-            return null;
-        }
-
-        private void onChunkSuccess(Object lastProcessed) {
-            jobProcessingContext.setLastProcessed(lastProcessed);
-            jobContext.forEachJobInstanceListeners(listener -> {
-                listener.onJobInstanceChunkSuccess(jobInstance, jobProcessingContext);
-            });
-            jobContext.getJobManager().onJobInstanceChunkSuccess(jobInstance, jobProcessingContext);
-        }
-
-        private void onError(Throwable e) {
-            jobContext.forEachJobInstanceListeners(listener -> {
-                listener.onJobInstanceError(jobInstance, jobProcessingContext);
-            });
-            jobContext.getJobManager().onJobInstanceError(jobInstance, jobProcessingContext);
-        }
-
-        private void onSuccess() {
-            jobContext.forEachJobInstanceListeners(listener -> {
-                listener.onJobInstanceSuccess(jobInstance, jobProcessingContext);
-            });
-            jobContext.getJobManager().onJobInstanceSuccess(jobInstance, jobProcessingContext);
+            done = true;
+            try {
+                return result = callable.call();
+            } catch (Exception e) {
+                throw new ExecutionException(exception = e);
+            }
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof JobInstanceRunner)) {
-                return false;
-            }
-
-            JobInstanceRunner that = (JobInstanceRunner) o;
-
-            return jobInstance.equals(that.jobInstance);
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return get();
         }
+    }
 
-        @Override
-        public int hashCode() {
-            return jobInstance.hashCode();
+    private static class JobInstanceExecution {
+        private final JobInstance<?> jobInstance;
+        private final int deferCount;
+        private final MutableScheduleContext scheduleContext;
+        private final MutableJobInstanceProcessingContext jobProcessingContext;
+        private final Future<Object> future;
+
+        public JobInstanceExecution(JobInstance<?> jobInstance, int deferCount, MutableScheduleContext scheduleContext, MutableJobInstanceProcessingContext jobProcessingContext, Future<Object> future) {
+            this.jobInstance = jobInstance;
+            this.deferCount = deferCount;
+            this.scheduleContext = scheduleContext;
+            this.jobProcessingContext = jobProcessingContext;
+            this.future = future;
         }
     }
 
@@ -473,13 +439,15 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
     private static class MutableJobInstanceProcessingContext implements JobInstanceProcessingContext<Object> {
 
         private final JobContext jobContext;
-        private int processCount;
+        private final PartitionKey partitionKey;
+        private final int processCount;
         private int partitionId;
         private int partitionCount;
         private Object lastProcessed;
 
-        public MutableJobInstanceProcessingContext(JobContext jobContext, int processCount) {
+        public MutableJobInstanceProcessingContext(JobContext jobContext, PartitionKey partitionKey, int processCount) {
             this.jobContext = jobContext;
+            this.partitionKey = partitionKey;
             this.processCount = processCount;
         }
 
@@ -489,12 +457,13 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
         }
 
         @Override
-        public int getProcessCount() {
-            return processCount;
+        public PartitionKey getPartitionKey() {
+            return partitionKey;
         }
 
-        public void setProcessCount(int processCount) {
-            this.processCount = processCount;
+        @Override
+        public int getProcessCount() {
+            return processCount;
         }
 
         @Override

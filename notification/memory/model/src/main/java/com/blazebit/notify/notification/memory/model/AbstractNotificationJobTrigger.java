@@ -16,10 +16,34 @@
 
 package com.blazebit.notify.notification.memory.model;
 
+import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.Schedule;
 import com.blazebit.notify.job.memory.model.AbstractJobTrigger;
 import com.blazebit.notify.notification.NotificationJobTrigger;
 
 public abstract class AbstractNotificationJobTrigger<T extends AbstractNotificationJob> extends AbstractJobTrigger<T> implements NotificationJobTrigger {
 
 	private static final long serialVersionUID = 1L;
+
+	private String notificationCronExpression;
+
+	public AbstractNotificationJobTrigger() {
+	}
+
+	public AbstractNotificationJobTrigger(Long id) {
+		super(id);
+	}
+
+	@Override
+	public Schedule getNotificationSchedule(JobContext jobContext) {
+		return getNotificationCronExpression() == null ? null : jobContext.getScheduleFactory().createSchedule(getNotificationCronExpression());
+	}
+
+	public String getNotificationCronExpression() {
+		return notificationCronExpression;
+	}
+
+	public void setNotificationCronExpression(String notificationCronExpression) {
+		this.notificationCronExpression = notificationCronExpression;
+	}
 }

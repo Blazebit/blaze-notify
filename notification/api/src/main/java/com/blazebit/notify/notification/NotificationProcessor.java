@@ -15,7 +15,15 @@
  */
 package com.blazebit.notify.notification;
 
-public interface NotificationProcessor<N extends Notification<?>> {
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.JobInstanceProcessor;
+
+public interface NotificationProcessor<N extends Notification<?>> extends JobInstanceProcessor<Object, N> {
+
+    @Override
+    default Object process(N jobInstance, JobInstanceProcessingContext<Object> context) {
+        return process(jobInstance, (NotificationJobContext) context.getJobContext());
+    }
 
     Object process(N notification, NotificationJobContext context);
 }

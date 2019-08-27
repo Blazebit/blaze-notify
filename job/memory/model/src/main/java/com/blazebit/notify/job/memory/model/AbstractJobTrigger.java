@@ -17,12 +17,11 @@
 package com.blazebit.notify.job.memory.model;
 
 import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobTrigger;
 import com.blazebit.notify.job.Schedule;
 
-import java.time.Instant;
-
-public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEntity<Long> implements JobTrigger {
+public abstract class AbstractJobTrigger<T extends AbstractJob> extends AbstractJobInstance<Long> implements JobTrigger {
 
 	private static final long serialVersionUID = 1L;
 
@@ -30,9 +29,11 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 	private String name;
 	private JobConfiguration jobConfiguration = new JobConfiguration();
 
+	/**
+	 * True if overlapping executions of the job are allowed
+	 */
+	private boolean allowOverlap;
 	private String scheduleCronExpression;
-	private Instant creationTime;
-	private Instant lastExecutionTime;
 
 	public AbstractJobTrigger() {
 	}
@@ -42,8 +43,7 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 	}
 
 	@Override
-	public Long getId() {
-		return id();
+	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 
 	@Override
@@ -68,8 +68,24 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 		return jobConfiguration;
 	}
 
+	public JobConfiguration getOrCreateJobConfiguration() {
+		if (getJobConfiguration() == null) {
+			setJobConfiguration(new JobConfiguration());
+		}
+		return getJobConfiguration();
+	}
+
 	public void setJobConfiguration(JobConfiguration jobConfiguration) {
 		this.jobConfiguration = jobConfiguration;
+	}
+
+	@Override
+	public boolean isAllowOverlap() {
+		return allowOverlap;
+	}
+
+	public void setAllowOverlap(boolean allowOverlap) {
+		this.allowOverlap = allowOverlap;
 	}
 
 	public String getScheduleCronExpression() {
@@ -83,24 +99,5 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 	@Override
 	public Schedule getSchedule(JobContext jobContext) {
 		return scheduleCronExpression == null ? null : jobContext.getScheduleFactory().createSchedule(scheduleCronExpression);
-	}
-
-	@Override
-	public Instant getCreationTime() {
-		return creationTime;
-	}
-
-	public void setCreationTime(Instant creationTime) {
-		this.creationTime = creationTime;
-	}
-
-	@Override
-	public Instant getLastExecutionTime() {
-		return lastExecutionTime;
-	}
-
-	@Override
-	public void setLastExecutionTime(Instant lastExecutionTime) {
-		this.lastExecutionTime = lastExecutionTime;
 	}
 }

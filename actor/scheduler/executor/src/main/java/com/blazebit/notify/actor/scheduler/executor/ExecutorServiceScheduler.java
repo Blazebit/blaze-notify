@@ -24,8 +24,9 @@ import java.util.logging.Logger;
 
 public class ExecutorServiceScheduler implements Scheduler {
 
+    public static final String EXECUTOR_SERVICE_PROPERTY = "actor.scheduler.executor.executor_service";
+
     private static final Logger LOG = Logger.getLogger(ExecutorServiceScheduler.class.getName());
-    private static final String EXECUTOR_SERVICE_PROPERTY = "actor.scheduler.executor.executor_service";
     private static final Class<?> MANAGED_EXECUTOR_SERVICE_CLASS;
 
     static {

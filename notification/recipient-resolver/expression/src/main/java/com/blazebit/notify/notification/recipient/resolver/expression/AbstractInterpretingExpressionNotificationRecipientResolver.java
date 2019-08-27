@@ -32,7 +32,7 @@ import java.util.Map;
 public abstract class AbstractInterpretingExpressionNotificationRecipientResolver implements NotificationRecipientResolver {
 
     @Override
-    public List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
+    public List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
         ExpressionServiceFactory expressionServiceFactory = jobContext.getJobContext().getService(ExpressionServiceFactory.class);
         ExpressionInterpreter interpreter = expressionServiceFactory.createInterpreter();
         ExpressionCompiler compiler = expressionServiceFactory.createCompiler();
@@ -62,5 +62,5 @@ public abstract class AbstractInterpretingExpressionNotificationRecipientResolve
 
     protected abstract Map<String, Object> getRootDomainObjects(JobInstanceProcessingContext jobContext);
 
-    protected abstract String getRecipientPredicateExpression(NotificationJobInstance<?> jobInstance, JobInstanceProcessingContext jobContext);
+    protected abstract String getRecipientPredicateExpression(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext jobContext);
 }

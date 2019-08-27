@@ -17,10 +17,7 @@ package com.blazebit.notify.notification;
 
 import com.blazebit.notify.job.JobInstance;
 
-public interface NotificationJobInstance<R> extends JobInstance {
-
-    @Override
-    NotificationJobTrigger getTrigger();
+public interface NotificationJobInstance<ID, R> extends JobInstance<ID> {
 
     R getRecipientCursor();
 

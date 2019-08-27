@@ -20,26 +20,27 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @MappedSuperclass
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity<ID> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private Long id;
+	private ID id;
 	private Long version;
 
 	public BaseEntity() {
 	}
 
-	public BaseEntity(Long id) {
+	public BaseEntity(ID id) {
 		this.id = id;
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-	public Long getId() {
+	public ID id() {
 		return id;
 	}
-	
-	public void setId(Long id){
+
+	@Transient
+	public abstract ID getId();
+
+	public void setId(ID id){
 		this.id = id;
 	}
 
@@ -69,7 +70,7 @@ public abstract class BaseEntity implements Serializable {
 			return false;
 		if (getNoProxyClass(getClass()) != getNoProxyClass(obj.getClass()))
 			return false;
-		BaseEntity other = (BaseEntity) obj;
+		BaseEntity<Long> other = (BaseEntity<Long>) obj;
 		// null does not equal null in case of ids!
 		if (id == null || other.id == null) {
 			return false;

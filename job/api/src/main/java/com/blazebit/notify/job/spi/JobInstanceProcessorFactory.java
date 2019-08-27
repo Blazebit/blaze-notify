@@ -21,5 +21,5 @@ import com.blazebit.notify.job.JobInstanceProcessor;
 
 public interface JobInstanceProcessorFactory {
 
-    <T extends JobInstance> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance);
+    <T extends JobInstance<?>> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance);
 }

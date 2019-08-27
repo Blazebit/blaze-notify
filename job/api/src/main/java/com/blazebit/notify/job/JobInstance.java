@@ -18,15 +18,11 @@ package com.blazebit.notify.job;
 
 import java.time.Instant;
 
-public interface JobInstance {
+public interface JobInstance<ID> {
 
-    Long getId();
+    ID getId();
 
-    default JobConfiguration getJobConfiguration() {
-        return getTrigger().getJobConfiguration();
-    }
-
-    JobTrigger getTrigger();
+    Long getPartitionKey();
 
     JobInstanceState getState();
 
@@ -38,6 +34,10 @@ public interface JobInstance {
 
     void setScheduleTime(Instant scheduleTime);
 
+    default Instant nextSchedule(JobContext jobContext, ScheduleContext scheduleContext) {
+        return getScheduleTime();
+    }
+
     Instant getCreationTime();
 
     Instant getLastExecutionTime();
@@ -46,13 +46,21 @@ public interface JobInstance {
 
     void onChunkSuccess(JobInstanceProcessingContext<?> processingContext);
 
+    JobConfiguration getJobConfiguration();
+
+    void markDone(Object result);
+
+    void markFailed(Throwable t);
+
     default void markDeferred(Instant newScheduleTime) {
         incrementDeferCount();
+        if (getDeferCount() >= getJobConfiguration().getMaximumDeferCount()) {
+            markDropped();
+        }
         setScheduleTime(newScheduleTime);
     }
 
     void markDeadlineReached();
 
     void markDropped();
-
 }

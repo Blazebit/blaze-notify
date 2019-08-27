@@ -16,6 +16,7 @@
     <modules>
         <module>memory</module>
         <module>smtp</module>
+        <module>ses</module>
     </modules>
 
 </project>

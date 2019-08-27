@@ -15,7 +15,13 @@
  */
 package com.blazebit.notify.job;
 
-public interface JobProcessor<T extends JobTrigger> {
+public interface JobProcessor<T extends JobTrigger> extends JobInstanceProcessor<Object, T> {
+
+    @Override
+    default Object process(T jobInstance, JobInstanceProcessingContext<Object> context) {
+        process(jobInstance, context.getJobContext());
+        return null;
+    }
 
     /**
      * Processes the job trigger with the given job context.

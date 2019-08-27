@@ -21,7 +21,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collections;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class NotificationJobProcessorTest extends AbstractConfigurationTest<SimpleNotificationRecipient, SimpleNotificationMessage> {
 
-    public NotificationJobProcessorTest(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, SimpleNotificationMessage defaultMessage, Queue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
+    public NotificationJobProcessorTest(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, SimpleNotificationMessage defaultMessage, BlockingQueue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
         super(channel, defaultMessage, sink, jobProcessorFactory, jobInstanceProcessorFactory);
     }
 
@@ -42,7 +42,8 @@ public class NotificationJobProcessorTest extends AbstractConfigurationTest<Simp
                     @Override
                     public void process(T jobTrigger, NotificationJobContext context) {
                         SimpleNotification notification = new SimpleNotification((SimpleNotificationJobTrigger) jobTrigger);
-                        Channel channel = jobContext.getChannel(jobContext.resolveChannelKey(notification));
+                        notification.setChannelType(channelKey.getChannelType());
+                        Channel channel = jobContext.getChannel(notification.getChannelType());
                         channel.sendNotificationMessage(null, new SimpleNotificationMessage());
                         channel.sendNotificationMessage(null, new SimpleNotificationMessage());
                     }
@@ -52,8 +53,10 @@ public class NotificationJobProcessorTest extends AbstractConfigurationTest<Simp
     }
 
     @Test
-    public void simpleTest() throws InterruptedException {
-        jobContext.getJobManager().addJobTrigger(new SimpleNotificationJobTrigger(channel, null, null/* TODO recipientResolver */, new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
+    public void simpleTest() throws Exception {
+        jobContext.getJobManager().addJobInstance(new SimpleNotificationJobTrigger(channel, null, null/* TODO recipientResolver */, new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
+        // Wait for notifications to be produced
+        sink.add(sink.poll(10, TimeUnit.SECONDS));
         jobContext.stop(1, TimeUnit.MINUTES);
         assertEquals(2, sink.size());
     }

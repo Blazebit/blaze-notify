@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J extends NotificationJobInstance<?>, R extends NotificationRecipient<?>> extends AbstractMemoryJobInstanceProcessor<T, I, J> implements NotificationJobInstanceProcessor<T, J> {
+public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J extends NotificationJobInstance<Long, ?>, R extends NotificationRecipient<?>> extends AbstractMemoryJobInstanceProcessor<T, I, J> implements NotificationJobInstanceProcessor<T, J> {
 
     private static final Logger LOG = Logger.getLogger(AbstractMemoryNotificationJobInstanceProcessor.class.getName());
 

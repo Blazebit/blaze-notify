@@ -16,17 +16,14 @@
 
 package com.blazebit.notify.job.jpa.model;
 
-import com.blazebit.notify.job.JobContext;
-import com.blazebit.notify.job.JobTrigger;
-import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.Instant;
 
 @MappedSuperclass
 @Table(name = "job_trigger")
-public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEntity implements JobTrigger {
+public abstract class AbstractJobTrigger<T extends AbstractJob> extends AbstractJobInstance<Long> implements JpaJobTrigger {
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,15 +31,27 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 	private String name;
 	private JobConfiguration jobConfiguration = new JobConfiguration();
 
+	/**
+	 * True if overlapping executions of the job are allowed
+	 */
+	private boolean allowOverlap;
 	private String scheduleCronExpression;
-	private Instant creationTime;
-	private Instant lastExecutionTime;
 
 	public AbstractJobTrigger() {
 	}
 
 	public AbstractJobTrigger(Long id) {
 		super(id);
+	}
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+	public Long getId() {
+		return id();
+	}
+
+	@Override
+	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 
 	@NotNull
@@ -67,6 +76,11 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 	}
 
 	@Override
+	public void setJob(Job job) {
+		setJob((T) job);
+	}
+
+	@Override
 	@Embedded
 	@AssociationOverrides({
 			@AssociationOverride(name = "executionTimeFrames", joinTable = @JoinTable(name = "job_trigger_execution_time_frames", foreignKey = @ForeignKey(name = "job_trigger_execution_time_frames_fk_job_trigger"))),
@@ -76,8 +90,27 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 		return jobConfiguration;
 	}
 
+	@Transient
+	@Override
+	public JobConfiguration getOrCreateJobConfiguration() {
+		if (getJobConfiguration() == null) {
+			setJobConfiguration(new JobConfiguration());
+		}
+		return getJobConfiguration();
+	}
+
 	public void setJobConfiguration(JobConfiguration jobConfiguration) {
 		this.jobConfiguration = jobConfiguration;
+	}
+
+	@Override
+	@Column(nullable = false)
+	public boolean isAllowOverlap() {
+		return allowOverlap;
+	}
+
+	public void setAllowOverlap(boolean allowOverlap) {
+		this.allowOverlap = allowOverlap;
 	}
 
 	@Column(nullable = false)
@@ -94,30 +127,4 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends BaseEnti
 		return scheduleCronExpression == null ? null : jobContext.getScheduleFactory().createSchedule(scheduleCronExpression);
 	}
 
-	@Override
-	@Column(nullable = false)
-	public Instant getCreationTime() {
-		return creationTime;
-	}
-
-	public void setCreationTime(Instant creationTime) {
-		this.creationTime = creationTime;
-	}
-
-	@Override
-	public Instant getLastExecutionTime() {
-		return lastExecutionTime;
-	}
-
-	@Override
-	public void setLastExecutionTime(Instant lastExecutionTime) {
-		this.lastExecutionTime = lastExecutionTime;
-	}
-
-	@PrePersist
-	protected void onPersist() {
-		if (this.creationTime == null) {
-			this.creationTime = Instant.now();
-		}
-	}
 }

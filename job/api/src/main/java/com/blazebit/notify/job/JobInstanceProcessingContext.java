@@ -26,4 +26,6 @@ public interface JobInstanceProcessingContext<T> {
     int getPartitionId();
 
     int getPartitionCount();
+
+    PartitionKey getPartitionKey();
 }

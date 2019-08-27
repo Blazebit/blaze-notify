@@ -20,7 +20,7 @@ import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.memory.model.AbstractJobInstance;
 import com.blazebit.notify.notification.NotificationJobInstance;
 
-public abstract class AbstractNotificationJobInstance<R, J extends AbstractNotificationJob, T extends AbstractNotificationJobTrigger<J>> extends AbstractJobInstance<T> implements NotificationJobInstance<R> {
+public abstract class AbstractNotificationJobInstance<R> extends AbstractJobInstance<Long> implements NotificationJobInstance<Long, R> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -35,7 +35,7 @@ public abstract class AbstractNotificationJobInstance<R, J extends AbstractNotif
 
 	@Override
 	public void onChunkSuccess(JobInstanceProcessingContext<?> context) {
-		this.recipientCursor = (R) context.getLastProcessed();
+		setRecipientCursor((R) context.getLastProcessed());
 	}
 
 	@Override

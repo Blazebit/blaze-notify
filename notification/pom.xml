@@ -21,6 +21,8 @@
         <module>processor</module>
         <module>testsuite</module>
         <module>recipient-resolver</module>
+
+        <module>email</module>
     </modules>
 
 </project>
