@@ -26,4 +26,16 @@ public interface NotificationJobProcessorFactory extends JobProcessorFactory {
     }
 
     <T extends NotificationJobTrigger> NotificationJobProcessor<T> createJobProcessor(NotificationJobContext jobContext, T jobTrigger);
+
+    static NotificationJobProcessorFactory of(NotificationJobProcessor<?> jobProcessor) {
+        return new NotificationJobProcessorFactory() {
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public <T extends NotificationJobTrigger> NotificationJobProcessor<T> createJobProcessor(NotificationJobContext jobContext, T jobTrigger) {
+                return (NotificationJobProcessor<T>) jobProcessor;
+            }
+
+        };
+    }
 }

@@ -28,4 +28,16 @@ public interface NotificationJobInstanceProcessorFactory extends JobInstanceProc
     }
 
     <T extends NotificationJobInstance<?, ?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance);
+
+    static NotificationJobInstanceProcessorFactory of(NotificationJobInstanceProcessor<?, ?> jobInstanceProcessor) {
+        return new NotificationJobInstanceProcessorFactory() {
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public <T extends NotificationJobInstance<?, ?>> NotificationJobInstanceProcessor<?, T> createJobInstanceProcessor(NotificationJobContext jobContext, T jobInstance) {
+                return (NotificationJobInstanceProcessor<?, T>) jobInstanceProcessor;
+            }
+
+        };
+    }
 }

@@ -19,6 +19,7 @@ package com.blazebit.notify.job.memory.storage;
 import com.blazebit.notify.job.*;
 import com.blazebit.notify.job.memory.model.AbstractJobInstance;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -33,11 +34,13 @@ public class MemoryJobManager implements JobManager {
     private static final String JOB_INSTANCES_PROPERTY = "job.memory.storage.jobInstances";
 
     private final JobContext jobContext;
+    private final Clock clock;
     private final AtomicLong jobInstanceCounter = new AtomicLong();
     private final Set<JobInstance<?>> jobInstances;
 
     public MemoryJobManager(JobContext jobContext) {
         this.jobContext = jobContext;
+        this.clock = jobContext.getService(Clock.class) == null ? Clock.systemUTC() : jobContext.getService(Clock.class);
         Object jobInstancesProperty = jobContext.getProperty(JOB_INSTANCES_PROPERTY);
         if (jobInstancesProperty == null) {
             this.jobInstances = new HashSet<>();
@@ -50,14 +53,19 @@ public class MemoryJobManager implements JobManager {
 
     public MemoryJobManager(JobContext jobContext, Set<JobInstance<?>> jobInstances) {
         this.jobContext = jobContext;
+        this.clock = jobContext.getService(Clock.class) == null ? Clock.systemUTC() : jobContext.getService(Clock.class);
         this.jobInstances = jobInstances;
     }
 
     @Override
     public void addJobInstance(JobInstance<?> jobInstance) {
         ((AbstractJobInstance<Long>) jobInstance).setId(jobInstanceCounter.incrementAndGet());
-        if (jobInstance.getScheduleTime() == null && jobInstance instanceof JobTrigger) {
-            jobInstance.setScheduleTime(((JobTrigger) jobInstance).getSchedule(jobContext).nextSchedule());
+        if (jobInstance.getScheduleTime() == null) {
+            if (jobInstance instanceof JobTrigger) {
+                jobInstance.setScheduleTime(((JobTrigger) jobInstance).getSchedule(jobContext).nextSchedule(Schedule.scheduleContext(clock.millis())));
+            } else {
+                throw new JobException("Invalid null schedule time for job instance: " + jobInstance);
+            }
         }
         jobInstances.add(jobInstance);
         if (jobInstance.getState() == JobInstanceState.NEW) {
@@ -68,15 +76,16 @@ public class MemoryJobManager implements JobManager {
     @Override
     public List<JobInstance<?>> getJobInstancesToProcess(int partition, int partitionCount, int limit, PartitionKey partitionKey) {
         return jobInstances.stream()
-                .filter(jobInstancePredicate(partition, partitionCount, partitionKey))
+                .filter(jobInstancePredicate(partition, partitionCount, partitionKey, clock.instant()))
                 .sorted(Comparator.comparing(JobInstance::getScheduleTime))
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    private static Predicate<JobInstance<?>> jobInstancePredicate(int partition, int partitionCount, PartitionKey partitionKey) {
+    private static Predicate<JobInstance<?>> jobInstancePredicate(int partition, int partitionCount, PartitionKey partitionKey, Instant now) {
         return i -> {
             return i.getState() == JobInstanceState.NEW
+                    && i.getScheduleTime().compareTo(now) <= 0
                     && (partitionCount == 1 || (i.getPartitionKey() & partitionCount) == partition)
                     && partitionKey.matches(i);
         };
@@ -85,7 +94,7 @@ public class MemoryJobManager implements JobManager {
     @Override
     public Instant getNextSchedule(int partition, int partitionCount, PartitionKey partitionKey) {
         return jobInstances.stream()
-                .filter(jobInstancePredicate(partition, partitionCount, partitionKey))
+                .filter(jobInstancePredicate(partition, partitionCount, partitionKey, clock.instant()))
                 .sorted(Comparator.comparing(JobInstance::getScheduleTime))
                 .map(JobInstance::getScheduleTime)
                 .findFirst()

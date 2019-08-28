@@ -54,7 +54,7 @@ public interface JobInstance<ID> {
 
     default void markDeferred(Instant newScheduleTime) {
         incrementDeferCount();
-        if (getDeferCount() >= getJobConfiguration().getMaximumDeferCount()) {
+        if (getDeferCount() > getJobConfiguration().getMaximumDeferCount()) {
             markDropped();
         }
         setScheduleTime(newScheduleTime);

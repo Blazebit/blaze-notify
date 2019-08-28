@@ -20,14 +20,17 @@ import com.blazebit.notify.actor.ActorRunResult;
 import com.blazebit.notify.actor.ScheduledActor;
 import com.blazebit.notify.actor.spi.*;
 import com.blazebit.notify.job.*;
+import com.blazebit.notify.job.event.JobInstanceListener;
 import com.blazebit.notify.job.spi.JobScheduler;
 import com.blazebit.notify.job.spi.TransactionSupport;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +40,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
 
     private final JobContext jobContext;
     private final ActorContext actorContext;
+    private final Clock clock;
     private final Scheduler scheduler;
     private final JobManager jobManager;
     private final JobInstanceRunner runner;
@@ -50,6 +54,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
     public JobSchedulerImpl(JobContext jobContext, ActorContext actorContext, SchedulerFactory schedulerFactory, String actorName, int processCount, PartitionKey partitionKey) {
         this.jobContext = jobContext;
         this.actorContext = actorContext;
+        this.clock = jobContext.getService(Clock.class) == null ? Clock.systemUTC() : jobContext.getService(Clock.class);
         this.scheduler = schedulerFactory.createScheduler(actorContext, actorName + "/processor");
         this.jobManager = jobContext.getJobManager();
         this.runner = new JobInstanceRunner();
@@ -174,7 +179,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                     }
                     List<JobInstanceExecution> jobInstanceExecutions = new ArrayList<>(size);
                     for (int i = 0; i < size; i++) {
-                        Instant now = Instant.now();
+                        Instant now = clock.instant();
                         JobInstance<?> jobInstance = jobInstancesToProcess.get(i);
                         MutableJobInstanceProcessingContext jobProcessingContext = new MutableJobInstanceProcessingContext(jobContext, partitionKey, processCount);
                         jobProcessingContext.setPartitionCount(clusterNodeInfo.getClusterSize());
@@ -183,26 +188,27 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                         boolean future = false;
                         Instant lastExecutionTime = jobInstance.getLastExecutionTime();
                         if (lastExecutionTime == null) {
-                            lastExecutionTime = Instant.now();
+                            lastExecutionTime = now;
                             jobInstance.setLastExecutionTime(lastExecutionTime);
                         }
                         scheduleContext.setLastScheduledExecutionTime(jobInstance.getScheduleTime().toEpochMilli());
                         scheduleContext.setLastActualExecutionTime(lastExecutionTime.toEpochMilli());
                         try {
                             Instant deadline = jobInstance.getJobConfiguration().getDeadline();
-                            if (deadline != null && deadline.isBefore(Instant.now())) {
+                            if (deadline != null && deadline.compareTo(now) <= 0) {
                                 jobInstance.markDeadlineReached();
+                                jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
                             } else {
                                 Set<? extends TimeFrame> executionTimeFrames = jobInstance.getJobConfiguration().getExecutionTimeFrames();
                                 if (TimeFrame.isContained(executionTimeFrames, now)) {
                                     int deferCount = jobInstance.getDeferCount();
                                     JobInstanceProcessor jobInstanceProcessor = jobContext.getJobInstanceProcessor(jobInstance);
-                                    Callable<Object> callable = () -> jobInstanceProcessor.process(jobInstance, jobProcessingContext);
                                     Future<Object> f;
+                                    // By default we execute transactional job instance processors synchronously within our transaction
                                     if (jobInstanceProcessor.isTransactional()) {
-                                        f = new SyncFuture(callable);
+                                        f = new SyncJobInstanceProcessorFuture(jobInstanceProcessor, jobInstance, jobProcessingContext);
                                     } else {
-                                        f = scheduler.submit(callable);
+                                        f = scheduler.submit(() -> jobInstanceProcessor.process(jobInstance, jobProcessingContext));
                                     }
                                     jobInstanceExecutions.add(new JobInstanceExecution(jobInstance, deferCount, scheduleContext, jobProcessingContext, f));
                                     future = true;
@@ -213,17 +219,22 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                                             LOG.log(Level.FINEST, "Dropping job instance: " + jobInstance);
                                         }
                                         jobInstance.markDropped();
+                                        jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
                                     } else {
                                         if (LOG.isLoggable(Level.FINEST)) {
                                             LOG.log(Level.FINEST, "Deferring job instance to " + nextSchedule);
                                         }
                                         jobInstance.markDeferred(nextSchedule);
+                                        if (jobInstance.getState() == JobInstanceState.DROPPED) {
+                                            jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
+                                        }
                                     }
                                 }
                             }
                         } catch (Throwable t) {
-                            LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
+                            LOG.log(Level.SEVERE, "An error occurred in the job scheduler", t);
                             jobInstance.markFailed(t);
+                            jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
                         } finally {
                             if (!future) {
                                 jobManager.updateJobInstance(jobInstance);
@@ -244,11 +255,9 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                             Object lastProcessed = future.get();
                             jobProcessingContext.setLastProcessed(lastProcessed);
                             // If the job instance isn't done yet, we report a chunk success
-                            if (jobInstance.getState() == JobInstanceState.NEW && jobInstance.getDeferCount() == deferCount) {
+                            if (lastProcessed != null && jobInstance.getState() == JobInstanceState.NEW && jobInstance.getDeferCount() == deferCount) {
                                 jobInstance.onChunkSuccess(jobProcessingContext);
-                                jobContext.forEachJobInstanceListeners(listener -> {
-                                    listener.onJobInstanceChunkSuccess(jobInstance, jobProcessingContext);
-                                });
+                                jobContext.forEachJobInstanceListeners(new JobInstanceChunkSuccessListenerConsumer(jobInstance, jobProcessingContext));
                             }
 
                             scheduleContext.setLastCompletionTime(System.currentTimeMillis());
@@ -263,39 +272,40 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                             }
 
                             jobInstance.markDone(lastProcessed);
-                            jobContext.forEachJobInstanceListeners(listener -> {
-                                listener.onJobInstanceSuccess(jobInstance, jobProcessingContext);
-                            });
-                        } catch (JobRateLimitException t) {
-                            LOG.log(Level.FINEST, "Deferring job instance due to rate limit", t);
-                            if (rescheduleRateLimitTime == null) {
-                                if (t.getDeferMillis() != -1) {
-                                    rescheduleRateLimitTime = Instant.now().plus(t.getDeferMillis(), ChronoUnit.MILLIS);
-                                } else {
-                                    rescheduleRateLimitTime = Instant.now().plus(rateLimitDeferSeconds, ChronoUnit.SECONDS);
+                            jobContext.forEachJobInstanceListeners(new JobInstanceSuccessListenerConsumer(jobInstance, jobProcessingContext));
+                        } catch (ExecutionException ex) {
+                            Throwable t = ex.getCause();
+                            if (t instanceof JobRateLimitException) {
+                                JobRateLimitException e = (JobRateLimitException) t;
+                                LOG.log(Level.FINEST, "Deferring job instance due to rate limit", e);
+                                if (rescheduleRateLimitTime == null) {
+                                    if (e.getDeferMillis() != -1) {
+                                        rescheduleRateLimitTime = clock.instant().plus(e.getDeferMillis(), ChronoUnit.MILLIS);
+                                    } else {
+                                        rescheduleRateLimitTime = clock.instant().plus(rateLimitDeferSeconds, ChronoUnit.SECONDS);
+                                    }
                                 }
-                            }
-                            jobInstance.setScheduleTime(rescheduleRateLimitTime);
-                        } catch (JobTemporaryException t) {
-                            LOG.log(Level.FINEST, "Deferring job instance due to temporary error", t);
-                            if (t.getDeferMillis() != -1) {
-                                jobInstance.setScheduleTime(Instant.now().plus(t.getDeferMillis(), ChronoUnit.MILLIS));
+                                jobInstance.setScheduleTime(rescheduleRateLimitTime);
+                            } else if (t instanceof JobTemporaryException) {
+                                JobTemporaryException e = (JobTemporaryException) t;
+                                LOG.log(Level.FINEST, "Deferring job instance due to temporary error", e);
+                                if (e.getDeferMillis() != -1) {
+                                    jobInstance.setScheduleTime(clock.instant().plus(e.getDeferMillis(), ChronoUnit.MILLIS));
+                                } else {
+                                    jobInstance.setScheduleTime(clock.instant().plus(temporaryErrorDeferSeconds, ChronoUnit.SECONDS));
+                                }
                             } else {
-                                jobInstance.setScheduleTime(Instant.now().plus(temporaryErrorDeferSeconds, ChronoUnit.SECONDS));
-                            }
-                        } catch (Throwable t) {
-                            LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
-                            success = false;
-                            transactionSupport.transactional(jobContext, transactionTimeout, true, () -> {
-                                jobContext.forEachJobInstanceListeners(listener -> {
-                                    listener.onJobInstanceError(jobInstance, jobProcessingContext);
+                                LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
+                                success = false;
+                                transactionSupport.transactional(jobContext, transactionTimeout, true, () -> {
+                                    jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
+                                    jobInstance.markFailed(t);
+                                    jobManager.updateJobInstance(jobInstance);
+                                    return null;
+                                }, t2 -> {
+                                    LOG.log(Level.SEVERE, "An error occurred in the job instance error handler", t2);
                                 });
-                                jobInstance.markFailed(t);
-                                jobManager.updateJobInstance(jobInstance);
-                                return null;
-                            }, t2 -> {
-                                LOG.log(Level.SEVERE, "An error occurred in the job instance error handler", t2);
-                            });
+                            }
                         } finally {
                             if (success) {
                                 jobManager.updateJobInstance(jobInstance);
@@ -336,15 +346,64 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
         return expWait <= 0 ? maximum : Math.min(maximum, expWait);
     }
 
-    private static class SyncFuture<T> implements Future<T> {
+    private static class JobInstanceChunkSuccessListenerConsumer implements Consumer<JobInstanceListener> {
+        private final JobInstance<?> jobInstance;
+        private final MutableJobInstanceProcessingContext jobProcessingContext;
 
-        private final Callable<T> callable;
+        public JobInstanceChunkSuccessListenerConsumer(JobInstance<?> jobInstance, MutableJobInstanceProcessingContext jobProcessingContext) {
+            this.jobInstance = jobInstance;
+            this.jobProcessingContext = jobProcessingContext;
+        }
+
+        @Override
+        public void accept(JobInstanceListener listener) {
+            listener.onJobInstanceChunkSuccess(jobInstance, jobProcessingContext);
+        }
+    }
+
+    private static class JobInstanceSuccessListenerConsumer implements Consumer<JobInstanceListener> {
+        private final JobInstance<?> jobInstance;
+        private final MutableJobInstanceProcessingContext jobProcessingContext;
+
+        public JobInstanceSuccessListenerConsumer(JobInstance<?> jobInstance, MutableJobInstanceProcessingContext jobProcessingContext) {
+            this.jobInstance = jobInstance;
+            this.jobProcessingContext = jobProcessingContext;
+        }
+
+        @Override
+        public void accept(JobInstanceListener listener) {
+            listener.onJobInstanceSuccess(jobInstance, jobProcessingContext);
+        }
+    }
+
+    private static class JobInstanceErrorListenerConsumer implements Consumer<JobInstanceListener> {
+        private final JobInstance<?> jobInstance;
+        private final MutableJobInstanceProcessingContext jobProcessingContext;
+
+        public JobInstanceErrorListenerConsumer(JobInstance<?> jobInstance, MutableJobInstanceProcessingContext jobProcessingContext) {
+            this.jobInstance = jobInstance;
+            this.jobProcessingContext = jobProcessingContext;
+        }
+
+        @Override
+        public void accept(JobInstanceListener listener) {
+            listener.onJobInstanceError(jobInstance, jobProcessingContext);
+        }
+    }
+
+    private static class SyncJobInstanceProcessorFuture implements Future<Object> {
+
+        private final JobInstanceProcessor jobInstanceProcessor;
+        private final JobInstance<?> jobInstance;
+        private final JobInstanceProcessingContext<?> processingContext;
         private boolean done;
-        private T result;
+        private Object result;
         private Exception exception;
 
-        public SyncFuture(Callable<T> callable) {
-            this.callable = callable;
+        public SyncJobInstanceProcessorFuture(JobInstanceProcessor jobInstanceProcessor, JobInstance<?> jobInstance, JobInstanceProcessingContext<?> processingContext) {
+            this.jobInstanceProcessor = jobInstanceProcessor;
+            this.jobInstance = jobInstance;
+            this.processingContext = processingContext;
         }
 
         @Override
@@ -363,7 +422,8 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
         }
 
         @Override
-        public T get() throws InterruptedException, ExecutionException {
+        @SuppressWarnings("unchecked")
+        public Object get() throws InterruptedException, ExecutionException {
             if (done) {
                 if (exception == null) {
                     return result;
@@ -374,14 +434,14 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
 
             done = true;
             try {
-                return result = callable.call();
+                return result = jobInstanceProcessor.process(jobInstance, processingContext);
             } catch (Exception e) {
                 throw new ExecutionException(exception = e);
             }
         }
 
         @Override
-        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             return get();
         }
     }

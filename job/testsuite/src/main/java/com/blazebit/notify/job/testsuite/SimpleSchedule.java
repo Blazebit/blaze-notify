@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.job.spi;
 
-import com.blazebit.notify.job.*;
+package com.blazebit.notify.job.testsuite;
 
-public interface JobProcessorFactory {
+import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.ScheduleContext;
 
-    <T extends JobTrigger> JobProcessor<T> createJobProcessor(JobContext jobContext, T jobTrigger);
+public class SimpleSchedule implements Schedule {
 
-    static JobProcessorFactory of(JobProcessor<?> jobProcessor) {
-        return new JobProcessorFactory() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public <T extends JobTrigger> JobProcessor<T> createJobProcessor(JobContext jobContext, T jobTrigger) {
-                return (JobProcessor<T>) jobProcessor;
-            }
-        };
+    @Override
+    public long nextEpochSchedule(ScheduleContext ctx) {
+        return 0;
     }
 }

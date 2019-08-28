@@ -15,39 +15,44 @@
  */
 package com.blazebit.notify.job.processor.memory;
 
-import com.blazebit.notify.job.JobInstance;
-import com.blazebit.notify.job.JobInstanceProcessingContext;
-import com.blazebit.notify.job.JobInstanceProcessor;
+import com.blazebit.notify.job.*;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
 public abstract class AbstractMemoryJobInstanceProcessor<T, I, J extends JobInstance<?>> implements JobInstanceProcessor<T, J> {
 
-    private static final Logger LOG = Logger.getLogger(AbstractMemoryJobInstanceProcessor.class.getName());
-
-    protected final BlockingQueue<I> sink;
+    protected final BiConsumer<JobContext, I> sink;
 
     public AbstractMemoryJobInstanceProcessor(BlockingQueue<I> sink) {
+        this(new BiConsumer<JobContext, I>() {
+            @Override
+            public void accept(JobContext context, I object) {
+                try {
+                    sink.put(object);
+                } catch (InterruptedException e) {
+                    throw new JobException(e);
+                }
+            }
+        });
+    }
+
+    public AbstractMemoryJobInstanceProcessor(BiConsumer<JobContext, I> sink) {
         this.sink = sink;
     }
 
     @Override
     public T process(J jobInstance, JobInstanceProcessingContext<T> context) {
+        JobContext jobContext = context.getJobContext();
         T lastJobResultProcessed = context.getLastProcessed();
         for (int i = 0; i < context.getProcessCount(); i++) {
             I processingResult = processSingle(jobInstance, context, lastJobResultProcessed);
             if (processingResult == null) {
                 break;
             }
-            try {
-                sink.put(processingResult);
-                lastJobResultProcessed = getProcessingResultId(processingResult);
-            } catch (InterruptedException e) {
-                LOG.warning("Thread was interrupted while adding job result " + processingResult + " to sink");
-                Thread.currentThread().interrupt();
-                break;
-            }
+            sink.accept(jobContext, processingResult);
+            lastJobResultProcessed = getProcessingResultId(processingResult);
         }
 
         if (lastJobResultProcessed == context.getLastProcessed()) {

@@ -26,6 +26,8 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.WhereBuilder;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,7 +61,12 @@ public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T
                     serializer.serializeTo(serializerContext, predicate, insertCriteriaBuilder);
                 }
             } else {
-                throw new IllegalArgumentException("Expected recipient resolver of type " + AbstractPredicatingExpressionNotificationRecipientResolver.class.getName() + " but got " + recipientResolver.getClass().getName());
+                List<? extends NotificationRecipient<?>> notificationRecipients = recipientResolver.resolveNotificationRecipients(jobInstance, context);
+                List<Object> ids = new ArrayList<>(notificationRecipients.size());
+                for (int i = 0; i < notificationRecipients.size(); i++) {
+                    ids.add(notificationRecipients.get(i).getId());
+                }
+                insertCriteriaBuilder.where(recipientIdPath).in(ids);
             }
         }
 

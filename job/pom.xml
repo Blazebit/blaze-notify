@@ -21,6 +21,7 @@
         <module>processor</module>
         <module>schedule</module>
         <module>transaction</module>
+        <module>testsuite</module>
     </modules>
 
 </project>

@@ -25,7 +25,6 @@ import org.wildfly.clustering.dispatcher.CommandResponse;
 import org.wildfly.clustering.group.Group;
 import org.wildfly.clustering.group.Node;
 
-import javax.annotation.PreDestroy;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,8 +83,7 @@ public class WildflyClusterStateManager implements ClusterStateManager {
         });
     }
 
-    @PreDestroy
-    public void destroy() {
+    public void close() {
         fireEventDispatcher.close();
     }
 

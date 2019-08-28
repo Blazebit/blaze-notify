@@ -28,13 +28,11 @@ import java.util.Map;
 
 public class SimpleNotificationJobTrigger extends AbstractNotificationJobTrigger<SimpleNotificationJob> {
 
-    private final NotificationMessageResolver<SimpleNotificationMessage> messageResolver;
     private final Schedule schedule;
     private final Schedule notificationSchedule;
 
-    public SimpleNotificationJobTrigger(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, NotificationMessageResolver<SimpleNotificationMessage> messageResolver, NotificationRecipientResolver recipientResolver, Schedule schedule, Schedule notificationSchedule, Map<String, Serializable> jobParameters) {
+    public SimpleNotificationJobTrigger(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, NotificationRecipientResolver recipientResolver, Schedule schedule, Schedule notificationSchedule, Map<String, Serializable> jobParameters) {
         setJob(new SimpleNotificationJob(channel, recipientResolver));
-        this.messageResolver = messageResolver;
         this.schedule = schedule;
         this.notificationSchedule = notificationSchedule;
         getJobConfiguration().setParameters(jobParameters);
@@ -48,10 +46,6 @@ public class SimpleNotificationJobTrigger extends AbstractNotificationJobTrigger
     @Override
     public Schedule getNotificationSchedule(JobContext jobContext) {
         return notificationSchedule;
-    }
-
-    public NotificationMessageResolver<SimpleNotificationMessage> getMessageResolver() {
-        return messageResolver;
     }
 
 }

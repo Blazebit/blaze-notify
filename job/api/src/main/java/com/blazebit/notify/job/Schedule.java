@@ -35,10 +35,14 @@ public interface Schedule {
 
     static ScheduleContext now() {
         final long now = System.currentTimeMillis();
+        return scheduleContext(now);
+    }
+
+    static ScheduleContext scheduleContext(long lastScheduledExecutionTime) {
         return new ScheduleContext() {
             @Override
             public long getLastScheduledExecutionTime() {
-                return now;
+                return lastScheduledExecutionTime;
             }
 
             @Override

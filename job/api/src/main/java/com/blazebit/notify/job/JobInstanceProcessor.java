@@ -21,6 +21,14 @@ package com.blazebit.notify.job;
  */
 public interface JobInstanceProcessor<ID, J extends JobInstance<?>> {
 
+    /**
+     * Returns whether the job instance processor should be executed within a transaction.
+     *
+     * The effect is that the job instance processor will run synchronously within the scheduler,
+     * possibly blocking other job instance processors that the scheduler tries to run within the same batch.
+     *
+     * @return true if the processor should be executed within a transaction
+     */
     default boolean isTransactional() {
         return false;
     }

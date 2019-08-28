@@ -15,50 +15,25 @@
  */
 package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.*;
+import com.blazebit.notify.notification.NotificationRecipientResolver;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.util.Collections;
-import java.util.concurrent.BlockingQueue;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(Parameterized.class)
-public class NotificationJobProcessorTest extends AbstractConfigurationTest<SimpleNotificationRecipient, SimpleNotificationMessage> {
-
-    public NotificationJobProcessorTest(Channel<SimpleNotificationRecipient, SimpleNotificationMessage> channel, SimpleNotificationMessage defaultMessage, BlockingQueue<NotificationMessage> sink, NotificationJobProcessorFactory jobProcessorFactory, NotificationJobInstanceProcessorFactory jobInstanceProcessorFactory) {
-        super(channel, defaultMessage, sink, jobProcessorFactory, jobInstanceProcessorFactory);
-    }
-
-    @Parameterized.Parameters
-    public static Object[][] createCombinations() {
-        return createCombinations(new NotificationJobProcessorFactory() {
-            @Override
-            public <T extends NotificationJobTrigger> NotificationJobProcessor<T> createJobProcessor(NotificationJobContext jobContext, T jobTrigger) {
-                return new NotificationJobProcessor<T>() {
-                    @Override
-                    public void process(T jobTrigger, NotificationJobContext context) {
-                        SimpleNotification notification = new SimpleNotification((SimpleNotificationJobTrigger) jobTrigger);
-                        notification.setChannelType(channelKey.getChannelType());
-                        Channel channel = jobContext.getChannel(notification.getChannelType());
-                        channel.sendNotificationMessage(null, new SimpleNotificationMessage());
-                        channel.sendNotificationMessage(null, new SimpleNotificationMessage());
-                    }
-                };
-            }
-        });
-    }
+public class NotificationJobProcessorTest extends AbstractNotificationJobTest<SimpleNotificationRecipient, SimpleNotificationMessage> {
 
     @Test
-    public void simpleTest() throws Exception {
-        jobContext.getJobManager().addJobInstance(new SimpleNotificationJobTrigger(channel, null, null/* TODO recipientResolver */, new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
-        // Wait for notifications to be produced
-        sink.add(sink.poll(10, TimeUnit.SECONDS));
+    public void testTriggerToSink() throws Exception {
+        // We expect the trigger, job instance and notification to run
+        this.jobContext = builder(3).createContext();
+        jobContext.getJobManager().addJobInstance(new SimpleNotificationJobTrigger(channel, NotificationRecipientResolver.of(new SimpleNotificationRecipient(Locale.GERMAN)), new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
+        await();
         jobContext.stop(1, TimeUnit.MINUTES);
-        assertEquals(2, sink.size());
+        assertEquals(1, sink.size());
     }
-
+    // TODO: updateEarliestSchedule tests + channel partition tests
 }

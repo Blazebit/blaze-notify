@@ -29,6 +29,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +39,7 @@ import java.util.Set;
 public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanceListener {
 
     private final JobContext jobContext;
+    private final Clock clock;
     private final EntityManager entityManager;
     private final Set<Class<?>> entityClasses;
 
@@ -56,6 +58,7 @@ public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanc
             throw new JobException("JPA storage requires transaction support!");
         }
         this.jobContext = jobContext;
+        this.clock = jobContext.getService(Clock.class) == null ? Clock.systemUTC() : jobContext.getService(Clock.class);
         this.entityManager = entityManager;
         Set<Class<?>> entityClasses = new HashSet<>();
         for (EntityType<?> entity : entityManager.getMetamodel().getEntities()) {
@@ -128,7 +131,7 @@ public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanc
             }
         }
         if (jobTrigger.getScheduleTime() == null) {
-            jobTrigger.setScheduleTime(jobTrigger.getSchedule(jobContext).nextSchedule());
+            jobTrigger.setScheduleTime(jobTrigger.getSchedule(jobContext).nextSchedule(Schedule.scheduleContext(clock.millis())));
         }
         entityManager.persist(jobTrigger);
         if (jobTrigger.getState() == JobInstanceState.NEW) {

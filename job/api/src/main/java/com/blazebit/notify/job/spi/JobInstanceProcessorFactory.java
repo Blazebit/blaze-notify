@@ -22,4 +22,14 @@ import com.blazebit.notify.job.JobInstanceProcessor;
 public interface JobInstanceProcessorFactory {
 
     <T extends JobInstance<?>> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance);
+
+    static JobInstanceProcessorFactory of(JobInstanceProcessor<?, ?> jobInstanceProcessor) {
+        return new JobInstanceProcessorFactory() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public <T extends JobInstance<?>> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance) {
+                return (JobInstanceProcessor<?, T>) jobInstanceProcessor;
+            }
+        };
+    }
 }

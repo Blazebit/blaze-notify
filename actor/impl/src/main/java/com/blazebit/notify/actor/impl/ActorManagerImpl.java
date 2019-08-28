@@ -53,7 +53,7 @@ public class ActorManagerImpl implements ActorManager {
         this.clusterStateManager.registerListener(ActorRescheduleEvent.class, e -> {
             // Reschedule without delay since this is a cluster event
             if (!rescheduleActorLocally(e.getActorName(), 0)) {
-                // TODO: queue events and fire when registered?
+                // No need to queue events as the cluster event should only be fired after registering all actors
                 if (LOG.isLoggable(Level.WARNING)) {
                     LOG.warning("Dropping rescheduling event because actor is not registered: " + e.getActorName());
                 }
@@ -163,7 +163,7 @@ public class ActorManagerImpl implements ActorManager {
                     if (runResult.isReschedule()) {
                         reschedule(runResult.getDelayMillis());
                     } else if (runResult.isDone()) {
-                        registeredActors.remove(name, this);
+                        cancel();
                     } else {
 //                    runner.onSuspend();
                     }

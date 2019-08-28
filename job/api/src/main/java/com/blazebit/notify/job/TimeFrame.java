@@ -42,10 +42,10 @@ public interface TimeFrame {
 		return earliestInstant;
 	}
 
-	static boolean isContained(Set<? extends TimeFrame> publishTimeFrames, Instant time) {
-		if (publishTimeFrames != null) {
-			for (TimeFrame publishTimeFrame : publishTimeFrames) {
-				if (!publishTimeFrame.contains(time)) {
+	static boolean isContained(Set<? extends TimeFrame> timeFrames, Instant time) {
+		if (timeFrames != null) {
+			for (TimeFrame timeFrame : timeFrames) {
+				if (!timeFrame.contains(time)) {
 					return false;
 				}
 			}
@@ -69,16 +69,16 @@ public interface TimeFrame {
 
 	default boolean contains(Instant time) {
 		OffsetDateTime offsetDateTime = time.atOffset(ZoneOffset.UTC);
-		if (getStartYear() != null && getEndYear() != null) {
+		if (getStartYear() != null || getEndYear() != null) {
 			int year = offsetDateTime.getYear();
-			if (year < getStartYear().getValue() || year > getEndYear().getValue()) {
+			if (getStartYear() != null && year < getStartYear().getValue() || getEndYear() != null && year > getEndYear().getValue()) {
 				return false;
 			}
 		}
 
-		if (getStartMonth() != null && getEndMonth() != null) {
-			int year = offsetDateTime.getMonthValue();
-			if (year < getStartMonth().getValue() || year > getEndMonth().getValue()) {
+		if (getStartMonth() != null || getEndMonth() != null) {
+			int month = offsetDateTime.getMonthValue();
+			if (getStartMonth() != null && month < getStartMonth().getValue() || getEndMonth() != null && month > getEndMonth().getValue()) {
 				return false;
 			}
 		}
@@ -87,9 +87,9 @@ public interface TimeFrame {
 			return false;
 		}
 
-		if (getStartTime() != null && getEndTime() != null) {
+		if (getStartTime() != null || getEndTime() != null) {
 			LocalTime localTime = offsetDateTime.toLocalTime();
-			if (localTime.isBefore(getStartTime()) || localTime.isAfter(getEndTime())) {
+			if (getStartTime() != null && localTime.isBefore(getStartTime()) || getEndTime() != null && localTime.isAfter(getEndTime())) {
 				return false;
 			}
 		}

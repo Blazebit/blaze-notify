@@ -109,7 +109,6 @@ public interface NotificationJobContext extends JobContext {
             Map<PartitionKey, Integer> partitionKeyMap = getPartitionKeyMap();
             Map<String, PartitionKey> channelPartitionKeys = new HashMap<>(channelFactories.size());
             if (partitionKeyMap.isEmpty()) {
-                partitionKeyMap = new HashMap<>();
                 PartitionKeyProvider partitionKeyProvider = super.getPartitionKeyProvider();
                 NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
                 partitionKeyMap = new HashMap<>(channelFactories.size() + 1);

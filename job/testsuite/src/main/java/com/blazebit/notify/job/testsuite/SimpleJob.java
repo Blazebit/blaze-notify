@@ -13,21 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.job.spi;
 
-import com.blazebit.notify.job.*;
+package com.blazebit.notify.job.testsuite;
 
-public interface JobProcessorFactory {
+import com.blazebit.notify.job.memory.model.AbstractJob;
 
-    <T extends JobTrigger> JobProcessor<T> createJobProcessor(JobContext jobContext, T jobTrigger);
+public class SimpleJob extends AbstractJob {
 
-    static JobProcessorFactory of(JobProcessor<?> jobProcessor) {
-        return new JobProcessorFactory() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public <T extends JobTrigger> JobProcessor<T> createJobProcessor(JobContext jobContext, T jobTrigger) {
-                return (JobProcessor<T>) jobProcessor;
-            }
-        };
-    }
 }

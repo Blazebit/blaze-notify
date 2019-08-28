@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.notification.testsuite;
+package com.blazebit.notify.job.testsuite;
 
 import com.blazebit.notify.job.JobConfiguration;
-import com.blazebit.notify.notification.memory.model.AbstractTriggerBasedNotificationJobInstance;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.memory.model.AbstractTriggerBasedJobInstance;
 
 import java.time.Instant;
 
-public class SimpleNotificationJobInstance extends AbstractTriggerBasedNotificationJobInstance<Long, SimpleNotificationJob, SimpleNotificationJobTrigger> {
+public class SimpleTriggerBasedJobInstance extends AbstractTriggerBasedJobInstance<SimpleJobTrigger> {
 
-    public SimpleNotificationJobInstance() {
+    public SimpleTriggerBasedJobInstance() {
         setCreationTime(Instant.now());
         setScheduleTime(getCreationTime());
     }
 
-    public SimpleNotificationJobInstance(SimpleNotificationJobTrigger trigger) {
+    public SimpleTriggerBasedJobInstance(SimpleJobTrigger trigger) {
         setTrigger(trigger);
         setCreationTime(Instant.now());
         setScheduleTime(getCreationTime());
@@ -37,5 +38,9 @@ public class SimpleNotificationJobInstance extends AbstractTriggerBasedNotificat
     @Override
     public JobConfiguration getJobConfiguration() {
         return getTrigger().getJobConfiguration();
+    }
+
+    @Override
+    public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
     }
 }

@@ -18,24 +18,18 @@ package com.blazebit.notify.notification.testsuite;
 
 import com.blazebit.notify.notification.memory.model.AbstractNotification;
 
+import java.time.Instant;
+
 public class SimpleNotification extends AbstractNotification<SimpleNotificationId, SimpleNotificationRecipient, SimpleNotificationJobInstance> {
 
     public SimpleNotification() {
         super(new SimpleNotificationId());
     }
 
-    public SimpleNotification(SimpleNotificationId id) {
-        super(id);
-    }
-
-    public SimpleNotification(SimpleNotificationJobTrigger trigger) {
-        this();
-        setNotificationJobInstance(new SimpleNotificationJobInstance(trigger));
-    }
-
     public SimpleNotification(SimpleNotificationJobInstance jobInstance) {
         this();
         setNotificationJobInstance(jobInstance);
+        setScheduleTime(Instant.now());
     }
 
     @Override

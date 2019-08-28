@@ -15,25 +15,37 @@
  */
 package com.blazebit.notify.notification.processor.memory;
 
+import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.JobInstance;
 import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.processor.memory.AbstractMemoryJobInstanceProcessor;
 import com.blazebit.notify.notification.*;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
 public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J extends NotificationJobInstance<Long, ?>, R extends NotificationRecipient<?>> extends AbstractMemoryJobInstanceProcessor<T, I, J> implements NotificationJobInstanceProcessor<T, J> {
 
     private static final Logger LOG = Logger.getLogger(AbstractMemoryNotificationJobInstanceProcessor.class.getName());
 
+    public AbstractMemoryNotificationJobInstanceProcessor() {
+        super((context, notification) -> context.getJobManager().addJobInstance((JobInstance<?>) notification));
+    }
+
     public AbstractMemoryNotificationJobInstanceProcessor(BlockingQueue<I> sink) {
+        super(sink);
+    }
+
+    public AbstractMemoryNotificationJobInstanceProcessor(BiConsumer<JobContext, I> sink) {
         super(sink);
     }
 
     @Override
     public T process(J jobInstance, JobInstanceProcessingContext<T> context) {
-        List<? extends NotificationRecipient<?>> recipientBatch = context.getJobContext().getService(NotificationRecipientResolver.class).resolveNotificationRecipients(jobInstance, context);
+        JobContext jobContext = context.getJobContext();
+        List<? extends NotificationRecipient<?>> recipientBatch = jobContext.getService(NotificationRecipientResolver.class).resolveNotificationRecipients(jobInstance, context);
 
         T lastNotificationProcessed = null;
         for (int i = 0; i < recipientBatch.size(); i++) {
@@ -41,14 +53,8 @@ public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J ext
             if (jobResult == null) {
                 break;
             }
-            try {
-                sink.put(jobResult);
-                lastNotificationProcessed = getProcessingResultId(jobResult);
-            } catch (InterruptedException e) {
-                LOG.warning("Thread was interrupted while adding notification " + jobResult + " to sink");
-                Thread.currentThread().interrupt();
-                break;
-            }
+            sink.accept(jobContext, jobResult);
+            lastNotificationProcessed = getProcessingResultId(jobResult);
         }
 
         if (lastNotificationProcessed == context.getLastProcessed()) {
