@@ -19,6 +19,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
+@SequenceGenerator(name = "idGenerator", sequenceName = "from_email_seq")
+@Table(name = "from_email")
 public class FromEmail extends BaseEntity<Long> {
 	
 	private String email;

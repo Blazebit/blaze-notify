@@ -17,8 +17,6 @@
 package com.blazebit.notify.job.jpa.storage;
 
 import com.blazebit.notify.job.*;
-import com.blazebit.notify.job.event.JobInstanceListener;
-import com.blazebit.notify.job.event.JobTriggerListener;
 import com.blazebit.notify.job.jpa.model.JpaJobInstance;
 import com.blazebit.notify.job.jpa.model.JpaJobTrigger;
 import com.blazebit.notify.job.jpa.model.JpaPartitionKey;
@@ -36,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanceListener {
+public class JpaJobManager implements JobManager {
 
     private final JobContext jobContext;
     private final Clock clock;
@@ -192,13 +190,20 @@ public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanc
         if (readyStateValue != null) {
             typedQuery.setParameter("readyState", readyStateValue);
         }
-        return (List<JobInstance<?>>) (List) typedQuery
+        List<JobInstance<?>> jobInstances = (List<JobInstance<?>>) (List) typedQuery
                 // TODO: lockMode for update? advisory locks?
                 // TODO: PostgreSQL 9.5 supports the skip locked clause, but since then, we have to use advisory locks
 //                .where("FUNCTION('pg_try_advisory_xact_lock', id.userId)").eqExpression("true")
                 .setHint("org.hibernate.lockMode.e", "UPGRADE_SKIPLOCKED")
                 .setMaxResults(limit)
                 .getResultList();
+
+        // Detach the job instances to avoid accidental flushes due to changes
+//        for (int i = 0; i < jobInstances.size(); i++) {
+//            entityManager.detach(jobInstances.get(i));
+//        }
+
+        return jobInstances;
     }
 
     @Override
@@ -216,7 +221,6 @@ public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanc
                         "WHERE " + statePredicate + " " +
                         (partitionPredicate.isEmpty() ? "" : "AND " + partitionPredicate + " ") +
                         (partitionCount > 1 ? "AND MOD(e." + partitionKeyAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
-                        "AND e." + scheduleAttributeName + " <= CURRENT_TIMESTAMP " +
                         "ORDER BY e." + scheduleAttributeName + " ASC, e." + idAttributeName + " ASC",
                 Instant.class
         );
@@ -239,55 +243,7 @@ public class JpaJobManager implements JobManager, JobTriggerListener, JobInstanc
         if (!entityManager.contains(jobInstance)) {
             entityManager.merge(jobInstance);
         }
-    }
 
-    @Override
-    public void onJobInstanceChunkSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobInstance);
-    }
-
-    @Override
-    public void onJobInstanceError(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobInstance);
-    }
-
-    @Override
-    public void onJobInstanceSuccess(JobInstance<?> jobInstance, JobInstanceProcessingContext<?> context) {
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobInstance);
-    }
-
-    @Override
-    public void onJobTriggerError(JobTrigger jobTrigger, JobContext context) {
-        // This is a hook for users to e.g. do logging
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobTrigger);
-    }
-
-    @Override
-    public void onJobTriggerSuccess(JobTrigger jobTrigger, JobContext context) {
-        // This is a hook for users to e.g. do logging
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobTrigger);
-    }
-
-    @Override
-    public void onJobTriggerEnded(JobTrigger jobTrigger, JobContext context) {
-        if (!entityManager.isJoinedToTransaction()) {
-            entityManager.joinTransaction();
-        }
-        entityManager.merge(jobTrigger);
+        entityManager.flush();
     }
 }

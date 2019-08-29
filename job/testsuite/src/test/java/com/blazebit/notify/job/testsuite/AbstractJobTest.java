@@ -97,7 +97,7 @@ public class AbstractJobTest {
         private final Schedule schedule;
 
         public SimpleScheduleFactory() {
-            this(new SimpleSchedule());
+            this(new OnceSchedule());
         }
 
         public SimpleScheduleFactory(Schedule schedule) {

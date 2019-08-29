@@ -15,7 +15,7 @@
  */
 package com.blazebit.notify.notification.email.model;
 
-public enum MailJobDeliveryState {
+public enum EmailNotificationDeliveryState {
 
 	DELIVERED,
 	BOUNCED,

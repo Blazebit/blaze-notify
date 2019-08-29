@@ -60,10 +60,6 @@ public abstract class AbstractJob extends BaseEntity<Long> implements Job {
 
 	@Override
 	@Embedded
-	@AssociationOverrides({
-			@AssociationOverride(name = "executionTimeFrames", joinTable = @JoinTable(name = "job_execution_time_frames", foreignKey = @ForeignKey(name = "job_execution_time_frames_fk_job"))),
-			@AssociationOverride(name = "jobParameters", joinTable = @JoinTable(name = "job_parameter", foreignKey = @ForeignKey(name = "job_parameter_fk_job")))
-	})
 	public JobConfiguration getJobConfiguration() {
 		return jobConfiguration;
 	}

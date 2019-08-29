@@ -17,9 +17,9 @@
 package com.blazebit.notify.job.jpa.model;
 
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
-import javax.persistence.MapKeyColumn;
+import javax.persistence.Lob;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashMap;
@@ -85,8 +85,8 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 		this.deadline = deadline;
 	}
 
-	@ElementCollection
-	// TODO: Use string encoding to avoid joins
+	@Override
+	@Transient
 	public Set<TimeFrame> getExecutionTimeFrames() {
 		return executionTimeFrames;
 	}
@@ -96,16 +96,39 @@ public class JobConfiguration implements com.blazebit.notify.job.JobConfiguratio
 	}
 
 	@Override
-	@ElementCollection
-	@Column(name = "value")
-	@MapKeyColumn(name = "name")
-	// TODO: Use string encoding to avoid joins
+	@Transient
 	public Map<String, Serializable> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(Map<String, Serializable> jobParameters) {
-		this.parameters = jobParameters;
+	public void setParameters(Map<String, Serializable> parameters) {
+		this.parameters = parameters;
+	}
+
+	@Lob
+	@Column(name = "parameters")
+	protected Serializable getParameterSerializable() {
+		Set<TimeFrame> executionTimeFrames = getExecutionTimeFrames();
+		Map<String, Serializable> parameters = getParameters();
+		if ((executionTimeFrames == null || executionTimeFrames.isEmpty()) && (parameters == null || parameters.isEmpty())) {
+			return null;
+		}
+
+		return new ParameterSerializable(executionTimeFrames, parameters);
+	}
+
+	protected void setParameterSerializable(Serializable parameterSerializable) {
+		if (parameterSerializable instanceof ParameterSerializable) {
+			setExecutionTimeFrames(((ParameterSerializable) parameterSerializable).getExecutionTimeFrames());
+			setParameters(((ParameterSerializable) parameterSerializable).getParameters());
+		} else {
+			if (getExecutionTimeFrames() == null) {
+				setExecutionTimeFrames(new HashSet<>(0));
+			}
+			if (getParameters() == null) {
+				setParameters(new HashMap<>(0));
+			}
+		}
 	}
 
 	@Override

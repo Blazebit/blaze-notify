@@ -21,36 +21,32 @@ import com.blazebit.notify.job.spi.PartitionKeyProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.function.Function;
 
 public class JpaPartitionKeyProvider implements PartitionKeyProvider {
 
-    public static final String JOB_TRIGGER_ENTITY_CLASS_PROPERTY = "job.jpa.storage.job_trigger_entity_class";
     public static final String JOB_TRIGGER_ID_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_id_attribute_name";
     public static final String JOB_TRIGGER_SCHEDULE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_schedule_attribute_name";
     public static final String JOB_TRIGGER_STATE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_trigger_state_attribute_name";
     public static final String JOB_TRIGGER_STATE_READY_VALUE_PROPERTY = "job.jpa.storage.job_trigger_state_ready_value";
-    public static final String JOB_INSTANCE_ENTITY_CLASS_PROPERTY = "job.jpa.storage.job_instance_entity_class";
     public static final String JOB_INSTANCE_ID_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_id_attribute_name";
     public static final String JOB_INSTANCE_PARTITION_KEY_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_partition_key_attribute_name";
     public static final String JOB_INSTANCE_SCHEDULE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_schedule_attribute_name";
     public static final String JOB_INSTANCE_STATE_ATTRIBUTE_NAME_PROPERTY = "job.jpa.storage.job_instance_state_attribute_name";
     public static final String JOB_INSTANCE_STATE_READY_VALUE_PROPERTY = "job.jpa.storage.job_instance_state_ready_value";
 
-    private final JpaPartitionKey jobTriggerPartitionKey;
-    private final JpaPartitionKey jobInstancePartitionKey;
+    private final Collection<PartitionKey> jobTriggerPartitionKeys;
+    private final Collection<PartitionKey> jobInstancePartitionKeys;
 
     public JpaPartitionKeyProvider(ServiceProvider serviceProvider, ConfigurationSource configurationSource) {
         this(
                 serviceProvider.getService(EntityManager.class),
-                configurationSource.getPropertyOrDefault(JOB_TRIGGER_ENTITY_CLASS_PROPERTY, Class.class, JpaPartitionKeyProvider::forName, o -> JobTrigger.class),
                 configurationSource.getPropertyOrDefault(JOB_TRIGGER_ID_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
                 configurationSource.getPropertyOrDefault(JOB_TRIGGER_SCHEDULE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "scheduleTime"),
                 configurationSource.getPropertyOrDefault(JOB_TRIGGER_STATE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "state"),
                 configurationSource.getPropertyOrDefault(JOB_TRIGGER_STATE_READY_VALUE_PROPERTY, Object.class, null, o -> JobInstanceState.NEW),
-                configurationSource.getPropertyOrDefault(JOB_INSTANCE_ENTITY_CLASS_PROPERTY, Class.class, JpaPartitionKeyProvider::forName, o -> JobInstance.class),
                 configurationSource.getPropertyOrDefault(JOB_INSTANCE_ID_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
                 configurationSource.getPropertyOrDefault(JOB_INSTANCE_PARTITION_KEY_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
                 configurationSource.getPropertyOrDefault(JOB_INSTANCE_SCHEDULE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "scheduleTime"),
@@ -59,75 +55,55 @@ public class JpaPartitionKeyProvider implements PartitionKeyProvider {
         );
     }
 
-    public JpaPartitionKeyProvider(EntityManager entityManager, Class<?> jobTriggerEntityClass, String jobTriggerIdAttributeName, String jobTriggerScheduleAttributeName, String jobTriggerStateAttributeName, Object jobTriggerStateReadyValue,
-                                   Class<?> jobInstanceEntityClass, String jobInstanceIdAttributeName, String jobInstancePartitionKeyAttributeName, String jobInstanceScheduleAttributeName, String jobInstanceStateAttributeName, Object jobInstanceStateReadyValue) {
+    public JpaPartitionKeyProvider(EntityManager entityManager, String jobTriggerIdAttributeName, String jobTriggerScheduleAttributeName, String jobTriggerStateAttributeName, Object jobTriggerStateReadyValue,
+                                   String jobInstanceIdAttributeName, String jobInstancePartitionKeyAttributeName, String jobInstanceScheduleAttributeName, String jobInstanceStateAttributeName, Object jobInstanceStateReadyValue) {
         if (entityManager == null) {
             throw new JobException("No entity manager given!");
         }
 
-        Set<Class<?>> nonTriggerJobInstanceTypes = new HashSet<>();
-        StringBuilder sb = new StringBuilder();
-        sb.append("NOT IN (");
+        Collection<PartitionKey> jobTriggerPartitionKeys = new ArrayList<>();
+        Collection<PartitionKey> jobInstancePartitionKeys = new ArrayList<>();
         for (EntityType<?> entity : entityManager.getMetamodel().getEntities()) {
-            if (entity.getJavaType() != null) {
-                if (JobTrigger.class.isAssignableFrom(entity.getJavaType())) {
-                    sb.append(entity.getName()).append(", ");
-                } else {
-                    nonTriggerJobInstanceTypes.add(entity.getJavaType());
+            Class<?> javaType = entity.getJavaType();
+            if (javaType != null) {
+                if (JobTrigger.class.isAssignableFrom(javaType)) {
+                    jobTriggerPartitionKeys.add(
+                            JpaPartitionKey.builder()
+                                    .withName(entity.getName())
+                                    .withJobInstanceType((Class<? extends JobInstance<?>>) javaType)
+                                    .withIdAttributeName(jobTriggerIdAttributeName)
+                                    .withScheduleAttributeName(jobTriggerScheduleAttributeName)
+                                    .withPartitionKeyAttributeName(jobTriggerIdAttributeName)
+                                    .withStateAttributeName(jobTriggerStateAttributeName)
+                                    .withReadyStateValue(jobTriggerStateReadyValue)
+                                    .build()
+                    );
+                } else if (JobInstance.class.isAssignableFrom(javaType)) {
+                    jobInstancePartitionKeys.add(
+                            JpaPartitionKey.builder()
+                                    .withName(entity.getName())
+                                    .withJobInstanceType((Class<? extends JobInstance<?>>) javaType)
+                                    .withIdAttributeName(jobInstanceIdAttributeName)
+                                    .withScheduleAttributeName(jobInstanceScheduleAttributeName)
+                                    .withPartitionKeyAttributeName(jobInstancePartitionKeyAttributeName)
+                                    .withStateAttributeName(jobInstanceStateAttributeName)
+                                    .withReadyStateValue(jobInstanceStateReadyValue)
+                                    .build()
+                    );
                 }
             }
         }
-        sb.setLength(sb.length() - 2);
-        sb.append(')');
-
-        String nonTriggerPredicate = sb.toString();
-
-        this.jobTriggerPartitionKey = JpaPartitionKey.builder()
-                .withName("jobTrigger")
-                .withJobInstanceType((Class<? extends JobInstance<?>>) (Class<?>) jobTriggerEntityClass)
-                .withIdAttributeName(jobTriggerIdAttributeName)
-                .withScheduleAttributeName(jobTriggerScheduleAttributeName)
-                .withPartitionKeyAttributeName(jobTriggerIdAttributeName)
-                .withStateAttributeName(jobTriggerStateAttributeName)
-                .withReadyStateValue(jobTriggerStateReadyValue)
-                .build();
-
-        JpaPartitionKey.JpaPartitionKeyBuilder jpaPartitionKeyBuilder = JpaPartitionKey.builder()
-                .withName("jobInstance");
-
-        // If there is no concrete job instance type given, we need a non trigger predicate
-        if (jobInstanceEntityClass == JobInstance.class) {
-            if (nonTriggerJobInstanceTypes.size() == 1) {
-                // Unless there is only one job instance entity type
-                jobInstanceEntityClass = nonTriggerJobInstanceTypes.iterator().next();
-            } else {
-                jpaPartitionKeyBuilder.withPartitionPredicateProvider(alias -> "TYPE(" + alias + ") " + nonTriggerPredicate);
-            }
-        }
-        this.jobInstancePartitionKey = jpaPartitionKeyBuilder.withJobInstanceType((Class<? extends JobInstance<?>>) (Class<?>) jobInstanceEntityClass)
-                .withIdAttributeName(jobInstanceIdAttributeName)
-                .withScheduleAttributeName(jobInstanceScheduleAttributeName)
-                .withPartitionKeyAttributeName(jobInstancePartitionKeyAttributeName)
-                .withStateAttributeName(jobInstanceStateAttributeName)
-                .withReadyStateValue(jobInstanceStateReadyValue)
-                .build();
-    }
-
-    private static Class<?> forName(String name) {
-        try {
-            return Class.forName(name);
-        } catch (ClassNotFoundException e) {
-            throw new JobException("Could not resolve class for name!", e);
-        }
+        this.jobTriggerPartitionKeys = jobTriggerPartitionKeys;
+        this.jobInstancePartitionKeys = jobInstancePartitionKeys;
     }
 
     @Override
-    public PartitionKey getDefaultTriggerPartitionKey() {
-        return jobTriggerPartitionKey;
+    public Collection<PartitionKey> getDefaultTriggerPartitionKeys() {
+        return jobTriggerPartitionKeys;
     }
 
     @Override
-    public PartitionKey getDefaultJobInstancePartitionKey() {
-        return jobInstancePartitionKey;
+    public Collection<PartitionKey> getDefaultJobInstancePartitionKeys() {
+        return jobInstancePartitionKeys;
     }
 }

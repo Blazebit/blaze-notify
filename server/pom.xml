@@ -94,6 +94,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-email-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-notification-jpa-storage</artifactId>
             <version>${project.version}</version>
         </dependency>

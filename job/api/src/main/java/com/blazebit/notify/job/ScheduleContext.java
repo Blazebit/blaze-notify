@@ -17,9 +17,9 @@ package com.blazebit.notify.job;
 
 public interface ScheduleContext {
 
-    long getLastScheduledExecutionTime();
+    long getLastScheduleTime();
 
-    long getLastActualExecutionTime();
+    long getLastExecutionTime();
 
     long getLastCompletionTime();
 }

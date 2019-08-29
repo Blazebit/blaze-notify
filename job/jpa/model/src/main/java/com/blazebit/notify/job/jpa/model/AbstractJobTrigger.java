@@ -16,7 +16,10 @@
 
 package com.blazebit.notify.job.jpa.model;
 
-import com.blazebit.notify.job.*;
+import com.blazebit.notify.job.Job;
+import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.job.JobInstanceProcessingContext;
+import com.blazebit.notify.job.Schedule;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -82,10 +85,6 @@ public abstract class AbstractJobTrigger<T extends AbstractJob> extends Abstract
 
 	@Override
 	@Embedded
-	@AssociationOverrides({
-			@AssociationOverride(name = "executionTimeFrames", joinTable = @JoinTable(name = "job_trigger_execution_time_frames", foreignKey = @ForeignKey(name = "job_trigger_execution_time_frames_fk_job_trigger"))),
-			@AssociationOverride(name = "jobParameters", joinTable = @JoinTable(name = "job_trigger_parameter", foreignKey = @ForeignKey(name = "job_trigger_parameter_fk_job_trigger")))
-	})
 	public JobConfiguration getJobConfiguration() {
 		return jobConfiguration;
 	}

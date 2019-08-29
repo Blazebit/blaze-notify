@@ -21,14 +21,15 @@ import com.blazebit.notify.notification.email.sns.EmailEvent;
 import com.blazebit.notify.notification.email.sns.EmailEventBounceRecipient;
 
 import javax.json.Json;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 public class EmailEventHandler {
 
-	public List<String> onEmailEvent(EmailEvent event, MailJob mailJob) {
-		mailJob.setDelivered(Calendar.getInstance());
+	public List<String> onEmailEvent(EmailEvent event, AbstractEmailNotification<?> emailNotification) {
+		emailNotification.setDeliveredTime(Instant.now());
 		
 		List<String> suppressedEmails = new ArrayList<String>();
 		
@@ -37,21 +38,21 @@ public class EmailEventHandler {
 			EmailBounceEvent bounceEvent = (EmailBounceEvent) event;
 			
 			switch (bounceEvent.getBounceType()) {
-			case TRANSIENT:
-				// Manually review bounce
-				mailJob.setReviewState(MailJobReviewState.NECESSARY);
-				break;
-			default:
-				// Just set status and suppress emails
-				for (EmailEventBounceRecipient recipient : bounceEvent.getBouncedRecipients()){
-					suppressedEmails.add(recipient.getEmailAddress());
-				}
-				break;
+				case TRANSIENT:
+					// Manually review bounce
+					emailNotification.setReviewState(EmailNotificationReviewState.NECESSARY);
+					break;
+				default:
+					// Just set status and suppress emails
+					for (EmailEventBounceRecipient recipient : bounceEvent.getBouncedRecipients()){
+						suppressedEmails.add(recipient.getEmailAddress());
+					}
+					break;
 			}
 			
-			mailJob.setDeliveryState(MailJobDeliveryState.BOUNCED);
+			emailNotification.setDeliveryState(EmailNotificationDeliveryState.BOUNCED);
 			
-			mailJob.setDeliveryNotification(Json.createObjectBuilder()
+			emailNotification.setDeliveryNotification(Json.createObjectBuilder()
 					.add("bounceType", bounceEvent.getBounceType().toString())
 					.add("bounceSubType", bounceEvent.getBounceSubType().toString())
 				.build()
@@ -60,16 +61,16 @@ public class EmailEventHandler {
 		case COMPLAINT:
 			EmailComplaintEvent complaintEvent = (EmailComplaintEvent) event;
 			suppressedEmails.addAll(complaintEvent.getComplainedRecipients());
-			mailJob.setDeliveryState(MailJobDeliveryState.COMPLAINED);
+			emailNotification.setDeliveryState(EmailNotificationDeliveryState.COMPLAINED);
 			
-			mailJob.setDeliveryNotification(Json.createObjectBuilder()
+			emailNotification.setDeliveryNotification(Json.createObjectBuilder()
 					.add("complaintFeedbackType", complaintEvent.getComplaintFeedbackType().toString())
 					.add("userAgent", complaintEvent.getUserAgent())
 				.build()
 			.toString());
 			break;
 		case DELIVERY:
-			mailJob.setDeliveryState(MailJobDeliveryState.DELIVERED);
+			emailNotification.setDeliveryState(EmailNotificationDeliveryState.DELIVERED);
 			break;
 		}
 

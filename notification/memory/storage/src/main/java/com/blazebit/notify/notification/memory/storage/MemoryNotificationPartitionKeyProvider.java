@@ -39,34 +39,33 @@ public class MemoryNotificationPartitionKeyProvider implements NotificationParti
 
     @Override
     public PartitionKey getDefaultJobInstancePartitionKey(PartitionKey defaultJobInstancePartitionKey) {
-        return new PartitionKey() {
-            @Override
-            public boolean matches(JobInstance<?> jobInstance) {
-                return !(jobInstance instanceof Notification<?>) && defaultJobInstancePartitionKey.matches(jobInstance);
-            }
-
-            @Override
-            public String toString() {
-                return "jobInstance";
-            }
-        };
+        return defaultJobInstancePartitionKey;
     }
 
     @Override
     public PartitionKey getPartitionKey(PartitionKey defaultJobInstancePartitionKey, String channelType) {
+        if (channelType == null) {
+            return new PartitionKey() {
+                @Override
+                public boolean matches(JobInstance<?> jobInstance) {
+                    return !(jobInstance instanceof Notification<?>) && defaultJobInstancePartitionKey.matches(jobInstance);
+                }
+
+                @Override
+                public String toString() {
+                    return "jobInstance";
+                }
+            };
+        }
         return new PartitionKey() {
             @Override
             public boolean matches(JobInstance<?> jobInstance) {
-                return jobInstance instanceof Notification<?> && channelType.equals(((Notification<?>) jobInstance).getChannelType());
+                return jobInstance instanceof Notification<?> && channelType.equals(((Notification<?>) jobInstance).getChannelType()) && defaultJobInstancePartitionKey.matches(jobInstance);
             }
 
             @Override
             public String toString() {
-                if (channelType == null) {
-                    return "notification";
-                } else {
-                    return "notification/" + channelType;
-                }
+                return "notification/" + channelType;
             }
         };
     }

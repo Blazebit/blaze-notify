@@ -50,7 +50,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
     private final TemplateProcessor<String> subjectTemplateProcessor;
     private final TemplateProcessor<String> textBodyTemplateProcessor;
     private final TemplateProcessor<String> htmlBodyTemplateProcessor;
-    private final Collection<TemplateProcessor<Attachment>> attachmentProcessors;
+    private final Collection<TemplateProcessor> attachmentProcessors;
 
     public EmailNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
         this.from = configurationSource.getPropertyOrFail(EMAIL_MESSAGE_FROM_PROPERTY, String.class, Function.identity());
@@ -71,19 +71,21 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         this.textBodyTemplateProcessor = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_TEXT_PROPERTY, TemplateProcessor.class, templateProcessorFunction, o -> null);
         this.htmlBodyTemplateProcessor = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_HTML_PROPERTY, TemplateProcessor.class, templateProcessorFunction, o -> null);
         Object o = configurationSource.getProperty(EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY);
-        List<TemplateProcessor<Attachment>> attachmentProcessors = Collections.emptyList();
+        List<TemplateProcessor> attachmentProcessors = Collections.emptyList();
         if (o instanceof Collection<?>) {
             Collection<?> collection = (Collection<?>) o;
             attachmentProcessors = new ArrayList<>(collection.size());
             for (Object element : collection) {
                 if (element instanceof TemplateProcessor<?>) {
-                    attachmentProcessors.add((TemplateProcessor<Attachment>) element);
+                    attachmentProcessors.add((TemplateProcessor) element);
                 } else if (element instanceof String) {
                     attachmentProcessors.add(templateProcessorFunction.apply((String) element));
                 } else {
                     throw new NotificationException("Invalid attachment processor given via property '" + EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY + "': " + element);
                 }
             }
+        } else if (o instanceof TemplateProcessor<?>) {
+            attachmentProcessors = Arrays.asList((TemplateProcessor) o);
         } else if (o != null) {
             throw new NotificationException("Invalid attachment processors given via property '" + EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY + "': " + o);
         }
@@ -92,7 +94,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
 
     public EmailNotificationMessageResolver(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, String resourceBundleName,
                                             TemplateProcessor<String> subjectTemplateProcessor, TemplateProcessor<String> textBodyTemplateProcessor,
-                                            TemplateProcessor<String> htmlBodyTemplateProcessor, Collection<TemplateProcessor<Attachment>> attachmentProcessors) {
+                                            TemplateProcessor<String> htmlBodyTemplateProcessor, Collection<TemplateProcessor> attachmentProcessors) {
         this.from = from;
         this.fromDisplayName = fromDisplayName;
         this.replyTo = replyTo;
@@ -138,12 +140,24 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         model.put("recipient", notificationRecipient);
         model = Collections.unmodifiableMap(model);
 
-        EmailSubject subject = subjectTemplateProcessor == null ? null : new EmailSubject(subjectTemplateProcessor.processTemplate(model));
-        EmailBody textBody = textBodyTemplateProcessor == null ? null : new EmailBody(textBodyTemplateProcessor.processTemplate(model));
-        EmailBody htmlBody = htmlBodyTemplateProcessor == null ? null : new EmailBody(htmlBodyTemplateProcessor.processTemplate(model));
+        String subjectString = subjectTemplateProcessor == null ? null : subjectTemplateProcessor.processTemplate(model);
+        String textBodyString = textBodyTemplateProcessor == null ? null : textBodyTemplateProcessor.processTemplate(model);
+        String htmlBodyString = htmlBodyTemplateProcessor == null ? null : htmlBodyTemplateProcessor.processTemplate(model);
+        EmailSubject subject = subjectString == null ? null : new EmailSubject(subjectString);
+        EmailBody textBody = textBodyString == null ? null : new EmailBody(textBodyString);
+        EmailBody htmlBody = htmlBodyString == null ? null : new EmailBody(htmlBodyString);
         Collection<Attachment> attachments = new ArrayList<>(attachmentProcessors.size());
-        for (TemplateProcessor<Attachment> attachmentTemplateProcessor : attachmentProcessors) {
-            attachments.add(attachmentTemplateProcessor.processTemplate(model));
+        for (TemplateProcessor attachmentTemplateProcessor : attachmentProcessors) {
+            Object collectionOrAttachment = attachmentTemplateProcessor.processTemplate(model);
+            if (collectionOrAttachment != null) {
+                if (collectionOrAttachment instanceof Collection) {
+                    for (Object attachment : (Collection) collectionOrAttachment) {
+                        attachments.add((Attachment) attachment);
+                    }
+                } else {
+                    attachments.add((Attachment) collectionOrAttachment);
+                }
+            }
         }
         return new EmailNotificationMessage(from, fromDisplayName, replyTo, replyToDisplayName, envelopeFrom, subject, textBody, htmlBody, attachments);
     }

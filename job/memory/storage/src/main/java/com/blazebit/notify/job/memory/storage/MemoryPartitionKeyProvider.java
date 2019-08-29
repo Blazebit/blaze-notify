@@ -24,6 +24,9 @@ import com.blazebit.notify.job.PartitionKey;
 import com.blazebit.notify.job.spi.PartitionKeyProvider;
 import com.blazebit.notify.job.spi.PartitionKeyProviderFactory;
 
+import java.util.Collection;
+import java.util.Collections;
+
 @ServiceProvider(PartitionKeyProviderFactory.class)
 public class MemoryPartitionKeyProvider implements PartitionKeyProvider, PartitionKeyProviderFactory {
 
@@ -33,26 +36,27 @@ public class MemoryPartitionKeyProvider implements PartitionKeyProvider, Partiti
     }
 
     @Override
-    public PartitionKey getDefaultTriggerPartitionKey() {
+    public Collection<PartitionKey> getDefaultTriggerPartitionKeys() {
         return TRIGGER_ONLY;
     }
 
     @Override
-    public PartitionKey getDefaultJobInstancePartitionKey() {
+    public Collection<PartitionKey> getDefaultJobInstancePartitionKeys() {
         return NON_TRIGGER;
     }
 
-    private static final PartitionKey NON_TRIGGER = new PartitionKey() {
+    private static final Collection<PartitionKey> NON_TRIGGER = Collections.singletonList(new PartitionKey() {
         @Override
         public boolean matches(JobInstance<?> jobInstance) {
             return !(jobInstance instanceof JobTrigger);
         }
+
         @Override
         public String toString() {
             return "jobInstance";
         }
-    };
-    private static final PartitionKey TRIGGER_ONLY = new PartitionKey() {
+    });
+    private static final Collection<PartitionKey> TRIGGER_ONLY = Collections.singletonList(new PartitionKey() {
         @Override
         public Class<? extends JobInstance<?>> getJobInstanceType() {
             return JobTrigger.class;
@@ -65,5 +69,5 @@ public class MemoryPartitionKeyProvider implements PartitionKeyProvider, Partiti
         public String toString() {
             return "jobTrigger";
         }
-    };
+    });
 }

@@ -49,7 +49,7 @@ public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J ext
 
         T lastNotificationProcessed = null;
         for (int i = 0; i < recipientBatch.size(); i++) {
-            I jobResult = produceNotification(jobInstance, (R) recipientBatch.get(i));
+            I jobResult = produceNotification(context, jobInstance, (R) recipientBatch.get(i));
             if (jobResult == null) {
                 break;
             }
@@ -69,5 +69,5 @@ public abstract class AbstractMemoryNotificationJobInstanceProcessor<T, I, J ext
         throw new UnsupportedOperationException();
     }
 
-    protected abstract I produceNotification(J notificationJob, R recipient);
+    protected abstract I produceNotification(JobInstanceProcessingContext<T> context, J notificationJob, R recipient);
 }

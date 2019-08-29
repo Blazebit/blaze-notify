@@ -94,6 +94,9 @@ public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T
         if (returningResult.getUpdateCount() == 0 || returningResult.getUpdateCount() != context.getProcessCount()) {
             markDone(jobInstance, context);
         }
+        if (returningResult.getResultList().isEmpty()) {
+            return null;
+        }
         return returningResult.getLastResult();
     }
 

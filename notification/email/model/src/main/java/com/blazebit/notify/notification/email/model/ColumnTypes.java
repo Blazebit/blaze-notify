@@ -20,10 +20,7 @@ package com.blazebit.notify.notification.email.model;
  */
 public final class ColumnTypes {
 
-	public static final String MAIL_SUBJECT = "VARCHAR(255)";
-	public static final String MAIL_CONTENT = "TEXT";
 	public static final String MAIL_ADDRESS = "CITEXT";
 	public static final String MAIL_RECIPIENT = "VARCHAR(255)";
 	public static final String MAIL_MESSAGE_ID = "VARCHAR(60)";
-	public static final String MAIL_NOTIFICATION = "TEXT";
 }

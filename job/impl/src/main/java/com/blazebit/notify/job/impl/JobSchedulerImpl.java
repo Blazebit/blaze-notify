@@ -104,7 +104,8 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                 earliestNewSchedule = nextSchedule.toEpochMilli();
             }
             long earliestKnownSchedule = this.earliestKnownSchedule.get();
-            if (earliestNewSchedule < earliestKnownSchedule) {
+            // We use lower or equal because a re-schedule event could be cause from within a processor
+            if (earliestNewSchedule <= earliestKnownSchedule) {
                 // There are new job instances that should be scheduled before our known earliest job instance
 
                 // We just reschedule based on the new earliest schedule if it stays that
@@ -129,7 +130,8 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
             }
 
             oldValue = earliestKnownSchedule.get();
-        } while (oldValue < newValue);
+            // We use lower or equal because a re-schedule event could be cause from within a processor
+        } while (oldValue <= newValue);
 
         return false;
     }
@@ -137,7 +139,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
     private void resetEarliestKnownSchedule() {
         long earliestKnownSchedule = this.earliestKnownSchedule.get();
         // Only reset the value if the currently known earliest schedule is in the past
-        if (earliestKnownSchedule < System.currentTimeMillis()) {
+        if (earliestKnownSchedule < clock.millis()) {
             updateEarliestKnownSchedule(earliestKnownSchedule, Long.MAX_VALUE);
         }
     }
@@ -177,6 +179,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                     if (size == 0) {
                         return ActorRunResult.suspend();
                     }
+                    Instant earliestNewSchedule = Instant.MAX;
                     List<JobInstanceExecution> jobInstanceExecutions = new ArrayList<>(size);
                     for (int i = 0; i < size; i++) {
                         Instant now = clock.instant();
@@ -184,15 +187,15 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                         MutableJobInstanceProcessingContext jobProcessingContext = new MutableJobInstanceProcessingContext(jobContext, partitionKey, processCount);
                         jobProcessingContext.setPartitionCount(clusterNodeInfo.getClusterSize());
                         jobProcessingContext.setPartitionId(clusterNodeInfo.getClusterPosition());
+                        jobProcessingContext.setLastProcessed(jobInstance.getLastProcessed());
                         MutableScheduleContext scheduleContext = new MutableScheduleContext();
                         boolean future = false;
                         Instant lastExecutionTime = jobInstance.getLastExecutionTime();
                         if (lastExecutionTime == null) {
                             lastExecutionTime = now;
-                            jobInstance.setLastExecutionTime(lastExecutionTime);
                         }
-                        scheduleContext.setLastScheduledExecutionTime(jobInstance.getScheduleTime().toEpochMilli());
-                        scheduleContext.setLastActualExecutionTime(lastExecutionTime.toEpochMilli());
+                        scheduleContext.setLastScheduleTime(jobInstance.getScheduleTime().toEpochMilli());
+                        scheduleContext.setLastExecutionTime(lastExecutionTime.toEpochMilli());
                         try {
                             Instant deadline = jobInstance.getJobConfiguration().getDeadline();
                             if (deadline != null && deadline.compareTo(now) <= 0) {
@@ -228,6 +231,9 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                                         if (jobInstance.getState() == JobInstanceState.DROPPED) {
                                             jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
                                         }
+                                        if (jobInstance.getScheduleTime().isBefore(earliestNewSchedule)) {
+                                            earliestNewSchedule = jobInstance.getScheduleTime();
+                                        }
                                     }
                                 }
                             }
@@ -237,6 +243,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                             jobContext.forEachJobInstanceListeners(new JobInstanceErrorListenerConsumer(jobInstance, jobProcessingContext));
                         } finally {
                             if (!future) {
+                                jobInstance.setLastExecutionTime(lastExecutionTime);
                                 jobManager.updateJobInstance(jobInstance);
                             }
                         }
@@ -253,28 +260,44 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                         boolean success = true;
                         try {
                             Object lastProcessed = future.get();
+                            jobInstance.setLastExecutionTime(Instant.ofEpochMilli(scheduleContext.getLastExecutionTime()));
                             jobProcessingContext.setLastProcessed(lastProcessed);
-                            // If the job instance isn't done yet, we report a chunk success
-                            if (lastProcessed != null && jobInstance.getState() == JobInstanceState.NEW && jobInstance.getDeferCount() == deferCount) {
-                                jobInstance.onChunkSuccess(jobProcessingContext);
-                                jobContext.forEachJobInstanceListeners(new JobInstanceChunkSuccessListenerConsumer(jobInstance, jobProcessingContext));
-                            }
-
                             scheduleContext.setLastCompletionTime(System.currentTimeMillis());
+
                             if (jobInstance.getState() == JobInstanceState.NEW) {
                                 Instant nextSchedule = jobInstance.nextSchedule(jobContext, scheduleContext);
                                 // This is essential for limited time or fixed time schedules. When these are done, they always return a nextSchedule equal to getLastScheduledExecutionTime()
-                                if (nextSchedule.toEpochMilli() != scheduleContext.getLastScheduledExecutionTime()) {
+                                if (nextSchedule.toEpochMilli() != scheduleContext.getLastScheduleTime()) {
                                     // This is a recurring job that needs rescheduling
+                                    if (jobInstance.getDeferCount() == deferCount) {
+                                        jobInstance.onChunkSuccess(jobProcessingContext);
+                                        jobContext.forEachJobInstanceListeners(new JobInstanceChunkSuccessListenerConsumer(jobInstance, jobProcessingContext));
+                                    }
                                     jobInstance.setScheduleTime(nextSchedule);
+                                    if (jobInstance.getScheduleTime().isBefore(earliestNewSchedule)) {
+                                        earliestNewSchedule = jobInstance.getScheduleTime();
+                                    }
+                                    continue;
+                                } else if (lastProcessed != null) {
+                                    // Chunk processing
+                                    if (jobInstance.getDeferCount() == deferCount) {
+                                        jobInstance.onChunkSuccess(jobProcessingContext);
+                                        jobContext.forEachJobInstanceListeners(new JobInstanceChunkSuccessListenerConsumer(jobInstance, jobProcessingContext));
+                                    }
+                                    if (jobInstance.getScheduleTime().isBefore(earliestNewSchedule)) {
+                                        earliestNewSchedule = jobInstance.getScheduleTime();
+                                    }
                                     continue;
                                 }
                             }
 
-                            jobInstance.markDone(lastProcessed);
+                            if (jobInstance.getState() != JobInstanceState.DONE) {
+                                jobInstance.markDone(lastProcessed);
+                            }
                             jobContext.forEachJobInstanceListeners(new JobInstanceSuccessListenerConsumer(jobInstance, jobProcessingContext));
                         } catch (ExecutionException ex) {
                             Throwable t = ex.getCause();
+                            jobInstance.setLastExecutionTime(Instant.ofEpochMilli(scheduleContext.getLastExecutionTime()));
                             if (t instanceof JobRateLimitException) {
                                 JobRateLimitException e = (JobRateLimitException) t;
                                 LOG.log(Level.FINEST, "Deferring job instance due to rate limit", e);
@@ -286,6 +309,9 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                                     }
                                 }
                                 jobInstance.setScheduleTime(rescheduleRateLimitTime);
+                                if (jobInstance.getScheduleTime().isBefore(earliestNewSchedule)) {
+                                    earliestNewSchedule = jobInstance.getScheduleTime();
+                                }
                             } else if (t instanceof JobTemporaryException) {
                                 JobTemporaryException e = (JobTemporaryException) t;
                                 LOG.log(Level.FINEST, "Deferring job instance due to temporary error", e);
@@ -293,6 +319,9 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                                     jobInstance.setScheduleTime(clock.instant().plus(e.getDeferMillis(), ChronoUnit.MILLIS));
                                 } else {
                                     jobInstance.setScheduleTime(clock.instant().plus(temporaryErrorDeferSeconds, ChronoUnit.SECONDS));
+                                }
+                                if (jobInstance.getScheduleTime().isBefore(earliestNewSchedule)) {
+                                    earliestNewSchedule = jobInstance.getScheduleTime();
                                 }
                             } else {
                                 LOG.log(Level.SEVERE, "An error occurred in the job instance processor", t);
@@ -313,10 +342,13 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                         }
                     }
 
-                    return ActorRunResult.rescheduleIn(0);
+                    if (earliestNewSchedule == Instant.MAX) {
+                        return ActorRunResult.suspend();
+                    }
+                    return ActorRunResult.rescheduleIn(earliestNewSchedule.toEpochMilli() - clock.millis());
                 },
                 t -> {
-                    LOG.log(Level.SEVERE, "An error occurred in the job instance runner", t);
+                    LOG.log(Level.SEVERE, "An error occurred in the job scheduler", t);
                 }
             );
 
@@ -464,26 +496,26 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
 
     private static class MutableScheduleContext implements ScheduleContext {
 
-        private long lastScheduledExecutionTime;
-        private long lastActualExecutionTime;
+        private long lastScheduleTime;
+        private long lastExecutionTime;
         private long lastCompletionTime;
 
         @Override
-        public long getLastScheduledExecutionTime() {
-            return lastScheduledExecutionTime;
+        public long getLastScheduleTime() {
+            return lastScheduleTime;
         }
 
-        public void setLastScheduledExecutionTime(long lastScheduledExecutionTime) {
-            this.lastScheduledExecutionTime = lastScheduledExecutionTime;
+        public void setLastScheduleTime(long lastScheduleTime) {
+            this.lastScheduleTime = lastScheduleTime;
         }
 
         @Override
-        public long getLastActualExecutionTime() {
-            return lastActualExecutionTime;
+        public long getLastExecutionTime() {
+            return lastExecutionTime;
         }
 
-        public void setLastActualExecutionTime(long lastActualExecutionTime) {
-            this.lastActualExecutionTime = lastActualExecutionTime;
+        public void setLastExecutionTime(long lastExecutionTime) {
+            this.lastExecutionTime = lastExecutionTime;
         }
 
         @Override

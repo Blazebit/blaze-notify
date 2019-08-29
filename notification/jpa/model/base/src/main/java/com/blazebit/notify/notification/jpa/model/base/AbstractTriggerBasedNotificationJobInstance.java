@@ -44,6 +44,12 @@ public abstract class AbstractTriggerBasedNotificationJobInstance<ID, R, J exten
 	}
 
 	@Override
+	@Transient
+	public R getLastProcessed() {
+		return getRecipientCursor();
+	}
+
+	@Override
 	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 		setRecipientCursor((R) processingContext.getLastProcessed());
 	}

@@ -19,8 +19,10 @@ package com.blazebit.notify.server.notification;
 import com.blazebit.notify.job.JobInstanceProcessingContext;
 import com.blazebit.notify.job.JobInstanceState;
 import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.notification.email.model.EmailNotificationReviewState;
+import com.blazebit.notify.notification.email.model.FromEmail;
 import com.blazebit.notify.notification.processor.hibernate.insertselect.AbstractInsertSelectNotificationJobInstanceProcessor;
-import com.blazebit.notify.server.model.EmailNotification;
+import com.blazebit.notify.server.model.JobBasedEmailNotification;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
 import com.blazebit.persistence.InsertCriteriaBuilder;
@@ -29,7 +31,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectNotificationJobInstanceProcessor<Long, EmailNotification, EmailNotificationJobInstance, EmailNotificationRecipient> {
+public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectNotificationJobInstanceProcessor<Long, JobBasedEmailNotification, EmailNotificationJobInstance, EmailNotificationRecipient> {
 
     public static final EmailNotificationJobInstanceProcessor INSTANCE = new EmailNotificationJobInstanceProcessor();
 
@@ -39,15 +41,23 @@ public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectN
     }
 
     @Override
-    protected Instant bindNotificationAttributes(InsertCriteriaBuilder<EmailNotification> insertCriteriaBuilder, EmailNotificationJobInstance jobInstance, JobInstanceProcessingContext<Long> context, String recipientAlias, String jobInstanceAlias) {
+    protected Instant bindNotificationAttributes(InsertCriteriaBuilder<JobBasedEmailNotification> insertCriteriaBuilder, EmailNotificationJobInstance jobInstance, JobInstanceProcessingContext<Long> context, String recipientAlias, String jobInstanceAlias) {
         insertCriteriaBuilder.bind("state", JobInstanceState.NEW)
+                .bind("reviewState", EmailNotificationReviewState.UNNECESSARY)
                 .bind("channelType").select("'smtp'")
                 .bind("dropable").select("false")
                 .bind("maximumDeferCount").select("0")
                 .bind("deferCount").select("0")
                 .bind("creationTime").select("FUNCTION('TREAT_INSTANT', CURRENT_TIMESTAMP)")
+                .bind("fromId").selectSubquery()
+                    .from(FromEmail.class, "fromEmail")
+                    .select("fromEmail.id")
+                    .setMaxResults(1)
+                .end()
+                .bind("to").select(recipientAlias + ".email")
                 .bind("recipientId").select(recipientAlias + "." + getNotificationRecipientIdPath())
-                .bind("notificationJobInstanceId").select(jobInstanceAlias + "." + getJobInstanceIdPath());
+                .bind("notificationJobInstanceId").select(jobInstanceAlias + "." + getJobInstanceIdPath())
+                .bind("parameterSerializable").select(jobInstanceAlias + ".trigger.jobConfiguration.parameterSerializable");
         Schedule notificationSchedule = jobInstance.getTrigger().getNotificationSchedule(context.getJobContext());
         Instant nextSchedule;
         if (notificationSchedule == null) {
@@ -79,8 +89,8 @@ public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectN
     }
 
     @Override
-    protected Class<EmailNotification> getNotificationEntityClass() {
-        return EmailNotification.class;
+    protected Class<JobBasedEmailNotification> getNotificationEntityClass() {
+        return JobBasedEmailNotification.class;
     }
 
     @Override

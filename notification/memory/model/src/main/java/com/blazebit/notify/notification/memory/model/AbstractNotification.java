@@ -86,11 +86,6 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	}
 
 	@Override
-	public Set<? extends TimeFrame> getPublishTimeFrames() {
-		return getJobConfiguration().getExecutionTimeFrames();
-	}
-
-	@Override
 	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 }

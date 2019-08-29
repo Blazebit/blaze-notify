@@ -76,25 +76,23 @@ public class MemoryJobManager implements JobManager {
     @Override
     public List<JobInstance<?>> getJobInstancesToProcess(int partition, int partitionCount, int limit, PartitionKey partitionKey) {
         return jobInstances.stream()
-                .filter(jobInstancePredicate(partition, partitionCount, partitionKey, clock.instant()))
+                .filter(i -> i.getState() == JobInstanceState.NEW
+                        && i.getScheduleTime().toEpochMilli() <= clock.millis()
+                        && (partitionCount == 1 || (i.getPartitionKey() & partitionCount) == partition)
+                        && partitionKey.matches(i)
+                )
                 .sorted(Comparator.comparing(JobInstance::getScheduleTime))
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    private static Predicate<JobInstance<?>> jobInstancePredicate(int partition, int partitionCount, PartitionKey partitionKey, Instant now) {
-        return i -> {
-            return i.getState() == JobInstanceState.NEW
-                    && i.getScheduleTime().compareTo(now) <= 0
-                    && (partitionCount == 1 || (i.getPartitionKey() & partitionCount) == partition)
-                    && partitionKey.matches(i);
-        };
-    }
-
     @Override
     public Instant getNextSchedule(int partition, int partitionCount, PartitionKey partitionKey) {
         return jobInstances.stream()
-                .filter(jobInstancePredicate(partition, partitionCount, partitionKey, clock.instant()))
+                .filter(i -> i.getState() == JobInstanceState.NEW
+                        && (partitionCount == 1 || (i.getPartitionKey() & partitionCount) == partition)
+                        && partitionKey.matches(i)
+                )
                 .sorted(Comparator.comparing(JobInstance::getScheduleTime))
                 .map(JobInstance::getScheduleTime)
                 .findFirst()

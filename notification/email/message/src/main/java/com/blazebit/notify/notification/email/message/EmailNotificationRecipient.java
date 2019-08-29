@@ -17,7 +17,28 @@ package com.blazebit.notify.notification.email.message;
 
 import com.blazebit.notify.notification.NotificationRecipient;
 
+import java.util.Locale;
+
 public interface EmailNotificationRecipient<ID> extends NotificationRecipient<ID> {
 
     String getEmail();
+
+    static <X> EmailNotificationRecipient<X> of(X id, Locale locale, String email) {
+        return new EmailNotificationRecipient<X>() {
+            @Override
+            public X getId() {
+                return id;
+            }
+
+            @Override
+            public Locale getLocale() {
+                return locale;
+            }
+
+            @Override
+            public String getEmail() {
+                return email;
+            }
+        };
+    }
 }

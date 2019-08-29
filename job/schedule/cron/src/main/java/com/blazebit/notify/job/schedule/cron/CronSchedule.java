@@ -31,13 +31,13 @@ public class CronSchedule implements Schedule {
 
     @Override
     public long nextEpochSchedule(ScheduleContext ctx) {
-        Date nextValidTimeAfter = cronExpression.getNextValidTimeAfter(new Date(ctx.getLastScheduledExecutionTime()));
+        Date nextValidTimeAfter = cronExpression.getNextValidTimeAfter(new Date(ctx.getLastScheduleTime()));
         // if getLastScheduledExecutionTime() returned a date-time that happened before the cron expression, it returns null
         if (nextValidTimeAfter == null) {
             // if the schedule ran before, we are done and return the last scheduled time
             // which will result in de-scheduling the task
-            if (ctx.getLastCompletionTime() > ctx.getLastScheduledExecutionTime()) {
-                return ctx.getLastScheduledExecutionTime();
+            if (ctx.getLastCompletionTime() > ctx.getLastScheduleTime()) {
+                return ctx.getLastScheduleTime();
             }
             // otherwise we assume now is the next schedule
             return System.currentTimeMillis();

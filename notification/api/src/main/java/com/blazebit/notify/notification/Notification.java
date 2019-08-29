@@ -16,19 +16,11 @@
 package com.blazebit.notify.notification;
 
 import com.blazebit.notify.job.JobInstance;
-import com.blazebit.notify.job.TimeFrame;
-
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
 
 public interface Notification<ID> extends JobInstance<ID> {
 
     String getChannelType();
 
     NotificationRecipient<?> getRecipient();
-
-    Set<? extends TimeFrame> getPublishTimeFrames();
 
 }

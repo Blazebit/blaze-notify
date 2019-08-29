@@ -17,9 +17,11 @@ package com.blazebit.notify.job.spi;
 
 import com.blazebit.notify.job.PartitionKey;
 
+import java.util.Collection;
+
 public interface PartitionKeyProvider {
 
-    PartitionKey getDefaultTriggerPartitionKey();
+    Collection<PartitionKey> getDefaultTriggerPartitionKeys();
 
-    PartitionKey getDefaultJobInstancePartitionKey();
+    Collection<PartitionKey> getDefaultJobInstancePartitionKeys();
 }

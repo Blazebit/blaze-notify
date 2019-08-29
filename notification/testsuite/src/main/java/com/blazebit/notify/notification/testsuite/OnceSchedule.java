@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.notify.server.model;
+package com.blazebit.notify.notification.testsuite;
 
-import com.blazebit.notify.notification.NotificationMessage;
+import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.ScheduleContext;
 
-public class EmailNotificationMessage implements NotificationMessage {
+public class OnceSchedule implements Schedule {
 
+    @Override
+    public long nextEpochSchedule(ScheduleContext ctx) {
+        return 0;
+    }
 }

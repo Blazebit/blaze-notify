@@ -56,6 +56,11 @@ public interface JobConfiguration {
      */
     Set<? extends TimeFrame> getExecutionTimeFrames();
 
+    /**
+     * The job parameters.
+     *
+     * @return The job parameters
+     */
     Map<String, Serializable> getParameters();
 
 }

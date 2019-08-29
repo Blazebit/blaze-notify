@@ -44,6 +44,10 @@ public interface JobInstance<ID> {
 
     void setLastExecutionTime(Instant lastExecutionTime);
 
+    default Object getLastProcessed() {
+        return null;
+    }
+
     void onChunkSuccess(JobInstanceProcessingContext<?> processingContext);
 
     JobConfiguration getJobConfiguration();

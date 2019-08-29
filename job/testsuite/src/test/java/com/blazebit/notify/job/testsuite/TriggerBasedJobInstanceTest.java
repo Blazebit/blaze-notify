@@ -15,12 +15,9 @@
  */
 package com.blazebit.notify.job.testsuite;
 
-import com.blazebit.notify.job.JobContext;
-import com.blazebit.notify.job.JobProcessor;
-import com.blazebit.notify.job.JobTrigger;
-import com.blazebit.notify.job.spi.JobInstanceProcessorFactory;
+import com.blazebit.notify.job.Schedule;
+import com.blazebit.notify.job.ScheduleContext;
 import com.blazebit.notify.job.spi.JobProcessorFactory;
-import org.junit.After;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -38,37 +35,37 @@ public class TriggerBasedJobInstanceTest extends AbstractJobTest {
         this.sink = new ArrayBlockingQueue<>(1024);
     }
 
-    @Override
-    protected JobContext.Builder builder() {
-        // We expect the trigger, and the job instance to run
-        return builder(2);
-    }
-
-    @Override
-    protected JobContext.Builder builder(int count) {
-        return super.builder(count)
-                .withJobProcessorFactory(JobProcessorFactory.of(new SimpleJobProcessor()));
-    }
-
     @Test
     public void testTriggerBasedJobInstanceSchedule() throws Exception {
         this.jobContext = builder()
-                .withJobInstanceProcessorFactory(JobInstanceProcessorFactory.of(((jobInstance, context) -> {
+                .withJobProcessorFactory(JobProcessorFactory.of(((jobInstance, context) -> {
                     sink.add(jobInstance);
-                    return null;
                 })))
                 .createContext();
-        jobContext.getJobManager().addJobInstance(new SimpleJobTrigger(new SimpleSchedule(), Collections.emptyMap()));
+        jobContext.getJobManager().addJobInstance(new SimpleJobTrigger(new OnceSchedule(), Collections.emptyMap()));
         await();
         jobContext.stop(1, TimeUnit.MINUTES);
         assertEquals(1, sink.size());
     }
-    // TODO: recurring trigger tests
 
-    private static class SimpleJobProcessor implements JobProcessor<JobTrigger> {
-        @Override
-        public void process(JobTrigger jobTrigger, JobContext context) {
-            context.getJobManager().addJobInstance(new SimpleTriggerBasedJobInstance((SimpleJobTrigger) jobTrigger));
-        }
+    @Test
+    public void testRecurringTriggerBasedJobInstanceSchedule() throws Exception {
+        this.jobContext = builder(2)
+                .withJobProcessorFactory(JobProcessorFactory.of(((jobInstance, context) -> {
+                    sink.add(jobInstance);
+                })))
+                .createContext();
+        jobContext.getJobManager().addJobInstance(new SimpleJobTrigger(new Schedule() {
+            @Override
+            public long nextEpochSchedule(ScheduleContext ctx) {
+                if (ctx.getLastExecutionTime() == 0) {
+                    return ctx.getLastScheduleTime();
+                }
+                return 0;
+            }
+        }, Collections.emptyMap()));
+        await();
+        jobContext.stop(1, TimeUnit.MINUTES);
+        assertEquals(2, sink.size());
     }
 }

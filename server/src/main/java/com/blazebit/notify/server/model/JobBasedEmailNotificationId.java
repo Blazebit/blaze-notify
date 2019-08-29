@@ -22,23 +22,23 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class EmailNotificationId extends AbstractNotificationId<Long, Long> {
+public class JobBasedEmailNotificationId extends AbstractNotificationId<Long, Long> {
 
-    public EmailNotificationId() {
+    public JobBasedEmailNotificationId() {
     }
 
-    public EmailNotificationId(Long notificationJobInstanceId, Long recipientId) {
+    public JobBasedEmailNotificationId(Long notificationJobInstanceId, Long recipientId) {
         super(notificationJobInstanceId, recipientId);
     }
 
     @Override
-    @Column(name = "recipient_id", nullable = false)
+    @Column(name = "notification_job_instance_id", nullable = false)
     public Long getNotificationJobInstanceId() {
         return super.getNotificationJobInstanceId();
     }
 
     @Override
-    @Column(name = "notification_job_instance_id", nullable = false)
+    @Column(name = "recipient_id", nullable = false)
     public Long getRecipientId() {
         return super.getRecipientId();
     }

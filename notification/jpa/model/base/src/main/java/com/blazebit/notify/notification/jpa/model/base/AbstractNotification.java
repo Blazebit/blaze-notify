@@ -17,7 +17,6 @@
 package com.blazebit.notify.notification.jpa.model.base;
 
 import com.blazebit.notify.job.JobInstanceProcessingContext;
-import com.blazebit.notify.job.TimeFrame;
 import com.blazebit.notify.job.jpa.model.AbstractJobInstance;
 import com.blazebit.notify.job.jpa.model.JobConfiguration;
 import com.blazebit.notify.notification.Notification;
@@ -32,23 +31,18 @@ import java.util.Set;
 
 @MappedSuperclass
 @Table(name = "notification")
-public abstract class AbstractNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long, Long>> extends AbstractJobInstance<ID> implements Notification<ID>, com.blazebit.notify.job.JobConfiguration {
+public abstract class AbstractNotification<ID> extends AbstractJobInstance<ID> implements Notification<ID>, com.blazebit.notify.job.JobConfiguration {
 
 	private static final long serialVersionUID = 1L;
 
 	private String channelType;
-	private R recipient;
-	private I notificationJobInstance;
-	private JobConfiguration jobConfiguration = new JobConfiguration();
+	private NotificationJobConfiguration jobConfiguration = new NotificationJobConfiguration();
+
+	public AbstractNotification() {
+	}
 
 	public AbstractNotification(ID id) {
 		super(id);
-	}
-
-	@Override
-	@Transient
-	public Long getPartitionKey() {
-		return (Long) getRecipient().getId();
 	}
 
 	@Override
@@ -59,37 +53,6 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 
 	public void setChannelType(String channelType) {
 		this.channelType = channelType;
-	}
-
-	@Override
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "recipient_id", insertable = false, updatable = false, nullable = false)
-	public R getRecipient() {
-		return recipient;
-	}
-
-	public void setRecipient(R recipient) {
-		this.recipient = recipient;
-		if (recipient == null) {
-			id().setRecipientId(null);
-		} else {
-			((AbstractNotificationId) id()).setRecipientId(recipient.getId());
-		}
-	}
-
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "notification_job_instance_id", insertable = false, updatable = false, nullable = false)
-	public I getNotificationJobInstance() {
-		return notificationJobInstance;
-	}
-
-	public void setNotificationJobInstance(I notificationJobInstance) {
-		this.notificationJobInstance = notificationJobInstance;
-		if (notificationJobInstance == null) {
-			id().setNotificationJobInstanceId(null);
-		} else {
-			((AbstractNotificationId) id()).setNotificationJobInstanceId(notificationJobInstance.getId());
-		}
 	}
 
 	/*
@@ -125,9 +88,8 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 		jobConfiguration.setDeadline(deadline);
 	}
 
-	@ElementCollection
-	@CollectionTable(name = "notification_publish_time_frames", foreignKey = @ForeignKey(name = "notification_publish_time_frames_fk_notification"))
-	// TODO: Use string encoding to avoid joins
+	@Override
+	@Transient
 	public Set<com.blazebit.notify.job.jpa.model.TimeFrame> getExecutionTimeFrames() {
 		return jobConfiguration.getExecutionTimeFrames();
 	}
@@ -137,17 +99,23 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	}
 
 	@Override
-	@ElementCollection
-	@Column(name = "value")
-	@MapKeyColumn(name = "name")
-	@CollectionTable(name = "notification_parameter", foreignKey = @ForeignKey(name = "notification_parameter_fk_notification"))
-	// TODO: Use string encoding to avoid joins
+	@Transient
 	public Map<String, Serializable> getParameters() {
 		return jobConfiguration.getParameters();
 	}
 
 	public void setParameters(Map<String, Serializable> jobParameters) {
 		jobConfiguration.setParameters(jobParameters);
+	}
+
+	@Lob
+	@Column(name = "parameters")
+	protected Serializable getParameterSerializable() {
+		return jobConfiguration.getParameterSerializable();
+	}
+
+	protected void setParameterSerializable(Serializable parameterSerializable) {
+		jobConfiguration.setParameterSerializable(parameterSerializable);
 	}
 
 	@Override
@@ -157,12 +125,18 @@ public abstract class AbstractNotification<ID extends AbstractNotificationId<?, 
 	}
 
 	@Override
-	@Transient
-	public Set<? extends TimeFrame> getPublishTimeFrames() {
-		return getJobConfiguration().getExecutionTimeFrames();
+	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
 	}
 
-	@Override
-	public void onChunkSuccess(JobInstanceProcessingContext<?> processingContext) {
+	private static class NotificationJobConfiguration extends JobConfiguration {
+		@Override
+		public Serializable getParameterSerializable() {
+			return super.getParameterSerializable();
+		}
+
+		@Override
+		public void setParameterSerializable(Serializable parameterSerializable) {
+			super.setParameterSerializable(parameterSerializable);
+		}
 	}
 }

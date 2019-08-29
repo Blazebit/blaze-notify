@@ -24,9 +24,7 @@ import com.blazebit.notify.job.spi.*;
 import com.blazebit.notify.notification.spi.NotificationPartitionKeyProvider;
 import com.blazebit.notify.notification.spi.NotificationPartitionKeyProviderFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public interface NotificationJobContext extends JobContext {
@@ -38,6 +36,8 @@ public interface NotificationJobContext extends JobContext {
     void triggerNotificationScan(String channelType, long earliestNewNotificationSchedule);
 
     <M extends NotificationMessage> NotificationMessageResolver<M> getNotificationMessageResolver(Class<M> notificationMessageClass);
+
+    <M extends NotificationMessage> NotificationMessageResolver<M> getNotificationMessageResolver(Class<M> notificationMessageClass, ConfigurationSource configurationSource);
 
     <T extends Channel<? extends NotificationRecipient<?>, ? extends NotificationMessage>> T getChannel(String channelType);
 
@@ -111,12 +111,23 @@ public interface NotificationJobContext extends JobContext {
             if (partitionKeyMap.isEmpty()) {
                 PartitionKeyProvider partitionKeyProvider = super.getPartitionKeyProvider();
                 NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
-                partitionKeyMap = new HashMap<>(channelFactories.size() + 1);
-                partitionKeyMap.put(notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(partitionKeyProvider.getDefaultJobInstancePartitionKey()), DEFAULT_JOB_INSTANCE_PROCESS_COUNT);
-                for (String channelType : channelFactories.keySet()) {
-                    PartitionKey partitionKey = notificationPartitionKeyProvider.getPartitionKey(partitionKeyProvider.getDefaultJobInstancePartitionKey(), channelType);
-                    channelPartitionKeys.put(channelType, partitionKey);
-                    partitionKeyMap.put(partitionKey, DEFAULT_NOTIFICATION_PROCESS_COUNT);
+                Collection<PartitionKey> defaultJobInstancePartitionKeys = partitionKeyProvider.getDefaultJobInstancePartitionKeys();
+                partitionKeyMap = new HashMap<>(defaultJobInstancePartitionKeys.size() * (channelFactories.size() + 1));
+                if (defaultJobInstancePartitionKeys.size() == 1) {
+                    PartitionKey defaultJobInstancePartitionKey = defaultJobInstancePartitionKeys.iterator().next();
+                    partitionKeyMap.put(notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(defaultJobInstancePartitionKey), DEFAULT_JOB_INSTANCE_PROCESS_COUNT);
+                } else {
+                    for (PartitionKey defaultJobInstancePartitionKey : defaultJobInstancePartitionKeys) {
+                        if (Notification.class.isAssignableFrom(defaultJobInstancePartitionKey.getJobInstanceType())) {
+                            for (String channelType : channelFactories.keySet()) {
+                                PartitionKey partitionKey = notificationPartitionKeyProvider.getPartitionKey(defaultJobInstancePartitionKey, channelType);
+                                channelPartitionKeys.put(channelType, partitionKey);
+                                partitionKeyMap.put(partitionKey, DEFAULT_NOTIFICATION_PROCESS_COUNT);
+                            }
+                        } else {
+                            partitionKeyMap.put(notificationPartitionKeyProvider.getPartitionKey(defaultJobInstancePartitionKey, null), DEFAULT_JOB_INSTANCE_PROCESS_COUNT);
+                        }
+                    }
                 }
             }
             return new DefaultNotificationJobContext(
@@ -144,18 +155,31 @@ public interface NotificationJobContext extends JobContext {
 
         @Override
         protected PartitionKeyProvider getPartitionKeyProvider() {
-            PartitionKeyProvider partitionKeyProvider = super.getPartitionKeyProvider();
-            NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
-
             return new PartitionKeyProvider() {
                 @Override
-                public PartitionKey getDefaultTriggerPartitionKey() {
-                    return notificationPartitionKeyProvider.getDefaultTriggerPartitionKey(partitionKeyProvider.getDefaultTriggerPartitionKey());
+                public Collection<PartitionKey> getDefaultTriggerPartitionKeys() {
+                    PartitionKeyProvider partitionKeyProvider = Builder.super.getPartitionKeyProvider();
+                    NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
+                    Collection<PartitionKey> defaultTriggerPartitionKeys = partitionKeyProvider.getDefaultTriggerPartitionKeys();
+                    List<PartitionKey> newPartitionKeys = new ArrayList<>(defaultTriggerPartitionKeys.size());
+                    for (PartitionKey defaultTriggerPartitionKey : defaultTriggerPartitionKeys) {
+                        newPartitionKeys.add(notificationPartitionKeyProvider.getDefaultTriggerPartitionKey(defaultTriggerPartitionKey));
+                    }
+
+                    return newPartitionKeys;
                 }
 
                 @Override
-                public PartitionKey getDefaultJobInstancePartitionKey() {
-                    return notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(partitionKeyProvider.getDefaultJobInstancePartitionKey());
+                public Collection<PartitionKey> getDefaultJobInstancePartitionKeys() {
+                    PartitionKeyProvider partitionKeyProvider = Builder.super.getPartitionKeyProvider();
+                    NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
+                    Collection<PartitionKey> defaultJobInstancePartitionKeys = partitionKeyProvider.getDefaultJobInstancePartitionKeys();
+                    List<PartitionKey> newPartitionKeys = new ArrayList<>(defaultJobInstancePartitionKeys.size());
+                    for (PartitionKey defaultJobInstancePartitionKey : defaultJobInstancePartitionKeys) {
+                        newPartitionKeys.add(notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(defaultJobInstancePartitionKey));
+                    }
+
+                    return newPartitionKeys;
                 }
             };
         }
@@ -321,6 +345,7 @@ public interface NotificationJobContext extends JobContext {
                 return getNotificationMessageResolver(notificationMessageClass, this);
             }
 
+            @Override
             public <T extends NotificationMessage> NotificationMessageResolver<T> getNotificationMessageResolver(Class<T> notificationMessageClass, ConfigurationSource configurationSource) {
                 return (NotificationMessageResolver<T>) messageResolvers.computeIfAbsent(
                         new MessageResolverMapKey(notificationMessageClass, configurationSource),

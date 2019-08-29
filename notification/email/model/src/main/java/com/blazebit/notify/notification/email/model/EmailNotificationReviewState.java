@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.notify.notification.email.model;
 
-package com.blazebit.notify.notification.testsuite;
-
-import com.blazebit.notify.job.Schedule;
-import com.blazebit.notify.job.ScheduleContext;
-
-public class SimpleSchedule implements Schedule {
-
-    @Override
-    public long nextEpochSchedule(ScheduleContext ctx) {
-        return 0;
-    }
+public enum EmailNotificationReviewState {
+	UNNECESSARY,
+	NECESSARY,
+	REVIEWED;
 }

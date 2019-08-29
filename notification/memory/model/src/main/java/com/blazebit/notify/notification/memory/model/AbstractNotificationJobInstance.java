@@ -34,6 +34,11 @@ public abstract class AbstractNotificationJobInstance<R> extends AbstractJobInst
 	}
 
 	@Override
+	public R getLastProcessed() {
+		return getRecipientCursor();
+	}
+
+	@Override
 	public void onChunkSuccess(JobInstanceProcessingContext<?> context) {
 		setRecipientCursor((R) context.getLastProcessed());
 	}

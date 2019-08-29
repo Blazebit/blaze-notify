@@ -18,7 +18,7 @@
                  xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd">
 
-    <entity class="com.blazebit.notify.server.model.EmailNotification"/>
+    <entity class="com.blazebit.notify.server.model.JobBasedEmailNotification"/>
     <entity class="com.blazebit.notify.server.model.EmailNotificationJob"/>
     <entity class="com.blazebit.notify.server.model.EmailNotificationJobInstance"/>
     <entity class="com.blazebit.notify.server.model.EmailNotificationJobTrigger"/>

@@ -22,4 +22,18 @@ public interface NotificationRecipient<ID> {
     ID getId();
 
     Locale getLocale();
+
+    static <X> NotificationRecipient<X> of(X id, Locale locale) {
+        return new NotificationRecipient<X>() {
+            @Override
+            public X getId() {
+                return id;
+            }
+
+            @Override
+            public Locale getLocale() {
+                return locale;
+            }
+        };
+    }
 }

@@ -115,7 +115,7 @@ public abstract class AbstractNotificationJobTest<R extends NotificationRecipien
         private final Schedule schedule;
 
         public SimpleScheduleFactory() {
-            this(new SimpleSchedule());
+            this(new OnceSchedule());
         }
 
         public SimpleScheduleFactory(Schedule schedule) {
@@ -136,10 +136,11 @@ public abstract class AbstractNotificationJobTest<R extends NotificationRecipien
     protected static class SimpleNotificationJobInstanceProcessor extends AbstractMemoryNotificationJobInstanceProcessor<Object, SimpleNotification, SimpleNotificationJobInstance, SimpleNotificationRecipient> {
 
         @Override
-        protected SimpleNotification produceNotification(SimpleNotificationJobInstance notificationJobInstance, SimpleNotificationRecipient recipient) {
+        protected SimpleNotification produceNotification(JobInstanceProcessingContext<Object> context, SimpleNotificationJobInstance notificationJobInstance, SimpleNotificationRecipient recipient) {
             SimpleNotification notification = new SimpleNotification(notificationJobInstance);
             notification.setChannelType(channelKey.getChannelType());
             notification.setRecipient(recipient);
+            context.getJobContext().getJobManager().addJobInstance(notificationJobInstance);
             return notification;
         }
 

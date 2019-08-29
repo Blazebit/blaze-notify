@@ -25,6 +25,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-notify-notification-email-message</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-notification-email-sns-sqs-feedback</artifactId>
             <version>${project.version}</version>
         </dependency>

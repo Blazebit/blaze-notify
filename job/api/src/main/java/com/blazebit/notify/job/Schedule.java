@@ -31,6 +31,14 @@ public interface Schedule {
         return nextEpochSchedule(now());
     }
 
+    /**
+     * The next epoch in milliseconds, when the schedule should fire.
+     * Returning the value {@link ScheduleContext#getLastScheduleTime()}
+     * means that there is no next schedule.
+     *
+     * @param ctx The schedule context
+     * @return The next schedule in epoch milliseconds
+     */
     long nextEpochSchedule(ScheduleContext ctx);
 
     static ScheduleContext now() {
@@ -38,15 +46,15 @@ public interface Schedule {
         return scheduleContext(now);
     }
 
-    static ScheduleContext scheduleContext(long lastScheduledExecutionTime) {
+    static ScheduleContext scheduleContext(long lastScheduleTime) {
         return new ScheduleContext() {
             @Override
-            public long getLastScheduledExecutionTime() {
-                return lastScheduledExecutionTime;
+            public long getLastScheduleTime() {
+                return lastScheduleTime;
             }
 
             @Override
-            public long getLastActualExecutionTime() {
+            public long getLastExecutionTime() {
                 return 0;
             }
 

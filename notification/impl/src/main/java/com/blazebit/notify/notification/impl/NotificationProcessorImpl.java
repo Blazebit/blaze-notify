@@ -33,8 +33,12 @@ public class NotificationProcessorImpl<N extends Notification<?>> implements Not
         if (recipient == null) {
             throw new NotificationException("No recipient can be resolved from: " + notification);
         }
-        NotificationMessageResolver<NotificationMessage> notificationMessageResolver =
-                context.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType());
+        NotificationMessageResolver<NotificationMessage> notificationMessageResolver;
+        if (notification instanceof ConfigurationSourceProvider) {
+            notificationMessageResolver = context.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType(), ((ConfigurationSourceProvider) notification).getConfigurationSource(context));
+        } else {
+            notificationMessageResolver = context.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType());
+        }
         NotificationMessage notificationMessage;
         if (notificationMessageResolver == null) {
             if (notification instanceof NotificationMessage) {
@@ -48,6 +52,8 @@ public class NotificationProcessorImpl<N extends Notification<?>> implements Not
         if (notificationMessage == null) {
             throw new NotificationException("No notification message can be resolved from: " + notification);
         }
-        return channel.sendNotificationMessage(recipient, notificationMessage);
+        Object result = channel.sendNotificationMessage(recipient, notificationMessage);
+        notification.markDone(result);
+        return result;
     }
 }

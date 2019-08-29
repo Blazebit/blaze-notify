@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.notification.email.model;
+package com.blazebit.notify.notification;
 
-public enum MailJobState {
-	NEW,
-	SENT,
-	FAILED;
+import com.blazebit.notify.job.ConfigurationSource;
+
+public interface ConfigurationSourceProvider {
+
+    ConfigurationSource getConfigurationSource(NotificationJobContext context);
 }

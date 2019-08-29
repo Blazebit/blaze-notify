@@ -27,10 +27,10 @@ import static org.junit.Assert.assertEquals;
 public class NotificationJobProcessorTest extends AbstractNotificationJobTest<SimpleNotificationRecipient, SimpleNotificationMessage> {
 
     @Test
-    public void testTriggerToSink() throws Exception {
+    public void testTriggerToChannel() throws Exception {
         // We expect the trigger, job instance and notification to run
         this.jobContext = builder(3).createContext();
-        jobContext.getJobManager().addJobInstance(new SimpleNotificationJobTrigger(channel, NotificationRecipientResolver.of(new SimpleNotificationRecipient(Locale.GERMAN)), new SimpleSchedule(), new SimpleSchedule(), Collections.emptyMap()));
+        jobContext.getJobManager().addJobInstance(new SimpleNotificationJobTrigger(channel, NotificationRecipientResolver.of(new SimpleNotificationRecipient(Locale.GERMAN)), new OnceSchedule(), new OnceSchedule(), Collections.emptyMap()));
         await();
         jobContext.stop(1, TimeUnit.MINUTES);
         assertEquals(1, sink.size());

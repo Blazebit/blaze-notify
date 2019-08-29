@@ -16,12 +16,12 @@
 
 package com.blazebit.notify.job.jpa.model;
 
-import javax.persistence.Embeddable;
 import java.io.Serializable;
-import java.time.*;
-import java.util.List;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.time.Month;
+import java.time.Year;
 
-@Embeddable
 public class TimeFrame implements com.blazebit.notify.job.TimeFrame, Serializable {
 
 	private static final long serialVersionUID = 1L;

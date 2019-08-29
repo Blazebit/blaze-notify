@@ -17,6 +17,9 @@
 package com.blazebit.notify.server.rest.impl;
 
 import com.blazebit.notify.job.JobContext;
+import com.blazebit.notify.notification.email.model.AbstractEmailNotification;
+import com.blazebit.notify.notification.email.model.EmailNotification;
+import com.blazebit.notify.notification.email.model.FromEmail;
 import com.blazebit.notify.server.model.EmailNotificationJob;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
@@ -44,16 +47,34 @@ public class TestEndpointImpl implements TestEndpoint {
         recipient.setLocale(Locale.GERMANY);
         recipient.setEmail("test@localhost");
         entityManager.persist(recipient);
+        boolean direct = true;
 
-        EmailNotificationJob emailJob = new EmailNotificationJob();
-        emailJob.setName("test");
-        emailJob.setRecipientExpression("user.id = " + recipient.getId());
+        if (direct) {
+            EmailNotification emailNotification = new EmailNotification();
+            emailNotification.setTo(recipient.getEmail());
+            emailNotification.setTemplateProcessorType("freemarker");
+            emailNotification.setChannelType("smtp");
+            emailNotification.setFrom(entityManager.createQuery("SELECT e FROM FromEmail e", FromEmail.class).setMaxResults(1).getSingleResult());
+            emailNotification.setSubject("Hello");
+            emailNotification.setBodyText("Hey my friend!");
+            emailNotification.setScheduleTime(Instant.now());
+            jobContext.getJobManager().addJobInstance(emailNotification);
+        } else {
+            EmailNotificationJob emailJob = new EmailNotificationJob();
+            emailJob.setName("test");
+            emailJob.setRecipientExpression("user.id = " + recipient.getId());
 
-        EmailNotificationJobTrigger emailNotificationJobTrigger = new EmailNotificationJobTrigger();
-        emailNotificationJobTrigger.setName("test");
-        emailNotificationJobTrigger.setJob(emailJob);
-        emailNotificationJobTrigger.setScheduleCronExpression(jobContext.getScheduleFactory().asCronExpression(Instant.now()));
-        jobContext.getJobManager().addJobInstance(emailNotificationJobTrigger);
+            EmailNotificationJobTrigger emailNotificationJobTrigger = new EmailNotificationJobTrigger();
+            emailNotificationJobTrigger.setName("test");
+            emailNotificationJobTrigger.setJob(emailJob);
+            emailNotificationJobTrigger.setNotificationCronExpression("0 0 22 * * ?");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.TEMPLATE_PROCESSOR_TYPE_PARAMETER_NAME, "freemarker");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.SUBJECT_PARAMETER_NAME, "subject.ftl");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.BODY_TEXT_PARAMETER_NAME, "text.ftl");
+//        emailNotificationJobTrigger.setScheduleCronExpression("0 * * * * ?");
+            emailNotificationJobTrigger.setScheduleCronExpression(jobContext.getScheduleFactory().asCronExpression(Instant.now()));
+            jobContext.getJobManager().addJobInstance(emailNotificationJobTrigger);
+        }
 
         /*
 

@@ -15,6 +15,10 @@
  */
 package com.blazebit.notify.job.testsuite;
 
+import com.blazebit.notify.actor.ActorContext;
+import com.blazebit.notify.actor.spi.ClusterNodeInfo;
+import com.blazebit.notify.actor.spi.ClusterStateListener;
+import com.blazebit.notify.actor.spi.ClusterStateManager;
 import com.blazebit.notify.job.JobContext;
 import com.blazebit.notify.job.JobInstanceState;
 import com.blazebit.notify.job.JobRateLimitException;
@@ -24,10 +28,14 @@ import com.blazebit.notify.job.memory.model.TimeFrame;
 import com.blazebit.notify.job.spi.JobInstanceProcessorFactory;
 import com.blazebit.notify.job.spi.PartitionKeyProvider;
 import com.blazebit.notify.job.spi.TransactionSupport;
-import org.junit.After;
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.time.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
@@ -234,7 +242,7 @@ public class JobInstanceTest extends AbstractJobTest {
         assertEquals(JobInstanceState.DROPPED, jobInstance.getState());
     }
 
-    @Test
+    @Test(timeout = 5000L)
     public void testDefer() throws Exception {
         // GIVEN
         Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
@@ -258,13 +266,13 @@ public class JobInstanceTest extends AbstractJobTest {
 
         // THEN
         await();
-        jobContext.stop(1, TimeUnit.MINUTES);
+        jobContext.stop();
         assertEquals(JobInstanceState.NEW, jobInstance.getState());
         assertEquals(1, jobInstance.getDeferCount());
         assertEquals(Instant.parse("2019-01-01T00:00:00.00Z"), jobInstance.getScheduleTime());
     }
 
-    @Test
+    @Test(timeout = 5000L)
     public void testDeferDrop() throws Exception {
         // GIVEN
         Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
@@ -282,7 +290,7 @@ public class JobInstanceTest extends AbstractJobTest {
 
         // THEN
         await();
-        jobContext.stop(1, TimeUnit.MINUTES);
+        jobContext.stop();
         assertEquals(JobInstanceState.DROPPED, jobInstance.getState());
         assertEquals(1, jobInstance.getDeferCount());
         assertEquals(Instant.parse("2019-01-01T00:00:00.00Z"), jobInstance.getScheduleTime());
@@ -291,12 +299,9 @@ public class JobInstanceTest extends AbstractJobTest {
     @Test
     public void testRefreshJobInstanceSchedulesSpecific() throws Exception {
         // GIVEN
-        Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-        this.jobContext = builder().withService(Clock.class, clock).createContext();
+        this.jobContext = builder().createContext();
         SimpleJobInstance jobInstance = new SimpleJobInstance();
         jobInstance.setState(JobInstanceState.DONE);
-        jobInstance.setCreationTime(clock.instant());
-        jobInstance.setScheduleTime(jobInstance.getCreationTime());
         jobContext.getJobManager().addJobInstance(jobInstance);
 
         // WHEN
@@ -312,12 +317,9 @@ public class JobInstanceTest extends AbstractJobTest {
     @Test
     public void testRefreshJobInstanceSchedulesRescan() throws Exception {
         // GIVEN
-        Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-        this.jobContext = builder().withService(Clock.class, clock).createContext();
+        this.jobContext = builder().createContext();
         SimpleJobInstance jobInstance = new SimpleJobInstance();
         jobInstance.setState(JobInstanceState.DONE);
-        jobInstance.setCreationTime(clock.instant());
-        jobInstance.setScheduleTime(jobInstance.getCreationTime());
         jobContext.getJobManager().addJobInstance(jobInstance);
 
         // WHEN
@@ -333,17 +335,14 @@ public class JobInstanceTest extends AbstractJobTest {
     @Test
     public void testRefreshJobInstanceSchedulesGeneral() throws Exception {
         // GIVEN
-        Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-        this.jobContext = builder().withService(Clock.class, clock).createContext();
+        this.jobContext = builder().createContext();
         SimpleJobInstance jobInstance = new SimpleJobInstance();
         jobInstance.setState(JobInstanceState.DONE);
-        jobInstance.setCreationTime(clock.instant());
-        jobInstance.setScheduleTime(jobInstance.getCreationTime());
         jobContext.getJobManager().addJobInstance(jobInstance);
 
         // WHEN
         jobInstance.setState(JobInstanceState.NEW);
-        jobContext.refreshJobInstanceSchedules(clock.instant().toEpochMilli());
+        jobContext.refreshJobInstanceSchedules(jobInstance.getScheduleTime().toEpochMilli());
 
         // THEN
         await();
@@ -354,19 +353,16 @@ public class JobInstanceTest extends AbstractJobTest {
     @Test
     public void testRefreshJobInstanceSchedulesPartition() throws Exception {
         // GIVEN
-        Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-        JobContext.Builder builder = builder().withService(Clock.class, clock);
+        JobContext.Builder builder = builder();
         PartitionKeyProvider partitionKeyProvider = builder.getPartitionKeyProviderFactory().createPartitionKeyProvider(null, null);
         this.jobContext = builder.createContext();
         SimpleJobInstance jobInstance = new SimpleJobInstance();
         jobInstance.setState(JobInstanceState.DONE);
-        jobInstance.setCreationTime(clock.instant());
-        jobInstance.setScheduleTime(jobInstance.getCreationTime());
         jobContext.getJobManager().addJobInstance(jobInstance);
 
         // WHEN
         jobInstance.setState(JobInstanceState.NEW);
-        jobContext.refreshJobInstanceSchedules(partitionKeyProvider.getDefaultJobInstancePartitionKey(), clock.instant().toEpochMilli());
+        jobContext.refreshJobInstanceSchedules(partitionKeyProvider.getDefaultJobInstancePartitionKeys().iterator().next(), jobInstance.getScheduleTime().toEpochMilli());
 
         // THEN
         await();
@@ -374,5 +370,162 @@ public class JobInstanceTest extends AbstractJobTest {
         assertEquals(JobInstanceState.DONE, jobInstance.getState());
     }
 
-    // TODO: chunking tests + cluster tests
+    @Test
+    public void testChunkingTest() throws Exception {
+        // GIVEN
+        this.jobContext = builder(2)
+                .withJobInstanceProcessorFactory(JobInstanceProcessorFactory.of(((jobInstance, context) -> {
+                    sink.add(jobInstance);
+                    return sink.size() == 1 ? true : null;
+                })))
+                .createContext();
+        SimpleJobInstance jobInstance = new SimpleJobInstance();
+
+        // WHEN
+        jobContext.getJobManager().addJobInstance(jobInstance);
+
+        // THEN
+        await();
+        jobContext.stop(1, TimeUnit.MINUTES);
+        assertEquals(JobInstanceState.DONE, jobInstance.getState());
+        assertEquals(2, sink.size());
+    }
+
+    @Test
+    public void testChangeClusterWhileIdle() throws Exception {
+        // GIVEN
+        MutableClusterStateManager clusterStateManager = new MutableClusterStateManager();
+        this.jobContext = builder().withActorContextBuilder(ActorContext.Builder.create().withClusterStateManager(clusterStateManager)).createContext();
+
+        // WHEN
+        clusterStateManager.setClusterSize(2);
+        clusterStateManager.fireClusterStateChanged();
+        SimpleJobInstance jobInstance = new SimpleJobInstance();
+        jobInstance.setState(JobInstanceState.NEW);
+        jobContext.getJobManager().addJobInstance(jobInstance);
+
+        // THEN
+        await();
+        jobContext.stop(1, TimeUnit.MINUTES);
+        assertEquals(JobInstanceState.DONE, jobInstance.getState());
+    }
+
+    @Test
+    public void testChangeClusterWhileIdleWorkStealing() throws Exception {
+        // GIVEN
+        MutableClusterStateManager clusterStateManager = new MutableClusterStateManager();
+        this.jobContext = builder().withActorContextBuilder(ActorContext.Builder.create().withClusterStateManager(clusterStateManager)).createContext();
+        SimpleJobInstance jobInstance = new SimpleJobInstance();
+        jobInstance.setState(JobInstanceState.DONE);
+        jobContext.getJobManager().addJobInstance(jobInstance);
+
+        // WHEN
+        jobInstance.setState(JobInstanceState.NEW);
+        clusterStateManager.setClusterSize(2);
+        clusterStateManager.fireClusterStateChanged();
+
+        // THEN
+        await();
+        jobContext.stop(1, TimeUnit.MINUTES);
+        assertEquals(JobInstanceState.DONE, jobInstance.getState());
+    }
+
+    private static class MutableClusterStateManager implements ClusterStateManager, ClusterNodeInfo {
+
+        private final List<ClusterStateListener> clusterStateListeners = new CopyOnWriteArrayList<>();
+        private final Map<Class<?>, List<Consumer<Serializable>>> listeners = new ConcurrentHashMap<>();
+        private boolean isCoordinator = true;
+        private long clusterVersion = 0L;
+        private int clusterPosition = 0;
+        private int clusterSize = 1;
+
+        public void fireClusterStateChanged() {
+            clusterStateListeners.forEach(l -> l.onClusterStateChanged(this));
+        }
+
+        @Override
+        public ClusterNodeInfo getCurrentNodeInfo() {
+            return this;
+        }
+
+        @Override
+        public void registerListener(ClusterStateListener listener) {
+            clusterStateListeners.add(listener);
+            listener.onClusterStateChanged(this);
+        }
+
+        @Override
+        public <T extends Serializable> void registerListener(Class<T> eventClass, java.util.function.Consumer<T> listener) {
+            listeners.computeIfAbsent(eventClass, k -> new CopyOnWriteArrayList<>()).add((java.util.function.Consumer<Serializable>) listener);
+        }
+
+        @Override
+        public void fireEventExcludeSelf(Serializable event) {
+            // Noop because there is no cluster
+        }
+
+        @Override
+        public void fireEvent(Serializable event) {
+            java.util.function.Consumer<Class<?>> consumer = eventClass -> {
+                List<java.util.function.Consumer<Serializable>> consumers = listeners.get(eventClass);
+                if (consumers != null) {
+                    consumers.forEach(c -> c.accept(event));
+                }
+            };
+            Class<?> clazz = event.getClass();
+            Set<Class<?>> visitedClasses = new HashSet<>();
+            do {
+                consumer.accept(clazz);
+                visitInterfaces(consumer, clazz, visitedClasses);
+                clazz = clazz.getSuperclass();
+            } while (clazz != null);
+        }
+
+        private void visitInterfaces(java.util.function.Consumer<Class<?>> consumer, Class<?> clazz, Set<Class<?>> visitedClasses) {
+            Class<?>[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                Class<?> interfaceClass = interfaces[i];
+                if (visitedClasses.add(interfaceClass)) {
+                    consumer.accept(interfaceClass);
+                    visitInterfaces(consumer, interfaceClass, visitedClasses);
+                }
+            }
+        }
+
+        @Override
+        public boolean isCoordinator() {
+            return isCoordinator;
+        }
+
+        public void setCoordinator(boolean coordinator) {
+            isCoordinator = coordinator;
+        }
+
+        @Override
+        public long getClusterVersion() {
+            return clusterVersion;
+        }
+
+        public void setClusterVersion(long clusterVersion) {
+            this.clusterVersion = clusterVersion;
+        }
+
+        @Override
+        public int getClusterPosition() {
+            return clusterPosition;
+        }
+
+        public void setClusterPosition(int clusterPosition) {
+            this.clusterPosition = clusterPosition;
+        }
+
+        @Override
+        public int getClusterSize() {
+            return clusterSize;
+        }
+
+        public void setClusterSize(int clusterSize) {
+            this.clusterSize = clusterSize;
+        }
+    }
 }

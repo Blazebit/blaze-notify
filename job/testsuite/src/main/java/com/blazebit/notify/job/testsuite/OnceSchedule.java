@@ -19,7 +19,7 @@ package com.blazebit.notify.job.testsuite;
 import com.blazebit.notify.job.Schedule;
 import com.blazebit.notify.job.ScheduleContext;
 
-public class SimpleSchedule implements Schedule {
+public class OnceSchedule implements Schedule {
 
     @Override
     public long nextEpochSchedule(ScheduleContext ctx) {
