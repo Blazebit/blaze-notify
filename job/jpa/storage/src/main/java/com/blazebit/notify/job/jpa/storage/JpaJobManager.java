@@ -183,10 +183,11 @@ public class JpaJobManager implements JobManager {
                         "WHERE " + statePredicate + " " +
                         (partitionPredicate.isEmpty() ? "" : "AND " + partitionPredicate + " ") +
                         (partitionCount > 1 ? "AND MOD(e." + partitionKeyAttributeName + ", " + partitionCount + ") = " + partition + " " : "") +
-                        "AND e." + scheduleAttributeName + " <= CURRENT_TIMESTAMP " +
+                        "AND e." + scheduleAttributeName + " <= :now " +
                         "ORDER BY e." + scheduleAttributeName + " ASC, e." + idAttributeName + " ASC",
                 jobInstanceType
         );
+        typedQuery.setParameter("now", clock.instant());
         if (readyStateValue != null) {
             typedQuery.setParameter("readyState", readyStateValue);
         }

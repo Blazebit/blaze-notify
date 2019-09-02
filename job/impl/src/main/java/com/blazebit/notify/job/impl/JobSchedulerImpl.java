@@ -113,7 +113,7 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                     // A different thread won the race and apparently has a job instance that should be scheduled earlier
                     return -1L;
                 }
-                long delayMillis = earliestNewSchedule - System.currentTimeMillis();
+                long delayMillis = earliestNewSchedule - clock.millis();
 
                 delayMillis = delayMillis < 0 ? 0 : delayMillis;
                 return delayMillis;
@@ -167,6 +167,9 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
         @Override
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ActorRunResult work() {
+            if (closed) {
+                return ActorRunResult.done();
+            }
             JobManager jobManager = jobContext.getJobManager();
             TransactionSupport transactionSupport = jobContext.getTransactionSupport();
             // TODO: make configurable
@@ -345,7 +348,12 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                     if (earliestNewSchedule == Instant.MAX) {
                         return ActorRunResult.suspend();
                     }
-                    return ActorRunResult.rescheduleIn(earliestNewSchedule.toEpochMilli() - clock.millis());
+
+                    long delay = earliestNewSchedule.toEpochMilli() - clock.millis();
+                    if (LOG.isLoggable(Level.FINEST)) {
+                        LOG.log(Level.FINEST, "Rescheduling in: {0}", delay);
+                    }
+                    return ActorRunResult.rescheduleIn(delay);
                 },
                 t -> {
                     LOG.log(Level.SEVERE, "An error occurred in the job scheduler", t);
@@ -356,15 +364,25 @@ public class JobSchedulerImpl implements JobScheduler, ClusterStateListener {
                 return ActorRunResult.done();
             } else if (result == null) {
                 // An error occurred like e.g. a TX timeout or a temporary DB issue. We do exponential back-off
-                return ActorRunResult.rescheduleIn(getWaitTime(maxBackOff, baseBackOff, retryAttempt++));
+                long delay = getWaitTime(maxBackOff, baseBackOff, retryAttempt++);
+                if (LOG.isLoggable(Level.FINEST)) {
+                    LOG.log(Level.FINEST, "Rescheduling due to error in: {0}", delay);
+                }
+                return ActorRunResult.rescheduleIn(delay);
             }
 
             retryAttempt = 0;
             if (result.isSuspend()) {
                 // This will reschedule based on the next schedule
                 updateEarliestKnownSchedule(earliestKnownNotificationSchedule, Long.MAX_VALUE);
+                if (LOG.isLoggable(Level.FINEST)) {
+                    LOG.finest("Rescan due to suspend");
+                }
                 long delayMillis = rescan(0L);
                 if (delayMillis != -1L) {
+                    if (LOG.isLoggable(Level.FINEST)) {
+                        LOG.log(Level.FINEST, "Rescheduling after suspend in: {0}", delayMillis);
+                    }
                     return ActorRunResult.rescheduleIn(delayMillis);
                 }
             }

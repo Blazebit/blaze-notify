@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.server.rest.impl;
 
+import com.blazebit.notify.notification.NotificationJobContext;
 import com.blazebit.notify.notification.email.model.FromEmail;
 
 import javax.annotation.PostConstruct;
@@ -31,6 +32,9 @@ public class StartupBean {
     @Inject
     EntityManager entityManager;
 
+    @Inject
+    NotificationJobContext notificationJobContext;
+
     @PostConstruct
     public void init() {
         FromEmail fromEmail = new FromEmail();
@@ -39,5 +43,6 @@ public class StartupBean {
         fromEmail.setReplyToName(fromEmail.getName());
         fromEmail.setReplyToEmail(fromEmail.getEmail());
         entityManager.persist(fromEmail);
+        notificationJobContext.triggerNotificationScan(0L);
     }
 }
