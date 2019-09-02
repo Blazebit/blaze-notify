@@ -46,6 +46,6 @@ public class ExpressionInterpreterTest {
     @Test
     public void testBasic3() {
         instant = Instant.ofEpochMilli(0);
-        Assert.assertEquals(instant, testExpression("CURRENT_TIMESTAMP"));
+        Assert.assertEquals(instant, testExpression("CURRENT_TIMESTAMP()"));
     }
 }

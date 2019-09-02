@@ -2,8 +2,8 @@
  * Copyright 2014 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * you may [nN]ot use this file except in compliance with the License.
+ * You may obtain [aA] copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,139 +15,75 @@
  */
 lexer grammar PredicateLexer;
 
-BETWEEN: B E T W E E N;
-AND: A N D;
-OR: O R;
-NOT: N O T | '!';
-IN: I N;
-MEMBER_OF: M E M B E R ' ' O F;
-IS_NULL: I S ' ' N U L L;
-IS_NOT_NULL: I S ' ' N O T ' ' N U L L;
-INTERVAL: I N T E R V A L;
-fragment YEARS: Y E A R S;
-fragment MONTHS: M O N T H S;
-fragment DAYS: D A Y S;
-fragment HOURS: H O U R S;
-fragment MINUTES: M I N U T E S;
-fragment SECONDS: S E C O N D S;
+WS : ( ' ' | '\t' | '\f' | EOL ) -> skip;
+fragment EOL                : [\r\n]+;
 
-TIMESTAMP
-    : T I M E S T A M P;
-
-TIMESTAMP_LITERAL_CONTENT
-    : DATE_STRING (' ' TIME_STRING)?;
-
-fragment DATE_STRING
-    : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
-
-fragment TIME_STRING
-    : DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT DIGIT DIGIT)?;
-
-fragment DIGIT: '0'..'9';
-fragment DIGITS: DIGIT+;
-fragment DIGIT_NOT_ZERO: '1'..'9';
-
-TEMPORAL_INTERVAL_LITERAL_CONTENT
-    : INTEGER WS YEARS (WS INTEGER WS MONTHS)? (WS INTEGER WS DAYS)? (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
-    | INTEGER WS MONTHS (WS INTEGER WS DAYS)? (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
-    | INTEGER WS DAYS (WS INTEGER WS HOURS)? (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
-    | INTEGER WS HOURS (WS INTEGER WS MINUTES)? (WS INTEGER WS SECONDS)?
-    | INTEGER WS MINUTES (WS INTEGER WS SECONDS)?
-    | INTEGER WS SECONDS
-    ;
-
-BOOLEAN_LITERAL
-	: T R U E
-	| F A L S E;
+fragment DIGIT              : '0'..'9';
+fragment DIGITS             : DIGIT+;
+fragment DIGIT_NOT_ZERO     : '1'..'9';
+fragment INTEGER            : '0' | (DIGIT_NOT_ZERO DIGITS?);
+fragment EXPONENT_PART      : [eE] SIGNED_INTEGER;
+fragment SIGNED_INTEGER     : [+-]? DIGITS;
+fragment ESCAPE_SEQUENCE    : ('\\' ('b'|'t'|'n'|'f'|'r'|'\\"'|'\''|'\\')) | UNICODE_ESCAPE;
+fragment HEX_DIGIT          : ('0'..'9'|'a'..'f'|'A'..'F') ;
+fragment UNICODE_ESCAPE     : '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 STRING_LITERAL
-	: QUOTE (~['] | QUOTE QUOTE)* QUOTE
-	| DOUBLE_QUOTE (~["] | DOUBLE_QUOTE DOUBLE_QUOTE)* DOUBLE_QUOTE;
+    : '"' ( ESCAPE_SEQUENCE | ~('\\'|'"') )* '"' {setText(getText().substring(1, getText().length() - 1));}
+    | ('\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\'')+ {setText(getText().substring(1, getText().length() - 1).replace("''", "'"));}
+    ;
 
 NUMERIC_LITERAL
-    : INTEGER ('.' DIGITS)? EXPONENT_PART?;
-
-fragment INTEGER
-	: '0'
-	| DIGIT_NOT_ZERO DIGITS?;
-
-fragment EXPONENT_PART
-    : [eE] SIGNED_INTEGER
+    : INTEGER ('.' DIGITS)? EXPONENT_PART?
     ;
 
-fragment SIGNED_INTEGER
-    : [+-]? DIGITS
+LEADING_ZERO_NUMERIC_LITERAL
+    : '0' DIGITS
     ;
 
-OP_LT: '<';
-OP_LE: '<=';
-OP_GT: '>';
-OP_GE: '>=';
-OP_EQ: '=';
-OP_NEQ1: '!=';
-OP_NEQ2: '<>';
-OP_PLUS: '+';
-OP_MINUS: '-';
-OP_MUL: '*';
-OP_DIV: '/';
+AND             : [aA] [nN] [dD];
+BETWEEN         : [bB] [eE] [tT] [wW] [eE] [eE] [nN];
+DAYS            : [dD] [aA] [yY] [sS];
+FALSE           : [fF] [aA] [lL] [sS] [eE];
+HOURS           : [hH] [oO] [uU] [rR] [sS];
+IN              : [iI] [nN];
+INTERVAL        : [iI] [nN] [tT] [eE] [rR] [vV] [aA] [lL];
+IS              : [iI] [sS];
+MINUTES         : [mM] [iI] [nN] [uU] [tT] [eE] [sS];
+MONTHS          : [mM] [oO] [nN] [tT] [hH] [sS];
+NOT             : [nN] [oO] [tT];
+NULL            : [nN] [uU] [lL] [lL];
+OR              : [oO] [rR];
+SECONDS         : [sS] [eE] [cC] [oO] [nN] [dD] [sS];
+TIMESTAMP       : [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
+TRUE            : [tT] [rR] [uU] [eE];
+YEARS           : [yY] [eE] [aA] [rR] [sS];
 
-LP: '(';
-RP: ')';
-LB: '[';
-RB: ']';
-COMMA: ',';
-DOT: '.';
+LESS            : '<';
+LESS_EQUAL      : '<=';
+GREATER         : '>';
+GREATER_EQUAL   : '>=';
+EQUAL           : '=';
+NOT_EQUAL       : '!=' | '<>';
+PLUS            : '+';
+MINUS           : '-';
+ASTERISK        : '*';
+SLASH           : '/';
+PERCENT         : '%';
 
-IDENTIFIER: JavaLetter JavaLetterOrDigit*;
+LP              : '(';
+RP              : ')';
+LB              : '[';
+RB              : ']';
+COMMA           : ',';
+DOT             : '.';
+COLON           : ':';
+EXCLAMATION_MARK: '!';
 
-WS: [ \n\t\r]+ -> channel(HIDDEN);
-
-fragment A: ('a'|'A');
-fragment B: ('b'|'B');
-fragment C: ('c'|'C');
-fragment D: ('d'|'D');
-fragment E: ('e'|'E');
-fragment F: ('f'|'F');
-fragment G: ('g'|'G');
-fragment H: ('h'|'H');
-fragment I: ('i'|'I');
-fragment J: ('j'|'J');
-fragment K: ('k'|'K');
-fragment L: ('l'|'L');
-fragment M: ('m'|'M');
-fragment N: ('n'|'N');
-fragment O: ('o'|'O');
-fragment P: ('p'|'P');
-fragment Q: ('q'|'Q');
-fragment R: ('r'|'R');
-fragment S: ('s'|'S');
-fragment T: ('t'|'T');
-fragment U: ('u'|'U');
-fragment V: ('v'|'V');
-fragment W: ('w'|'W');
-fragment X: ('x'|'X');
-fragment Y: ('y'|'Y');
-fragment Z: ('z'|'Z');
-
-fragment QUOTE: '\'';
-fragment DOUBLE_QUOTE: '"';
-
-fragment JavaLetter
-    : [a-zA-Z$_] // these are the "java letters" below 0xFF
-    | // covers all characters above 0xFF which are not a surrogate
-    ~[\u0000-\u00FF\uD800-\uDBFF]
-    {Character.isJavaIdentifierStart(_input.LA(-1))}?
-    | // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-    [\uD800-\uDBFF] [\uDC00-\uDFFF]
-    {Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+IDENTIFIER
+    : ('a'..'z'|'A'..'Z'|'_'|'$'|'\u0080'..'\ufffe')('a'..'z'|'A'..'Z'|'_'|'$'|'0'..'9'|'\u0080'..'\ufffe')*
     ;
 
-fragment JavaLetterOrDigit
-    : [a-zA-Z0-9$_] // these are the "java letters or digits" below 0xFF
-    | // covers all characters above 0xFF which are not a surrogate
-    ~[\u0000-\u00FF\uD800-\uDBFF]
-    {Character.isJavaIdentifierPart(_input.LA(-1))}?
-    | // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-    [\uD800-\uDBFF] [\uDC00-\uDFFF]
-    {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+QUOTED_IDENTIFIER
+    : '`' ( ESCAPE_SEQUENCE | ~('\\'|'`') )* '`'
     ;

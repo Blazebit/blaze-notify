@@ -62,6 +62,9 @@ public class LiteralFactory {
 
     public ResolvedLiteral ofEnumValue(EnumDomainType enumDomainType, String value) {
         EnumDomainTypeValue domainEnumValue = enumDomainType.getEnumValues().get(value);
+        if (domainEnumValue == null) {
+            throw new DomainModelException("The value '" + value + "' on the enum domain type '" + enumDomainType.getName() + "' does not exist!");
+        }
         if (enumLiteralResolver == null) {
             throw new DomainModelException("No literal resolver for enum literals defined");
         }
@@ -136,6 +139,10 @@ public class LiteralFactory {
             }
         }
 
+        return ofTemporalAmounts(years, months, days, hours, minutes, seconds);
+    }
+
+    public ResolvedLiteral ofTemporalAmounts(int years, int months, int days, int hours, int minutes, int seconds) {
         TemporalInterval interval = new TemporalInterval(years, months, days, hours, minutes, seconds);
         if (temporalLiteralResolver == null) {
             throw new DomainModelException("No literal resolver for temporal interval literals defined");

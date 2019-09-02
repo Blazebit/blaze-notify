@@ -45,6 +45,6 @@ public class PredicateInterpreterTest {
 
     @Test
     public void testBasic3() {
-        Assert.assertEquals(true, testPredicate("CURRENT_TIMESTAMP = CURRENT_TIMESTAMP"));
+        Assert.assertEquals(true, testPredicate("CURRENT_TIMESTAMP() = CURRENT_TIMESTAMP()"));
     }
 }

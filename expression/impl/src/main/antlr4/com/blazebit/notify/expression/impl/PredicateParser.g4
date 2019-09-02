@@ -17,131 +17,107 @@ parser grammar PredicateParser;
 
 options { tokenVocab=PredicateLexer; }
 
-start
-    : conditional_expression EOF;
+parsePredicate
+    : predicate EOF;
 
-conditional_expression
-    : term=conditional_term							 		#TermPredicate
-    | left=conditional_expression OR term=conditional_term 	#OrPredicate
+parseExpression
+    : expression EOF;
+
+expression
+    : LP expression RP                                                                          # GroupedExpression
+    | lhs=expression ASTERISK rhs=expression                                                    # MultiplicationExpression
+    | lhs=expression SLASH rhs=expression                                                       # DivisionExpression
+    | lhs=expression PERCENT rhs=expression                                                     # ModuloExpression
+    | lhs=expression PLUS rhs=expression                                                        # AdditionExpression
+    | lhs=expression MINUS rhs=expression                                                       # SubtractionExpression
+    | MINUS expression                                                                          # UnaryMinusExpression
+    | PLUS expression                                                                           # UnaryPlusExpression
+    | literal                                                                                   # LiteralExpression
+    | path                                                                                      # PathExpression
+    | function                                                                                  # FunctionExpression
     ;
 
-conditional_term
-    : factor=conditional_factor							  #FactorPredicate
-    | left=conditional_term AND factor=conditional_factor #AndPredicate
+predicate
+    : LP predicate RP                                                                           # GroupedPredicate
+    | (NOT | EXCLAMATION_MARK) predicate                                                        # NegatedPredicate
+    | predicate AND predicate                                                                   # AndPredicate
+    | predicate OR predicate                                                                    # OrPredicate
+    | expression IS NOT? NULL                                                                   # IsNullPredicate
+    | lhs=expression EQUAL rhs=expression                                                       # EqualityPredicate
+    | lhs=expression NOT_EQUAL rhs=expression                                                   # InequalityPredicate
+    | lhs=expression GREATER rhs=expression                                                     # GreaterThanPredicate
+    | lhs=expression GREATER_EQUAL rhs=expression                                               # GreaterThanOrEqualPredicate
+    | lhs=expression LESS rhs=expression                                                        # LessThanPredicate
+    | lhs=expression LESS_EQUAL rhs=expression                                                  # LessThanOrEqualPredicate
+    | expression NOT? IN inList                                                                 # InPredicate
+    | lhs=expression NOT? BETWEEN start=expression AND end=expression                           # BetweenPredicate
+    | function                                                                                  # BooleanFunction
     ;
 
-conditional_factor
-    : (not=NOT)? expr=conditional_primary;
-
-conditional_primary
-    : expr=comparison_expression	    #SimplePredicate
-    | boolean_literal                   #BooleanLiteralPredicate
-    | function_invocation               #BooleanFunction
-    | LP expr=conditional_expression RP #NestedPredicate
+inList
+    : LP expression (COMMA expression)* RP
+    | expression
     ;
 
-comparison_expression
-    : left=arithmetic_expression 	comparison_operator 			right=arithmetic_expression		                                        #ComparisonPredicate
-    | left=arithmetic_expression BETWEEN lower=arithmetic_expression AND upper=arithmetic_expression                                        #BetweenPredicate
-    | arithmetic_expression 	(not=NOT)? IN 			LP (in_items+=arithmetic_in_item)? (COMMA in_items+=arithmetic_in_item)* RP         #InPredicate
-	| arithmetic_expression 	(not=NOT)? IN 			enum_literal_or_path			                                                    #InCollectionPredicate
-    | left=arithmetic_expression		kind=(IS_NULL | IS_NOT_NULL)                                                                        #IsNullPredicate
+path
+    : identifier (DOT identifier)*
     ;
 
-equality_comparison_operator
-    : OP_EQ
-    | OP_NEQ1
-    | OP_NEQ2
+literal
+    : NUMERIC_LITERAL
+    | STRING_LITERAL
+    | TRUE
+    | FALSE
+    | timestampLiteral
+    | temporalIntervalLiteral
+    | collectionLiteral
     ;
 
-comparison_operator
-    : equality_comparison_operator
-    | OP_GT
-    | OP_GE
-    | OP_LT
-    | OP_LE
+collectionLiteral
+    : LB (literal (COMMA literal)*)? RB
     ;
 
-arithmetic_expression
-    : arithmetic_term												    #SimpleArithmeticTerm
-    | arithmetic_expression op=( OP_PLUS | OP_MINUS ) arithmetic_term	#AdditiveExpression
+function
+    : name=identifier LP ((expression COMMA)* expression)? RP                                      #IndexedFunctionInvocation
+    | name=identifier LP ((identifier EQUAL expression COMMA)* identifier EQUAL expression)? RP    #NamedInvocation
     ;
 
-arithmetic_term
-    : arithmetic_factor											    #SimpleArithmeticFactor
-    | arithmetic_term op=( OP_MUL | OP_DIV ) arithmetic_factor	    #MultiplicativeExpression
+timestampLiteral
+    : TIMESTAMP LP datePart (timePart (DOT fraction=(NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL))? )? RP
     ;
 
-arithmetic_factor
-    : sign=( OP_PLUS | OP_MINUS )? arithmetic_primary   #ArithmeticPrimary
+datePart
+    : NUMERIC_LITERAL MINUS (NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL) MINUS (NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL)
     ;
 
-arithmetic_in_item
-	: sign=( OP_PLUS | OP_MINUS )? atom  #ArithmeticInItem
-	;
-
-arithmetic_primary
-    : atom               #ArithmeticAtom
-    | LP arithmetic_expression RP   #ArithmeticPrimaryParanthesis
+timePart
+    : (NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL) COLON (NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL) COLON (NUMERIC_LITERAL | LEADING_ZERO_NUMERIC_LITERAL)
     ;
 
-atom
-    : enum_literal_or_path
-    | entity_literal_or_function_invocation
-    | datetime_literal
-    | temporal_interval_literal
-    | numeric_literal
-    | string_literal
-    | collection_literal
+temporalIntervalLiteral
+    : INTERVAL (
+      (years=NUMERIC_LITERAL YEARS (months=NUMERIC_LITERAL MONTHS)? (days=NUMERIC_LITERAL DAYS)? (hours=NUMERIC_LITERAL HOURS)? (minutes=NUMERIC_LITERAL MINUTES)? (seconds=NUMERIC_LITERAL SECONDS)?)
+    | (months=NUMERIC_LITERAL MONTHS (days=NUMERIC_LITERAL DAYS)? (hours=NUMERIC_LITERAL HOURS)? (minutes=NUMERIC_LITERAL MINUTES)? (seconds=NUMERIC_LITERAL SECONDS)?)
+    | (days=NUMERIC_LITERAL DAYS (hours=NUMERIC_LITERAL HOURS)? (minutes=NUMERIC_LITERAL MINUTES)? (seconds=NUMERIC_LITERAL SECONDS)?)
+    | (hours=NUMERIC_LITERAL HOURS (minutes=NUMERIC_LITERAL MINUTES)? (seconds=NUMERIC_LITERAL SECONDS)?)
+    | (minutes=NUMERIC_LITERAL MINUTES (seconds=NUMERIC_LITERAL SECONDS)?)
+    | (seconds=NUMERIC_LITERAL SECONDS)
+    )
     ;
-
-enum_literal_or_path
-    : pathRoot=identifier (DOT pathElements+=identifier)+
-    ;
-
-entity_literal_or_function_invocation
-    : entity_literal
-    | function_invocation
-    ;
-
-entity_literal
-    : name=identifier                                                                                                                                                                                   #RootPathOrNoArgFunctionInvocation
-    ;
-
-function_invocation
-    : name=identifier LP ((args+=function_argument COMMA)* args+=function_argument)? RP                                                          #IndexedFunctionInvocation
-    | name=identifier LP ((argNames+=identifier OP_EQ args+=function_argument COMMA)* argNames+=identifier OP_EQ args+=function_argument)? RP    #NamedInvocation
-    ;
-
-function_argument
-    : conditional_expression
-    | arithmetic_expression
-    ;
-
-datetime_literal
-	: TIMESTAMP LP content=TIMESTAMP_LITERAL_CONTENT RP    #TimestampLiteral
-	;
-
-temporal_interval_literal
-    : INTERVAL content=TEMPORAL_INTERVAL_LITERAL_CONTENT #TemporalIntervalLiteral
-    ;
-
-boolean_literal
-    : BOOLEAN_LITERAL   #BooleanLiteral
-    ;
-
-string_literal
-	: STRING_LITERAL    #StringLiteral
-	;
-
-numeric_literal
-    : NUMERIC_LITERAL   #NumericLiteral
-	;
-
-collection_literal
-    : LB ((values+=atom) (COMMA (values+=atom))*)? RB   #CollectionLiteral
-	;
 
 identifier
     : IDENTIFIER
+    | AND
+    | BETWEEN
+    | DAYS
+    | HOURS
+    | IN
+    | IS
+    | MINUTES
+    | MONTHS
+    | NOT
+    | OR
+    | SECONDS
+    | TIMESTAMP
+    | YEARS
     ;

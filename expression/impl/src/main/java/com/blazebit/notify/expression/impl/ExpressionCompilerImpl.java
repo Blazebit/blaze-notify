@@ -35,13 +35,13 @@ public class ExpressionCompilerImpl implements ExpressionCompiler {
     private static final RuleInvoker<Predicate> PREDICATE_RULE_INVOKER = new RuleInvoker<Predicate>() {
         @Override
         public ParserRuleContext invokeRule(PredicateParser parser) {
-            return parser.start();
+            return parser.parsePredicate();
         }
     };
     private static final RuleInvoker<Expression> EXPRESSION_RULE_INVOKER = new RuleInvoker<Expression>() {
         @Override
         public ParserRuleContext invokeRule(PredicateParser parser) {
-            return parser.arithmetic_expression();
+            return parser.parseExpression();
         }
     };
 

@@ -29,7 +29,8 @@ public enum ArithmeticOperatorType {
     PLUS("+", DomainOperator.PLUS),
     MINUS("-", DomainOperator.MINUS),
     MULTIPLY("*", DomainOperator.MULTIPLICATION),
-    DIVIDE("/", DomainOperator.DIVISION);
+    DIVIDE("/", DomainOperator.DIVISION),
+    MODULO("/", DomainOperator.MODULO);
 
     private static Map<String, ArithmeticOperatorType> OPERATOR_MAP;
 

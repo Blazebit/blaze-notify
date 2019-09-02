@@ -19,6 +19,8 @@ package com.blazebit.notify.expression.impl;
 import com.blazebit.notify.domain.runtime.model.*;
 import com.blazebit.notify.expression.*;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
 
@@ -38,64 +40,137 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Predicate visitStart(PredicateParser.StartContext ctx) {
-        return (Predicate) ctx.conditional_expression().accept(this);
+    public Expression visitParsePredicate(PredicateParser.ParsePredicateContext ctx) {
+        return ctx.predicate().accept(this);
+    }
+
+    @Override
+    public Expression visitParseExpression(PredicateParser.ParseExpressionContext ctx) {
+        return ctx.expression().accept(this);
+    }
+
+    @Override
+    public Expression visitGroupedPredicate(PredicateParser.GroupedPredicateContext ctx) {
+        return ctx.predicate().accept(this);
+    }
+
+    @Override
+    public Expression visitNegatedPredicate(PredicateParser.NegatedPredicateContext ctx) {
+        Predicate predicate = (Predicate) ctx.predicate().accept(this);
+        predicate.setNegated(!predicate.isNegated());
+        return predicate;
     }
 
     @Override
     public Predicate visitOrPredicate(PredicateParser.OrPredicateContext ctx) {
-        Predicate leftTerm = (Predicate) ctx.left.accept(this);
-        Predicate rightTerm = (Predicate) ctx.term.accept(this);
+        List<PredicateParser.PredicateContext> predicate = ctx.predicate();
+        Predicate left = (Predicate) predicate.get(0).accept(this);
+        Predicate right = (Predicate) predicate.get(1).accept(this);
 
         CompoundPredicate disjunctivePredicate;
-        if (leftTerm instanceof CompoundPredicate && !((CompoundPredicate) leftTerm).isConjunction() && !leftTerm.isNegated()) {
-            disjunctivePredicate = (CompoundPredicate) leftTerm;
-            disjunctivePredicate.getPredicates().add(rightTerm);
+        if (left instanceof CompoundPredicate && !((CompoundPredicate) left).isConjunction() && !left.isNegated()) {
+            disjunctivePredicate = (CompoundPredicate) left;
+            disjunctivePredicate.getPredicates().add(right);
         } else {
             disjunctivePredicate = new CompoundPredicate(getBooleanDomainType(), new ArrayList<>(2), false);
-            disjunctivePredicate.getPredicates().add(leftTerm);
-            disjunctivePredicate.getPredicates().add(rightTerm);
+            disjunctivePredicate.getPredicates().add(left);
+            disjunctivePredicate.getPredicates().add(right);
         }
         return disjunctivePredicate;
     }
 
     @Override
     public Predicate visitAndPredicate(PredicateParser.AndPredicateContext ctx) {
-        Predicate leftTerm = (Predicate) ctx.left.accept(this);
-        Predicate rightFactor = (Predicate) ctx.factor.accept(this);
+        List<PredicateParser.PredicateContext> predicate = ctx.predicate();
+        Predicate left = (Predicate) predicate.get(0).accept(this);
+        Predicate right = (Predicate) predicate.get(1).accept(this);
 
         CompoundPredicate conjunctivePredicate;
-        if (leftTerm instanceof CompoundPredicate && ((CompoundPredicate) leftTerm).isConjunction() && !leftTerm.isNegated()) {
-            conjunctivePredicate = (CompoundPredicate) leftTerm;
-            conjunctivePredicate.getPredicates().add(rightFactor);
+        if (left instanceof CompoundPredicate && ((CompoundPredicate) left).isConjunction() && !left.isNegated()) {
+            conjunctivePredicate = (CompoundPredicate) left;
+            conjunctivePredicate.getPredicates().add(right);
         } else {
             conjunctivePredicate = new CompoundPredicate(getBooleanDomainType(), new ArrayList<>(2), true);
-            conjunctivePredicate.getPredicates().add(leftTerm);
-            conjunctivePredicate.getPredicates().add(rightFactor);
+            conjunctivePredicate.getPredicates().add(left);
+            conjunctivePredicate.getPredicates().add(right);
         }
         return conjunctivePredicate;
     }
 
     @Override
-    public Expression visitNestedPredicate(PredicateParser.NestedPredicateContext ctx) {
-        return ctx.expr.accept(this);
-    }
+    public Predicate visitIsNullPredicate(PredicateParser.IsNullPredicateContext ctx) {
+        Expression left = ctx.expression().accept(this);
 
-    @Override
-    public Predicate visitConditional_factor(PredicateParser.Conditional_factorContext ctx) {
-        Predicate predicate = (Predicate) ctx.expr.accept(this);
-        if (ctx.not != null) {
-            predicate.setNegated(!predicate.isNegated());
+        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.NULLNESS);
+
+        if (predicateTypeResolver == null) {
+            throw missingPredicateTypeResolver(left.getType(), DomainPredicateType.NULLNESS);
+        } else {
+            List<DomainType> operandTypes = Collections.singletonList(left.getType());
+            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
+            if (domainType == null) {
+                throw cannotResolvePredicateType(DomainPredicateType.NULLNESS, operandTypes);
+            } else {
+                return new IsNullPredicate(domainType, left, ctx.NOT() != null);
+            }
         }
-        return predicate;
     }
 
     @Override
-    public Predicate visitComparisonPredicate(PredicateParser.ComparisonPredicateContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.left.accept(this);
-        ArithmeticExpression right = (ArithmeticExpression) ctx.right.accept(this);
-        ComparisonOperator comparisonOperator = ComparisonOperator.valueOfOperator(ctx.comparison_operator().getText());
+    public Expression visitInequalityPredicate(PredicateParser.InequalityPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.NOT_EQUAL
+        );
+    }
 
+    @Override
+    public Expression visitLessThanOrEqualPredicate(PredicateParser.LessThanOrEqualPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.LOWER_OR_EQUAL
+        );
+    }
+
+    @Override
+    public Expression visitEqualityPredicate(PredicateParser.EqualityPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.EQUAL
+        );
+    }
+
+    @Override
+    public Expression visitGreaterThanPredicate(PredicateParser.GreaterThanPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.GREATER
+        );
+    }
+
+    @Override
+    public Expression visitLessThanPredicate(PredicateParser.LessThanPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.LOWER
+        );
+    }
+
+    @Override
+    public Expression visitGreaterThanOrEqualPredicate(PredicateParser.GreaterThanOrEqualPredicateContext ctx) {
+        return createComparisonPredicate(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ComparisonOperator.GREATER_OR_EQUAL
+        );
+    }
+
+    public Predicate createComparisonPredicate(ArithmeticExpression left, ArithmeticExpression right, ComparisonOperator comparisonOperator) {
         List<DomainType> operandTypes = Arrays.asList(left.getType(), right.getType());
         DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), comparisonOperator.getDomainPredicateType());
 
@@ -113,8 +188,8 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
 
     @Override
     public Expression visitInPredicate(PredicateParser.InPredicateContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_expression().accept(this);
-        List<ArithmeticExpression> inItems = getLiteralList(ArithmeticExpression.class, ctx.in_items);
+        ArithmeticExpression left = (ArithmeticExpression) ctx.expression().accept(this);
+        List<ArithmeticExpression> inItems = getLiteralList(ctx.inList().expression());
 
         DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.EQUALITY);
 
@@ -131,16 +206,16 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             if (domainType == null) {
                 throw cannotResolvePredicateType(DomainPredicateType.EQUALITY, operandTypes);
             } else {
-                return new InPredicate(domainType, left, inItems, ctx.not != null);
+                return new InPredicate(domainType, left, inItems, ctx.NOT() != null);
             }
         }
     }
 
     @Override
     public Predicate visitBetweenPredicate(PredicateParser.BetweenPredicateContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.left.accept(this);
-        ArithmeticExpression lower = (ArithmeticExpression) ctx.lower.accept(this);
-        ArithmeticExpression upper = (ArithmeticExpression) ctx.upper.accept(this);
+        ArithmeticExpression left = (ArithmeticExpression) ctx.lhs.accept(this);
+        ArithmeticExpression lower = (ArithmeticExpression) ctx.start.accept(this);
+        ArithmeticExpression upper = (ArithmeticExpression) ctx.end.accept(this);
 
         DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.RELATIONAL);
 
@@ -157,36 +232,67 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
         }
     }
 
-//    @Override
-//    public Predicate visitStringInCollectionPredicate(PredicateParser.StringInCollectionPredicateContext ctx) {
-//        return new StringInCollectionPredicate((StringAtom) ctx.string_expression().accept(this), (CollectionAtom) ctx.collection_attribute().accept(this), ctx.not != null);
-//    }
-
     @Override
-    public Predicate visitIsNullPredicate(PredicateParser.IsNullPredicateContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.left.accept(this);
-
-        DomainPredicateTypeResolver predicateTypeResolver = domainModel.getPredicateTypeResolver(left.getType().getName(), DomainPredicateType.NULLNESS);
-
-        if (predicateTypeResolver == null) {
-            throw missingPredicateTypeResolver(left.getType(), DomainPredicateType.NULLNESS);
-        } else {
-            List<DomainType> operandTypes = Collections.singletonList(left.getType());
-            DomainType domainType = predicateTypeResolver.resolveType(domainModel, operandTypes);
-            if (domainType == null) {
-                throw cannotResolvePredicateType(DomainPredicateType.NULLNESS, operandTypes);
-            } else {
-                return new IsNullPredicate(domainType, left, ctx.kind.getType() == PredicateParser.IS_NOT_NULL);
-            }
+    public Expression visitBooleanFunction(PredicateParser.BooleanFunctionContext ctx) {
+        Expression expression = super.visitBooleanFunction(ctx);
+        if (expression.getType() == getBooleanDomainType()) {
+            return expression;
         }
+
+        throw new TypeErrorException("Invalid use of non-boolean returning function: " + ctx.getText());
     }
 
     @Override
-    public Expression visitAdditiveExpression(PredicateParser.AdditiveExpressionContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_expression().accept(this);
-        ArithmeticExpression right = (ArithmeticExpression) ctx.arithmetic_term().accept(this);
-        ArithmeticOperatorType operator = ArithmeticOperatorType.valueOfOperator(ctx.op.getText());
+    public Expression visitGroupedExpression(PredicateParser.GroupedExpressionContext ctx) {
+        return ctx.expression().accept(this);
+    }
 
+    @Override
+    public Expression visitAdditionExpression(PredicateParser.AdditionExpressionContext ctx) {
+        return createArithmeticExpression(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ArithmeticOperatorType.PLUS
+        );
+    }
+
+    @Override
+    public Expression visitSubtractionExpression(PredicateParser.SubtractionExpressionContext ctx) {
+        return createArithmeticExpression(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ArithmeticOperatorType.MINUS
+        );
+    }
+
+    @Override
+    public Expression visitDivisionExpression(PredicateParser.DivisionExpressionContext ctx) {
+        return createArithmeticExpression(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ArithmeticOperatorType.DIVIDE
+        );
+    }
+
+    @Override
+    public Expression visitMultiplicationExpression(PredicateParser.MultiplicationExpressionContext ctx) {
+        return createArithmeticExpression(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ArithmeticOperatorType.MULTIPLY
+        );
+    }
+
+    @Override
+    public Expression visitModuloExpression(PredicateParser.ModuloExpressionContext ctx) {
+        return createArithmeticExpression(
+                (ArithmeticExpression) ctx.lhs.accept(this),
+                (ArithmeticExpression) ctx.rhs.accept(this),
+                ArithmeticOperatorType.MODULO
+        );
+    }
+
+    private Expression createArithmeticExpression(ArithmeticExpression left, ArithmeticExpression right, ArithmeticOperatorType operator) {
         List<DomainType> operandTypes = Arrays.asList(left.getType(), right.getType());
         DomainOperationTypeResolver operationTypeResolver = domainModel.getOperationTypeResolver(left.getType().getName(), operator.getDomainOperator());
         if (operationTypeResolver == null) {
@@ -202,84 +308,73 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Expression visitMultiplicativeExpression(PredicateParser.MultiplicativeExpressionContext ctx) {
-        ArithmeticExpression left = (ArithmeticExpression) ctx.arithmetic_term().accept(this);
-        ArithmeticExpression right = (ArithmeticExpression) ctx.arithmetic_factor().accept(this);
-        ArithmeticOperatorType operator = ArithmeticOperatorType.valueOfOperator(ctx.op.getText());
-
-        List<DomainType> operandTypes = Arrays.asList(left.getType(), right.getType());
-        DomainOperationTypeResolver operationTypeResolver = domainModel.getOperationTypeResolver(left.getType().getName(), operator.getDomainOperator());
-        if (operationTypeResolver == null) {
-            throw cannotResolveOperationType(operator.getDomainOperator(), operandTypes);
-        } else {
-            DomainType domainType = operationTypeResolver.resolveType(domainModel, operandTypes);
-            if (domainType == null) {
-                throw cannotResolveOperationType(operator.getDomainOperator(), operandTypes);
-            } else {
-                return new ChainingArithmeticExpression(left, right, operator);
-            }
-        }
+    public Expression visitUnaryMinusExpression(PredicateParser.UnaryMinusExpressionContext ctx) {
+        return new ArithmeticFactor((ArithmeticExpression) ctx.expression().accept(this), true);
     }
 
     @Override
-    public Expression visitArithmeticPrimary(PredicateParser.ArithmeticPrimaryContext ctx) {
-        Expression accept = ctx.arithmetic_primary().accept(this);
-        if (ctx.sign == null) {
-            return accept;
-        }
-        return new ArithmeticFactor((ArithmeticExpression) accept, ctx.sign.getType() == PredicateParser.OP_MINUS);
+    public Expression visitUnaryPlusExpression(PredicateParser.UnaryPlusExpressionContext ctx) {
+        return ctx.expression().accept(this);
     }
 
-    @Override
-    public Expression visitArithmeticInItem(PredicateParser.ArithmeticInItemContext ctx) {
-        ArithmeticExpression atom = (ArithmeticExpression) ctx.atom().accept(this);
-
-        if (ctx.sign == null || ctx.sign.getType() == PredicateParser.OP_PLUS) {
-            return atom;
-        } else {
-            if (atom.getType().getEnabledOperators().contains(DomainOperator.UNARY_MINUS)) {
-                return new ArithmeticFactor(atom, true);
-            } else {
-                throw new TypeErrorException(String.format("%s not enabled for type %s", DomainOperator.UNARY_MINUS, atom.getType()));
-            }
-        }
-    }
-
-    @Override
-    public Expression visitArithmeticPrimaryParanthesis(PredicateParser.ArithmeticPrimaryParanthesisContext ctx) {
-        return ctx.arithmetic_expression().accept(this);
-    }
+//    @Override
+//    public Predicate visitStringInCollectionPredicate(PredicateParser.StringInCollectionPredicateContext ctx) {
+//        return new StringInCollectionPredicate((StringAtom) ctx.string_expression().accept(this), (CollectionAtom) ctx.collection_attribute().accept(this), ctx.not != null);
+//    }
+//    @Override
+//    public Expression visitCollectionAttribute(PredicateParser.CollectionAttributeContext ctx) {
+//        return new CollectionAtom(new Path(ctx.identifier().getText(), TermType.COLLECTION));
+//    }
 
     @Override
     public Expression visitTimestampLiteral(PredicateParser.TimestampLiteralContext ctx) {
-        return new Literal(literalFactory.ofDateTimeString(ctx.content.getText()));
+        StringBuilder sb = new StringBuilder(23);
+        sb.append(ctx.datePart().getText());
+        PredicateParser.TimePartContext timePartContext = ctx.timePart();
+        if (timePartContext != null) {
+            sb.append(' ');
+            sb.append(timePartContext.getText());
+
+            if (ctx.fraction != null) {
+                sb.append('.');
+                sb.append(ctx.fraction.getText());
+            }
+        }
+        return new Literal(literalFactory.ofDateTimeString(sb.toString()));
     }
 
     @Override
     public Expression visitTemporalIntervalLiteral(PredicateParser.TemporalIntervalLiteralContext ctx) {
-        return new Literal(literalFactory.ofTemporalIntervalString(ctx.content.getText()));
+        int years = parseTemporalAmount(ctx.years, "years");
+        int months = parseTemporalAmount(ctx.months, "months");
+        int days = parseTemporalAmount(ctx.days, "days");
+        int hours = parseTemporalAmount(ctx.hours, "hours");
+        int minutes = parseTemporalAmount(ctx.minutes, "minutes");
+        int seconds = parseTemporalAmount(ctx.seconds, "seconds");
+        return new Literal(literalFactory.ofTemporalAmounts(years, months, days, hours, minutes, seconds));
     }
 
-    @Override
-    public Expression visitStringLiteral(PredicateParser.StringLiteralContext ctx) {
-        return new Literal(literalFactory.ofQuotedString(ctx.STRING_LITERAL().getText()));
-    }
-
-    @Override
-    public Expression visitNumericLiteral(PredicateParser.NumericLiteralContext ctx) {
-        return new Literal(literalFactory.ofNumericString(ctx.NUMERIC_LITERAL().getText()));
-    }
-
-    @Override
-    public Expression visitBooleanLiteral(PredicateParser.BooleanLiteralContext ctx) {
-        char c = ctx.BOOLEAN_LITERAL().getText().charAt(0);
-        boolean value = c == 't' || c == 'T';
-        return getBooleanLiteral(value);
+    private int parseTemporalAmount(Token token, String field) {
+        if (token == null) {
+            return 0;
+        }
+        int amount = 0;
+        NumberFormatException exception = null;
+        String amountString = token.getText();
+        try {
+            amount = Integer.parseInt(amountString);
+        } catch (NumberFormatException ex) {
+            exception = ex;
+        }
+        if (exception != null || amount < 0) {
+            throw new SyntaxErrorException("Illegal value given for temporal field '" + field + "': " + amountString, exception);
+        }
+        return amount;
     }
 
     @Override
     public Expression visitCollectionLiteral(PredicateParser.CollectionLiteralContext ctx) {
-        List<Expression> literalList = getLiteralList(Expression.class, ctx.values);
+        List<Expression> literalList = getLiteralList(ctx.literal());
         CollectionDomainType collectionDomainType;
         if (literalList.isEmpty()) {
             collectionDomainType = domainModel.getCollectionType(null);
@@ -291,21 +386,23 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Expression visitEnum_literal_or_path(PredicateParser.Enum_literal_or_pathContext ctx) {
-        String alias = ctx.pathRoot.getText();
+    public Expression visitPath(PredicateParser.PathContext ctx) {
+        List<PredicateParser.IdentifierContext> identifiers = ctx.identifier();
+        int size = identifiers.size();
+        String alias = identifiers.get(0).getText();
         DomainType type = compileContext.getRootDomainType(alias);
         if (type == null) {
-            if (ctx.pathElements.size() == 1) {
+            if (size == 2) {
                 type = domainModel.getType(alias);
                 if (type instanceof EnumDomainType) {
-                    return new Literal(literalFactory.ofEnumValue((EnumDomainType) type, ctx.pathElements.get(0).getText()));
+                    return new Literal(literalFactory.ofEnumValue((EnumDomainType) type, identifiers.get(1).getText()));
                 }
             }
             throw unknownType(alias);
         } else {
-            List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(ctx.pathElements.size());
-            for (int pathElemIdx = 0; pathElemIdx < ctx.pathElements.size(); pathElemIdx++) {
-                String pathElement = ctx.pathElements.get(pathElemIdx).getText();
+            List<EntityDomainTypeAttribute> pathAttributes = new ArrayList<>(size);
+            for (int pathElemIdx = 1; pathElemIdx < size; pathElemIdx++) {
+                String pathElement = identifiers.get(pathElemIdx).getText();
                 if (type instanceof CollectionDomainType) {
                     type = ((CollectionDomainType) type).getElementType();
                 }
@@ -328,46 +425,13 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
     }
 
     @Override
-    public Expression visitBooleanLiteralPredicate(PredicateParser.BooleanLiteralPredicateContext ctx) {
-        Literal literal = (Literal) ctx.boolean_literal().accept(this);
-        return new ComparisonPredicate(getBooleanDomainType(), literal, getBooleanTrueLiteral(), ComparisonOperator.EQUAL);
-    }
-
-    @Override
-    public Expression visitBooleanFunction(PredicateParser.BooleanFunctionContext ctx) {
-        Expression expression = super.visitBooleanFunction(ctx);
-        if (expression.getType() == getBooleanDomainType()) {
-            return expression;
-        }
-
-        throw new TypeErrorException("Invalid use of non-boolean returning function: " + ctx.getText());
-    }
-
-    @Override
-    public Expression visitRootPathOrNoArgFunctionInvocation(PredicateParser.RootPathOrNoArgFunctionInvocationContext ctx) {
-        String aliasOrFunctionName = ctx.name.getText();
-        DomainFunction function = domainModel.getFunction(aliasOrFunctionName);
-        if (function == null) {
-            DomainType domainType = compileContext.getRootDomainType(aliasOrFunctionName);
-            if (domainType == null) {
-                throw unknownFunction(aliasOrFunctionName);
-            }
-            return new Path(aliasOrFunctionName, Path.empty(), domainType);
-        } else {
-            DomainFunctionTypeResolver functionTypeResolver = domainModel.getFunctionTypeResolver(aliasOrFunctionName);
-            DomainType functionType = functionTypeResolver.resolveType(domainModel, function, Collections.emptyMap());
-            return new FunctionInvocation(function, Collections.emptyMap(), functionType);
-        }
-    }
-
-    @Override
     public Expression visitIndexedFunctionInvocation(PredicateParser.IndexedFunctionInvocationContext ctx) {
         String functionName = ctx.name.getText();
         DomainFunction function = domainModel.getFunction(functionName);
         if (function == null) {
             throw unknownFunction(functionName);
         } else {
-            List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+            List<Expression> literalList = getLiteralList(ctx.expression());
             if (literalList.size() > function.getArgumentCount()) {
                 throw new DomainModelException(String.format("Function '%s' expects at most %d arguments but found %d",
                         function.getName(),
@@ -396,8 +460,8 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             DomainType type = domainModel.getType(entityOrFunctionName);
             if (type instanceof EntityDomainType) {
                 EntityDomainType entityDomainType = (EntityDomainType) type;
-                List<PredicateParser.IdentifierContext> argNames = ctx.argNames;
-                List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+                List<PredicateParser.IdentifierContext> argNames = ctx.identifier();
+                List<Expression> literalList = getLiteralList(ctx.expression());
                 Map<EntityDomainTypeAttribute, Expression> arguments = new LinkedHashMap<>(literalList.size());
                 for (int i = 0; i < literalList.size(); i++) {
                     EntityDomainTypeAttribute attribute = entityDomainType.getAttribute(argNames.get(i).getText());
@@ -408,8 +472,8 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
                 throw unknownFunction(entityOrFunctionName);
             }
         } else {
-            List<PredicateParser.IdentifierContext> argNames = ctx.argNames;
-            List<Expression> literalList = getLiteralList(Expression.class, ctx.args);
+            List<PredicateParser.IdentifierContext> argNames = ctx.identifier();
+            List<Expression> literalList = getLiteralList(ctx.expression());
             Map<DomainFunctionArgument, Expression> arguments = new LinkedHashMap<>(literalList.size());
             if (arguments.size() > function.getArgumentCount()) {
                 throw new DomainModelException(String.format("Function '%s' expects at most %d arguments but found %d",
@@ -429,16 +493,31 @@ public class PredicateModelGenerator extends PredicateParserBaseVisitor<Expressi
             return new FunctionInvocation(function, arguments, functionType);
         }
     }
-//    @Override
-//    public Expression visitCollectionAttribute(PredicateParser.CollectionAttributeContext ctx) {
-//        return new CollectionAtom(new Path(ctx.identifier().getText(), TermType.COLLECTION));
-//    }
+
+    @Override
+    public Expression visitTerminal(TerminalNode node) {
+        if (node.getSymbol().getType() == PredicateLexer.EOF) {
+            return null;
+        }
+        switch (node.getSymbol().getType()) {
+            case PredicateLexer.STRING_LITERAL:
+            return new Literal(literalFactory.ofString(node.getText()));
+            case PredicateLexer.TRUE:
+                return getBooleanTrueLiteral();
+            case PredicateLexer.FALSE:
+                return getBooleanFalseLiteral();
+            case PredicateLexer.NUMERIC_LITERAL:
+            return new Literal(literalFactory.ofNumericString(node.getText()));
+            default:
+                throw new IllegalStateException("Terminal node '" + node.getText() + "' not handled");
+        }
+    }
 
     @SuppressWarnings("unchecked")
-    private <T> List<T> getLiteralList(Class<T> clazz, List<? extends ParserRuleContext> items) {
-        List<T> literals = new ArrayList<>();
-        for (ParserRuleContext item : items) {
-            literals.add((T) item.accept(this));
+    private <T> List<T> getLiteralList(List<? extends ParserRuleContext> items) {
+        List<T> literals = new ArrayList<>(items.size());
+        for (int i = 0; i < items.size(); i++) {
+            literals.add((T) items.get(i).accept(this));
         }
         return literals;
     }

@@ -47,7 +47,7 @@ public class FunctionExpressionCompilerTest extends AbstractExpressionCompilerTe
 
     @Test
     public void testCurrentTimestampFunction() {
-        Expression expression = parseArithmeticExpression("CURRENT_TIMESTAMP");
+        Expression expression = parseArithmeticExpression("CURRENT_TIMESTAMP()");
         assertEquals(
                 pos(functionInvocation("CURRENT_TIMESTAMP")),
                 expression
