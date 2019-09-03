@@ -17,6 +17,7 @@
         <module>memory</module>
         <module>smtp</module>
         <module>ses</module>
+        <module>slack</module>
     </modules>
 
 </project>
