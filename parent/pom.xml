@@ -21,9 +21,10 @@
 
         <version.blaze-utils>0.1.16</version.blaze-utils>
         <version.blaze-persistence>1.4.0-Alpha1</version.blaze-persistence>
-        <version.blaze-notify-job>${project.version}</version.blaze-notify-job>
-        <version.blaze-notify-expression>${project.version}</version.blaze-notify-expression>
-        <version.blaze-notify-domain>${project.version}</version.blaze-notify-domain>
+        <version.blaze-job>1.0.0-Alpha2</version.blaze-job>
+        <version.blaze-actor>1.0.0-Alpha1</version.blaze-actor>
+        <version.blaze-expression>1.0.0-Alpha3</version.blaze-expression>
+        <version.blaze-domain>1.0.0-Alpha1</version.blaze-domain>
         <version.weld>2.4.5.Final</version.weld>
         <version.spring>5.0.7.RELEASE</version.spring>
         <version.junit>4.12</version.junit>

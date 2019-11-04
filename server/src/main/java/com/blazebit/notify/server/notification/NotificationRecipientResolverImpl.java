@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,22 @@
 
 package com.blazebit.notify.server.notification;
 
-import com.blazebit.notify.domain.runtime.model.DomainModel;
-import com.blazebit.notify.domain.runtime.model.DomainType;
-import com.blazebit.notify.expression.ExpressionServiceFactory;
-import com.blazebit.notify.job.JobInstanceProcessingContext;
-import com.blazebit.notify.notification.NotificationJobInstance;
-import com.blazebit.notify.notification.recipient.resolver.expression.AbstractPredicatingExpressionNotificationRecipientResolver;
+import com.blazebit.domain.runtime.model.DomainModel;
+import com.blazebit.domain.runtime.model.DomainType;
+import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.job.JobInstanceProcessingContext;
+import com.blazebit.notify.NotificationJobInstance;
+import com.blazebit.notify.recipient.resolver.expression.AbstractPredicatingExpressionNotificationRecipientResolver;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class NotificationRecipientResolverImpl extends AbstractPredicatingExpressionNotificationRecipientResolver {
 
     @Override

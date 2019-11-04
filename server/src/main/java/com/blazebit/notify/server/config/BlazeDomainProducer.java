@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,20 @@
 
 package com.blazebit.notify.server.config;
 
-import com.blazebit.notify.domain.declarative.DeclarativeDomainConfiguration;
-import com.blazebit.notify.domain.runtime.model.DomainModel;
-import com.blazebit.notify.expression.ExpressionServiceFactory;
-import com.blazebit.notify.expression.Expressions;
+import com.blazebit.domain.declarative.DeclarativeDomainConfiguration;
+import com.blazebit.domain.runtime.model.DomainModel;
+import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.Expressions;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.persistence.EntityManagerFactory;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @ApplicationScoped
 public class BlazeDomainProducer {
 

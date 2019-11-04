@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Path("test")
 public interface TestEndpoint {
 

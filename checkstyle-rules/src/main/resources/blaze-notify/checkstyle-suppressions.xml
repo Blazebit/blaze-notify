@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  Copyright 2018 Blazebit.
+  Copyright 2018 - 2019 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,4 +20,11 @@
 <suppressions>
     <!-- Generated files don't have to fit our checkstyle requirements -->
     <suppress checks="." files="[\\/]target[\\/].*\.java$"/>
+
+    <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->
+    <suppress checks="JavadocPackage" files="[\\/](impl|testsuite|server)[\\/].*\.java$"/>
+    <suppress checks="JavadocMethod" files="[\\/](impl|testsuite|server)[\\/].*\.java$"/>
+    <suppress checks="JavadocStyle" files="[\\/](impl|testsuite|server)[\\/].*\.java$"/>
+    <suppress checks="JavadocType" files="[\\/](impl|testsuite|server)[\\/].*\.java$"/>
+    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](testsuite|server)[\\/].*\.java$"/>
 </suppressions>

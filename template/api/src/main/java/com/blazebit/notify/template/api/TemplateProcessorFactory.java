@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,28 @@
  */
 package com.blazebit.notify.template.api;
 
+/**
+ * A factory for template processors of a specific type.
+ *
+ * @param <R> The template processor result type
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public interface TemplateProcessorFactory<R> {
 
+    /**
+     * Returns the template processor ley class.
+     *
+     * @return the template processor key class
+     */
     TemplateProcessorKey<R> getTemplateProcessorKey();
 
+    /**
+     * Creates a new template processor for the given template context and configuration source.
+     *
+     * @param templateContext     The template context
+     * @param configurationSource The configuration source
+     * @return the template processor
+     */
     TemplateProcessor<R> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package com.blazebit.notify.server.rest.impl;
 
-import com.blazebit.notify.job.JobContext;
-import com.blazebit.notify.notification.email.model.AbstractEmailNotification;
-import com.blazebit.notify.notification.email.model.EmailNotification;
-import com.blazebit.notify.notification.email.model.FromEmail;
+import com.blazebit.job.JobContext;
+import com.blazebit.notify.email.model.AbstractEmailNotification;
+import com.blazebit.notify.email.model.EmailNotification;
+import com.blazebit.notify.email.model.FromEmail;
 import com.blazebit.notify.server.model.EmailNotificationJob;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
@@ -32,6 +32,10 @@ import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.util.Locale;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Stateless
 public class TestEndpointImpl implements TestEndpoint {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.blazebit.notify.server.rest.impl;
 
-import com.blazebit.notify.notification.NotificationJobContext;
-import com.blazebit.notify.notification.email.model.FromEmail;
+import com.blazebit.notify.NotificationJobContext;
+import com.blazebit.notify.email.model.FromEmail;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -25,6 +25,10 @@ import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Singleton
 @Startup
 public class StartupBean {

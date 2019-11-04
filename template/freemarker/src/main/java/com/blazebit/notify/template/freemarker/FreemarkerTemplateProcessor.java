@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package com.blazebit.notify.template.freemarker;
 
 import com.blazebit.notify.template.api.ConfigurationSource;
-import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateException;
+import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateProcessorKey;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -30,25 +30,54 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
+/**
+ * A Freemarker based implementation of a template processor.
+ *
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
 
+    /**
+     * The key for which the template processor is registered.
+     */
     public static final TemplateProcessorKey<String> KEY = TemplateProcessorKey.of("freemarker", String.class);
+    /**
+     * The configuration property for the Freemarker {@link Configuration} object.
+     */
     public static final String FREEMARKER_CONFIGURATION_PROPERTY = "configuration";
+    /**
+     * The configuration property for the Freemarker template encoding.
+     */
     public static final String FREEMARKER_ENCODING_PROPERTY = "encoding";
+    /**
+     * The configuration property for the Freemarker {@link Template}.
+     */
     public static final String FREEMARKER_TEMPLATE_PROPERTY = "template";
 
+    /**
+     * The configuration property for the {@link ResourceBundle}.
+     */
     public static final String RESOURCE_BUNDLE_KEY = "resourceBundle";
+    /**
+     * The configuration property for the {@link Locale}.
+     */
     public static final String LOCALE_KEY = "locale";
 
     private final Function<Locale, Template> freemarkerTemplate;
 
+    /**
+     * Creates a new Freemarker template processor from the given configuration source.
+     *
+     * @param configurationSource The configuration source
+     */
     public FreemarkerTemplateProcessor(ConfigurationSource configurationSource) {
-        Configuration configuration = configurationSource.getOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
+        Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
             Configuration c = new Configuration();
             c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
             return c;
         });
-        String templateEncoding = configurationSource.getOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
+        String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
         Function<String, Function<Locale, Template>> templateAccessor = name -> {
             return (Locale locale) -> {
                 try {
@@ -58,13 +87,23 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
                 }
             };
         };
-        this.freemarkerTemplate = (Function<Locale, Template>) configurationSource.getOrFail(FREEMARKER_TEMPLATE_PROPERTY, (Class) Function.class, templateAccessor);
+        this.freemarkerTemplate = (Function<Locale, Template>) configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, (Class) Function.class, templateAccessor);
     }
 
+    /**
+     * Creates a new Freemarker template processor from the given template.
+     *
+     * @param freemarkerTemplate The template
+     */
     public FreemarkerTemplateProcessor(Template freemarkerTemplate) {
         this.freemarkerTemplate = locale -> freemarkerTemplate;
     }
 
+    /**
+     * Creates a new Freemarker template processor from the given locale aware template function.
+     *
+     * @param freemarkerTemplate The locale aware template function
+     */
     public FreemarkerTemplateProcessor(Function<Locale, Template> freemarkerTemplate) {
         this.freemarkerTemplate = freemarkerTemplate;
     }

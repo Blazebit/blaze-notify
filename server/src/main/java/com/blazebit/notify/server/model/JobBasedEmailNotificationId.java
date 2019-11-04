@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,15 @@
 
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.notification.jpa.model.base.AbstractNotificationId;
+import com.blazebit.notify.jpa.model.base.AbstractNotificationId;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Embeddable
 public class JobBasedEmailNotificationId extends AbstractNotificationId<Long, Long> {
 

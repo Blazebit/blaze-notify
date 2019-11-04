@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,18 @@
 package com.blazebit.notify.template.freemarker;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.notify.template.api.*;
+import com.blazebit.notify.template.api.ConfigurationSource;
+import com.blazebit.notify.template.api.TemplateContext;
+import com.blazebit.notify.template.api.TemplateProcessor;
+import com.blazebit.notify.template.api.TemplateProcessorFactory;
+import com.blazebit.notify.template.api.TemplateProcessorKey;
 
+/**
+ * A factory for {@link FreemarkerTemplateProcessor}.
+ *
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @ServiceProvider(TemplateProcessorFactory.class)
 public class FreemarkerTemplateProcessorFactory implements TemplateProcessorFactory<String> {
 

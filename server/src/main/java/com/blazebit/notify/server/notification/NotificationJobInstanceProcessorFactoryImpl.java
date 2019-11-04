@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,16 @@
 
 package com.blazebit.notify.server.notification;
 
-import com.blazebit.notify.notification.NotificationJobContext;
-import com.blazebit.notify.notification.NotificationJobInstance;
-import com.blazebit.notify.notification.NotificationJobInstanceProcessor;
-import com.blazebit.notify.notification.NotificationJobInstanceProcessorFactory;
+import com.blazebit.notify.NotificationJobContext;
+import com.blazebit.notify.NotificationJobInstance;
+import com.blazebit.notify.NotificationJobInstanceProcessor;
+import com.blazebit.notify.NotificationJobInstanceProcessorFactory;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class NotificationJobInstanceProcessorFactoryImpl implements NotificationJobInstanceProcessorFactory {
 
     @Override

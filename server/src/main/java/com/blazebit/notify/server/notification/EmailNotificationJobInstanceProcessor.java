@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,25 @@
 
 package com.blazebit.notify.server.notification;
 
-import com.blazebit.notify.job.JobInstanceProcessingContext;
-import com.blazebit.notify.job.JobInstanceState;
-import com.blazebit.notify.job.Schedule;
-import com.blazebit.notify.notification.email.model.EmailNotificationReviewState;
-import com.blazebit.notify.notification.email.model.FromEmail;
-import com.blazebit.notify.notification.processor.hibernate.insertselect.AbstractInsertSelectNotificationJobInstanceProcessor;
-import com.blazebit.notify.server.model.JobBasedEmailNotification;
+import com.blazebit.job.JobInstanceProcessingContext;
+import com.blazebit.job.JobInstanceState;
+import com.blazebit.job.Schedule;
+import com.blazebit.notify.email.model.EmailNotificationReviewState;
+import com.blazebit.notify.email.model.FromEmail;
+import com.blazebit.notify.processor.hibernate.insertselect.AbstractInsertSelectNotificationJobInstanceProcessor;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
+import com.blazebit.notify.server.model.JobBasedEmailNotification;
 import com.blazebit.persistence.InsertCriteriaBuilder;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectNotificationJobInstanceProcessor<Long, JobBasedEmailNotification, EmailNotificationJobInstance, EmailNotificationRecipient> {
 
     public static final EmailNotificationJobInstanceProcessor INSTANCE = new EmailNotificationJobInstanceProcessor();
@@ -55,8 +59,8 @@ public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectN
                     .setMaxResults(1)
                 .end()
                 .bind("to").select(recipientAlias + ".email")
-                .bind("recipientId").select(recipientAlias + "." + getNotificationRecipientIdPath())
-                .bind("notificationJobInstanceId").select(jobInstanceAlias + "." + getJobInstanceIdPath())
+                .bind("recipientId").select(recipientAlias + "." + getNotificationRecipientIdPath(jobInstance))
+                .bind("notificationJobInstanceId").select(jobInstanceAlias + "." + getJobInstanceIdPath(jobInstance))
                 .bind("parameterSerializable").select(jobInstanceAlias + ".trigger.jobConfiguration.parameterSerializable");
         Schedule notificationSchedule = jobInstance.getTrigger().getNotificationSchedule(context.getJobContext());
         Instant nextSchedule;
@@ -89,37 +93,37 @@ public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectN
     }
 
     @Override
-    protected Class<JobBasedEmailNotification> getNotificationEntityClass() {
+    protected Class<JobBasedEmailNotification> getNotificationEntityClass(EmailNotificationJobInstance jobInstance) {
         return JobBasedEmailNotification.class;
     }
 
     @Override
-    protected Class<EmailNotificationJobInstance> getNotificationJobInstanceEntityClass() {
+    protected Class<EmailNotificationJobInstance> getNotificationJobInstanceEntityClass(EmailNotificationJobInstance jobInstance) {
         return EmailNotificationJobInstance.class;
     }
 
     @Override
-    protected String getNotificationJobInstanceIdPath() {
+    protected String getNotificationJobInstanceIdPath(EmailNotificationJobInstance jobInstance) {
         return "id";
     }
 
     @Override
-    protected Class<EmailNotificationRecipient> getNotificationRecipientEntityClass() {
+    protected Class<EmailNotificationRecipient> getNotificationRecipientEntityClass(EmailNotificationJobInstance jobInstance) {
         return EmailNotificationRecipient.class;
     }
 
     @Override
-    protected String getNotificationRecipientIdPath() {
+    protected String getNotificationRecipientIdPath(EmailNotificationJobInstance jobInstance) {
         return "id";
     }
 
     @Override
-    protected String getNotificationIdRecipientIdPath() {
+    protected String getNotificationIdRecipientIdPath(EmailNotificationJobInstance jobInstance) {
         return "recipientId";
     }
 
     @Override
-    protected Class<Long> getNotificationRecipientIdClass() {
+    protected Class<Long> getNotificationRecipientIdClass(EmailNotificationJobInstance jobInstance) {
         return Long.class;
     }
 }

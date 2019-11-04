@@ -30,76 +30,76 @@
         <!-- Actor dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-actor-impl</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-actor-core-impl</artifactId>
+            <version>${version.blaze-actor}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-actor-scheduler-executor</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-actor-scheduler-executor</artifactId>
+            <version>${version.blaze-actor}</version>
             <scope>runtime</scope>
         </dependency>
 
         <!-- Job dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-job-impl</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-job-core-impl</artifactId>
+            <version>${version.blaze-job}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-job-schedule-cron</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-job-schedule-cron</artifactId>
+            <version>${version.blaze-job}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-job-transaction-jta</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-job-transaction-jta</artifactId>
+            <version>${version.blaze-job}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-job-jpa-storage</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-job-jpa-storage</artifactId>
+            <version>${version.blaze-job}</version>
         </dependency>
 
         <!-- Notification dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-impl</artifactId>
+            <artifactId>blaze-notify-core-impl</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-channel-smtp</artifactId>
+            <artifactId>blaze-notify-channel-smtp</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-processor-hibernate-insert-select</artifactId>
+            <artifactId>blaze-notify-processor-hibernate-insert-select</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-recipient-resolver-expression</artifactId>
+            <artifactId>blaze-notify-recipient-resolver-expression</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-jpa-model-expression</artifactId>
+            <artifactId>blaze-notify-jpa-model-expression</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-email-model</artifactId>
+            <artifactId>blaze-notify-email-model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-notification-jpa-storage</artifactId>
+            <artifactId>blaze-notify-jpa-storage</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -120,14 +120,14 @@
         <!-- Expression dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-expression-impl</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-expression-core-impl</artifactId>
+            <version>${version.blaze-expression}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-expression-persistence</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-expression-persistence</artifactId>
+            <version>${version.blaze-expression}</version>
         </dependency>
         <!-- Templating dependencies -->
         <dependency>
@@ -139,25 +139,25 @@
         <!-- Domain dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-domain-impl</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-domain-core-impl</artifactId>
+            <version>${version.blaze-domain}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-domain-declarative-impl</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-domain-declarative-impl</artifactId>
+            <version>${version.blaze-domain}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-domain-declarative-persistence</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-domain-declarative-persistence</artifactId>
+            <version>${version.blaze-domain}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-domain-declarative-integration-cdi</artifactId>
-            <version>${project.version}</version>
+            <artifactId>blaze-domain-declarative-integration-cdi</artifactId>
+            <version>${version.blaze-domain}</version>
             <scope>runtime</scope>
         </dependency>
 

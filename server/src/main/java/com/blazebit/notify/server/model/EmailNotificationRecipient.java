@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,26 @@
 
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.domain.declarative.DiscoverMode;
-import com.blazebit.notify.domain.declarative.DomainAttribute;
-import com.blazebit.notify.domain.declarative.DomainType;
-import com.blazebit.notify.domain.declarative.persistence.EntityAttribute;
-import com.blazebit.notify.notification.jpa.model.base.AbstractNotificationRecipient;
+import com.blazebit.domain.declarative.DiscoverMode;
+import com.blazebit.domain.declarative.DomainAttribute;
+import com.blazebit.domain.declarative.DomainType;
+import com.blazebit.domain.declarative.persistence.EntityAttribute;
+import com.blazebit.notify.jpa.model.base.AbstractNotificationRecipient;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Entity
 @SequenceGenerator(name = "idGenerator", sequenceName = "email_notification_recipient_seq", allocationSize = 1)
 @Table(name = "email_notification_recipient")
 @DomainType(discoverMode = DiscoverMode.EXPLICIT)
-public class EmailNotificationRecipient extends AbstractNotificationRecipient implements com.blazebit.notify.notification.email.message.EmailNotificationRecipient<Long> {
+public class EmailNotificationRecipient extends AbstractNotificationRecipient implements com.blazebit.notify.email.message.EmailNotificationRecipient<Long> {
 
     private String email;
 

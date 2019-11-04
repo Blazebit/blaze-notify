@@ -2,12 +2,37 @@ package com.blazebit.notify.template.freemarker;
 
 import java.util.ResourceBundle;
 
-public class TemplatingUtil {
+/**
+ * A Freemarker template utility.
+ *
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
+public final class TemplatingUtil {
 
+    private TemplatingUtil() {
+    }
+
+    /**
+     * Resolves variables between the given markers <code>${</code> and <code>}</code> contained in the given text against the given resource bundle.
+     *
+     * @param text           The text
+     * @param resourceBundle The resource bundle
+     * @return The text with resolved variables
+     */
     public static String resolveVariables(String text, ResourceBundle resourceBundle) {
         return resolveVariables(text, resourceBundle, "${", "}");
     }
 
+    /**
+     * Resolves variables between the given markers contained in the given text against the given resource bundle.
+     *
+     * @param text           The text
+     * @param resourceBundle The resource bundle
+     * @param startMarker    The start marker
+     * @param endMarker      The end marker
+     * @return The text with resolved variables
+     */
     public static String resolveVariables(String text, ResourceBundle resourceBundle, String startMarker, String endMarker) {
         int e = 0;
         int s = text.indexOf(startMarker);

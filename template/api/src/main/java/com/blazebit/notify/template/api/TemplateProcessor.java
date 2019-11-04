@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,30 @@ package com.blazebit.notify.template.api;
 
 import java.util.Map;
 
+/**
+ * A template processor that can be applied on a map model to produce a result.
+ *
+ * @param <R> The template processor result type
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public interface TemplateProcessor<R> {
 
+    /**
+     * Processes this template based on the given map model.
+     *
+     * @param model The model
+     * @return The result
+     */
     R processTemplate(Map<String, Object> model);
 
+    /**
+     * Returns a {@link TemplateProcessor} that statically always processes the given element.
+     *
+     * @param element The template processor result to resolve statically
+     * @param <T>     The template processor result type
+     * @return a {@link TemplateProcessor}
+     */
     static <T> TemplateProcessor<T> of(T element) {
         return new TemplateProcessor<T>() {
             @Override

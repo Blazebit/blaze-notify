@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 
 package com.blazebit.notify.server.config;
 
-import com.blazebit.notify.expression.ExpressionServiceFactory;
-import com.blazebit.notify.job.jpa.storage.JpaPartitionKeyProvider;
-import com.blazebit.notify.notification.NotificationJobContext;
-import com.blazebit.notify.notification.channel.smtp.SmtpChannel;
-import com.blazebit.notify.server.model.EmailNotificationJobInstance;
+import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.notify.NotificationJobContext;
+import com.blazebit.notify.channel.smtp.SmtpChannel;
 import com.blazebit.notify.server.notification.NotificationJobInstanceProcessorFactoryImpl;
 import com.blazebit.notify.server.notification.NotificationJobProcessorFactoryImpl;
 import com.blazebit.notify.server.notification.NotificationRecipientResolverImpl;
@@ -36,6 +34,10 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @ApplicationScoped
 public class JobManagerProducer {
 
@@ -52,12 +54,12 @@ public class JobManagerProducer {
     @Produces
     @ApplicationScoped
     public NotificationJobContext createNotificationJobContext() {
-        return NotificationJobContext.Builder.create()
+        return NotificationJobContext.builder()
                 .withService(EntityManager.class, entityManager)
                 .withService(ExpressionServiceFactory.class, expressionServiceFactory)
                 .withService(CriteriaBuilderFactory.class, criteriaBuilderFactory)
                 .withService(ScheduledExecutorService.class, scheduledExecutorService)
-                .withService(TemplateContext.class, TemplateContext.Builder.create().createContext())
+                .withService(TemplateContext.class, TemplateContext.builder().createContext())
                 .withJobProcessorFactory(new NotificationJobProcessorFactoryImpl())
                 .withJobInstanceProcessorFactory(new NotificationJobInstanceProcessorFactoryImpl())
                 .withRecipientResolver(new NotificationRecipientResolverImpl())

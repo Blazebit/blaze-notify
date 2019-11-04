@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,22 @@
 
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.notification.email.model.AbstractEmailNotification;
+import com.blazebit.notify.email.model.AbstractEmailNotification;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 @Entity
-public class JobBasedEmailNotification extends AbstractEmailNotification<JobBasedEmailNotificationId>{
+public class JobBasedEmailNotification extends AbstractEmailNotification<JobBasedEmailNotificationId> {
 
     private EmailNotificationRecipient recipient;
     private EmailNotificationJobInstance notificationJobInstance;

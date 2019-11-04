@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,37 @@
  */
 package com.blazebit.notify.template.api;
 
+/**
+ * A type safe wrapper for identifying template processors by their template type.
+ *
+ * @param <R> The template processor result type
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public interface TemplateProcessorKey<R> {
 
+    /**
+     * Returns the template processor type identifier.
+     *
+     * @return the template processor type identifier
+     */
     String getTemplateProcessorType();
 
+    /**
+     * Returns the template processor result class.
+     *
+     * @return the template processor result class
+     */
     Class<R> getTemplateProcessorResultType();
 
+    /**
+     * Returns a new template processor key for the given type identifier and the given class.
+     *
+     * @param type  The template processor type identifier
+     * @param clazz The template processor result class
+     * @param <T>   The template processor result type
+     * @return A new template processor key
+     */
     static <T> TemplateProcessorKey<T> of(String type, Class<T> clazz) {
         return new TemplateProcessorKey<T>() {
             @Override

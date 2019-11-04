@@ -13,12 +13,15 @@
     <modules>
         <module>parent</module>
         <module>checkstyle-rules</module>
-        <module>domain</module>
-        <module>expression</module>
-        <module>notification</module>
         <module>documentation</module>
-        <module>actor</module>
-        <module>job</module>
+        <module>core</module>
+        <module>jpa</module>
+        <module>memory</module>
+        <module>channel</module>
+        <module>processor</module>
+        <module>testsuite</module>
+        <module>recipient-resolver</module>
+        <module>email</module>
         <module>server</module>
         <module>template</module>
     </modules>
@@ -32,7 +35,6 @@
 
     <properties>
         <jdk8.home>${env.JAVA_HOME}</jdk8.home>
-        <jdk8.classes.jar>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</jdk8.classes.jar>
         <java.version>1.8</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -141,7 +143,6 @@
                         <include>**/src/main/**/*.xml</include>
                     </includes>
                     <excludes>
-                        <exclude>**/src/main/java/com/blazebit/notify/job/schedule/cron/CronExpression.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/MessageFormatterMethod.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/notify/template/freemarker/TemplatingUtil.java</exclude>
                     </excludes>

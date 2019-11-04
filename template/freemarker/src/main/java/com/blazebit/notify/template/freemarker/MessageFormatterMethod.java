@@ -10,10 +10,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+/**
+ * A Freemarker method for easy internationalization.
+ *
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class MessageFormatterMethod implements TemplateMethodModelEx {
     private final ResourceBundle messages;
     private final Locale locale;
 
+    /**
+     * Creates the method.
+     *
+     * @param locale   The locale
+     * @param messages The resource bundle
+     */
     public MessageFormatterMethod(Locale locale, ResourceBundle messages) {
         this.locale = locale;
         this.messages = messages;

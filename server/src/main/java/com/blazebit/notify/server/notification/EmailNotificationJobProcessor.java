@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Blazebit.
+ * Copyright 2018 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,18 @@
 
 package com.blazebit.notify.server.notification;
 
-import com.blazebit.notify.job.JobInstanceState;
-import com.blazebit.notify.notification.NotificationJobContext;
-import com.blazebit.notify.notification.NotificationJobProcessor;
+import com.blazebit.job.JobInstanceState;
+import com.blazebit.notify.NotificationJobContext;
+import com.blazebit.notify.NotificationJobProcessor;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 
 import java.time.Instant;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class EmailNotificationJobProcessor implements NotificationJobProcessor<EmailNotificationJobTrigger> {
 
     public static final EmailNotificationJobProcessor INSTANCE = new EmailNotificationJobProcessor();
