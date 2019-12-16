@@ -39,7 +39,7 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
      * Configuration property for the notification id attribute name.
      * The default value is "id".
      */
-    public static final String NOTIFICATION_ID_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_instance_id_attribute_name";
+    public static final String NOTIFICATION_ID_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_id_attribute_name";
     /**
      * Configuration property for the notification partition key attribute name.
      * The default value is "recipient.id".
@@ -49,17 +49,22 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
      * Configuration property for the notification schedule attribute name.
      * The default value is "scheduleTime".
      */
-    public static final String NOTIFICATION_SCHEDULE_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_instance_schedule_attribute_name";
+    public static final String NOTIFICATION_SCHEDULE_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_schedule_attribute_name";
+    /**
+     * Configuration property for the notification last execution time attribute name.
+     * The default value is "lastExecutionTime".
+     */
+    public static final String NOTIFICATION_LAST_EXECUTION_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_last_execution_attribute_name";
     /**
      * Configuration property for the notification state attribute name.
      * The default value is "state".
      */
-    public static final String NOTIFICATION_STATE_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_instance_state_attribute_name";
+    public static final String NOTIFICATION_STATE_ATTRIBUTE_NAME_PROPERTY = "notification.jpa.storage.notification_state_attribute_name";
     /**
-     * Configuration property for the notification state ready value.
-     * The default value is {@link JobInstanceState#NEW}.
+     * Configuration property for a mapping function <code>Function&lt;JobInstanceState, Object&gt;</code> from notification state to the actual model state.
+     * The default value is a function that just returns the passed in {@link JobInstanceState}.
      */
-    public static final String NOTIFICATION_STATE_READY_VALUE_PROPERTY = "notification.jpa.storage.notification_instance_state_ready_value";
+    public static final String NOTIFICATION_STATE_VALUE_MAPPING_FUNCTION_PROPERTY = "notification.jpa.storage.notification_state_value_mapping_function";
     /**
      * Configuration property for the notification channel attribute name.
      * The default value is "channelType".
@@ -69,8 +74,9 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
     private final String notificationIdAttributeName;
     private final String partitionKeyAttributeName;
     private final String notificationScheduleAttributeName;
+    private final String notificationLastExecutionAttributeName;
     private final String notificationStateAttributeName;
-    private final Object notificationStateReadyValue;
+    private final Function<JobInstanceState, Object> notificationStateValueMappingFunction;
     private final String channelAttributeName;
 
     /**
@@ -85,8 +91,9 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
             configurationSource.getPropertyOrDefault(NOTIFICATION_ID_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "id"),
             configurationSource.getPropertyOrDefault(NOTIFICATION_PARTITION_KEY_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "recipient.id"),
             configurationSource.getPropertyOrDefault(NOTIFICATION_SCHEDULE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "scheduleTime"),
+            configurationSource.getPropertyOrDefault(NOTIFICATION_LAST_EXECUTION_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "lastExecution"),
             configurationSource.getPropertyOrDefault(NOTIFICATION_STATE_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "state"),
-            configurationSource.getPropertyOrDefault(NOTIFICATION_STATE_READY_VALUE_PROPERTY, Object.class, null, o -> JobInstanceState.NEW),
+            configurationSource.getPropertyOrDefault(NOTIFICATION_STATE_VALUE_MAPPING_FUNCTION_PROPERTY, Function.class, null, o -> Function.identity()),
             configurationSource.getPropertyOrDefault(NOTIFICATION_CHANNEL_ATTRIBUTE_NAME_PROPERTY, String.class, Function.identity(), o -> "channelType")
         );
     }
@@ -94,23 +101,26 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
     /**
      * Creates a new notification partition key provider.
      *
-     * @param entityManager                         The entity manager
-     * @param notificationIdAttributeName           The notification id attribute name
-     * @param notificationPartitionKeyAttributeName The notification partition key attribute name
-     * @param notificationScheduleAttributeName     The notification schedule attribute name
-     * @param notificationStateAttributeName        The notification state attribute name
-     * @param notificationStateReadyValue           The notification state ready value
-     * @param channelAttributeName                  The notification channel attribute name
+     * @param entityManager                          The entity manager
+     * @param notificationIdAttributeName            The notification id attribute name
+     * @param notificationPartitionKeyAttributeName  The notification partition key attribute name
+     * @param notificationScheduleAttributeName      The notification schedule attribute name
+     * @param notificationLastExecutionAttributeName The notification last execution attribute name
+     * @param notificationStateAttributeName         The notification state attribute name
+     * @param notificationStateValueMappingFunction  The notification state value mapping function
+     * @param channelAttributeName                   The notification channel attribute name
      */
-    public JpaNotificationPartitionKeyProvider(EntityManager entityManager, String notificationIdAttributeName, String notificationPartitionKeyAttributeName, String notificationScheduleAttributeName, String notificationStateAttributeName, Object notificationStateReadyValue, String channelAttributeName) {
+    public JpaNotificationPartitionKeyProvider(EntityManager entityManager, String notificationIdAttributeName, String notificationPartitionKeyAttributeName, String notificationScheduleAttributeName,
+                                               String notificationLastExecutionAttributeName, String notificationStateAttributeName, Function<JobInstanceState, Object> notificationStateValueMappingFunction, String channelAttributeName) {
         if (entityManager == null) {
             throw new JobException("No entity manager given!");
         }
 
         this.notificationIdAttributeName = notificationIdAttributeName;
         this.notificationScheduleAttributeName = notificationScheduleAttributeName;
+        this.notificationLastExecutionAttributeName = notificationLastExecutionAttributeName;
         this.notificationStateAttributeName = notificationStateAttributeName;
-        this.notificationStateReadyValue = notificationStateReadyValue;
+        this.notificationStateValueMappingFunction = notificationStateValueMappingFunction;
         this.partitionKeyAttributeName = notificationPartitionKeyAttributeName;
         this.channelAttributeName = channelAttributeName;
     }
@@ -164,8 +174,18 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
             }
 
             @Override
-            public Object getReadyStateValue() {
-                return notificationStateReadyValue;
+            public String getStateExpression(String jobAlias) {
+                return jobAlias + "." + notificationStateAttributeName;
+            }
+
+            @Override
+            public String getLastExecutionAttributeName() {
+                return notificationLastExecutionAttributeName;
+            }
+
+            @Override
+            public Function<JobInstanceState, Object> getStateValueMappingFunction() {
+                return notificationStateValueMappingFunction;
             }
 
             @Override

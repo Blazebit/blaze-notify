@@ -40,9 +40,9 @@ Blaze-Notify is split up into different modules. We recommend that you define a 
 
 ```xml
 <properties>
-    <blaze-notify.version>1.0.0-SNAPSHOT</blaze-notify.version>
+    <blaze-notify.version>1.0.0-Alpha2</blaze-notify.version>
     <blaze-expression.version>1.0.0-Alpha1</blaze-expression.version>
-    <blaze-job.version>1.0.0-Alpha1</blaze-job.version>
+    <blaze-job.version>1.0.0-Alpha3</blaze-job.version>
 </properties>
 ```
 
@@ -54,7 +54,7 @@ Alternatively you can also use our BOM in the `dependencyManagement` section.
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-notify-bom</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${blaze-notify.version}</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>    
