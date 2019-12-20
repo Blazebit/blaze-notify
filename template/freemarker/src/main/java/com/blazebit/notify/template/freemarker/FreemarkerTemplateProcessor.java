@@ -55,6 +55,8 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
      */
     public static final String FREEMARKER_TEMPLATE_PROPERTY = "template";
 
+    public static final String FREEMARKER_TEMPLATE_ACCESSOR_PROPERTY = "templateAccessor";
+
     /**
      * The configuration property for the {@link ResourceBundle}.
      */
@@ -78,16 +80,16 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
             return c;
         });
         String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
-        Function<String, Function<Locale, Template>> templateAccessor = name -> {
-            return (Locale locale) -> {
+        Function<String, Function<Locale, Template>> templateAccessor = configurationSource.getPropertyOrDefault(FREEMARKER_TEMPLATE_ACCESSOR_PROPERTY, (Class<Function<String, Function<Locale, Template>>>) (Class) Function.class, null,
+            o -> (String name) -> (Locale locale) -> {
                 try {
                     return configuration.getTemplate(name, locale, templateEncoding);
                 } catch (IOException e) {
                     throw new TemplateException("", e);
                 }
-            };
-        };
-        this.freemarkerTemplate = (Function<Locale, Template>) configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, (Class) Function.class, templateAccessor);
+            }
+        );
+        this.freemarkerTemplate = templateAccessor.apply(configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, String.class, Function.identity()));
     }
 
     /**
