@@ -9,29 +9,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-notify-email-model</artifactId>
-
-    <dependencies>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-jpa-model-base</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-email-message</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-email-sns-sqs-feedback</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
+    <packaging>pom</packaging>
+    <modules>
+        <module>memory</module>
+        <module>jpa</module>
+    </modules>
 </project>

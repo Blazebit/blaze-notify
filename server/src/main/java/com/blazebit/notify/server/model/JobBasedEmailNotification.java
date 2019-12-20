@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.email.model.AbstractEmailNotification;
+import com.blazebit.notify.email.model.jpa.AbstractEmailNotification;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

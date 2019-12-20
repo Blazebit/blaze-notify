@@ -17,7 +17,7 @@
 package com.blazebit.notify.server.rest.impl;
 
 import com.blazebit.notify.NotificationJobContext;
-import com.blazebit.notify.email.model.FromEmail;
+import com.blazebit.notify.email.model.jpa.FromEmail;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;

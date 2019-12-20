@@ -92,7 +92,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-notify-email-model</artifactId>
+            <artifactId>blaze-notify-email-model-jpa</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
