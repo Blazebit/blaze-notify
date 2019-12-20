@@ -17,9 +17,9 @@
 package com.blazebit.notify.server.rest.impl;
 
 import com.blazebit.job.JobContext;
-import com.blazebit.notify.email.model.AbstractEmailNotification;
-import com.blazebit.notify.email.model.EmailNotification;
-import com.blazebit.notify.email.model.FromEmail;
+import com.blazebit.notify.email.model.jpa.AbstractEmailNotification;
+import com.blazebit.notify.email.model.jpa.EmailNotification;
+import com.blazebit.notify.email.model.jpa.FromEmail;
 import com.blazebit.notify.server.model.EmailNotificationJob;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
