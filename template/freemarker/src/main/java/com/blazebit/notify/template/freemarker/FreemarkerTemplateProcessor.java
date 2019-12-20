@@ -19,6 +19,7 @@ import com.blazebit.notify.template.api.ConfigurationSource;
 import com.blazebit.notify.template.api.TemplateException;
 import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateProcessorKey;
+import com.blazebit.notify.template.api.TemplateResourceBundleLookup;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
@@ -65,7 +66,9 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
      */
     public static final String LOCALE_KEY = "locale";
 
-    private final FreemarkerTemplateLookup freemarkerTemplate;
+    private final FreemarkerTemplateLookup freemarkerTemplateLookup;
+
+    private final TemplateResourceBundleLookup resourceBundleLookup;
 
     /**
      * Creates a new Freemarker template processor from the given configuration source.
@@ -73,46 +76,53 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
      * @param configurationSource The configuration source
      */
     public FreemarkerTemplateProcessor(ConfigurationSource configurationSource) {
-        Function<String, FreemarkerTemplateLookup> templateAccessor = name -> {
-            return (Locale locale) -> {
-                Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
-                    Configuration c = new Configuration();
-                    c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
-                    return c;
-                });
-                String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
-                try {
-                    return configuration.getTemplate(name, locale, templateEncoding);
-                } catch (IOException e) {
-                    throw new TemplateException("", e);
-                }
-            };
+        Function<String, FreemarkerTemplateLookup> templateAccessor = name -> (Locale locale) -> {
+            Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
+                Configuration c = new Configuration();
+                c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
+                return c;
+            });
+            String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
+            try {
+                return configuration.getTemplate(name, locale, templateEncoding);
+            } catch (IOException e) {
+                throw new TemplateException("", e);
+            }
         };
-        this.freemarkerTemplate = configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, FreemarkerTemplateLookup.class, templateAccessor);
+        this.freemarkerTemplateLookup = configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, FreemarkerTemplateLookup.class, templateAccessor);
+        Function<String, TemplateResourceBundleLookup> resourceBundleAccessor = name -> (Locale locale) -> ResourceBundle.getBundle(name, locale);
+        this.resourceBundleLookup = configurationSource.getPropertyOrDefault(RESOURCE_BUNDLE_KEY, TemplateResourceBundleLookup.class, resourceBundleAccessor, o -> locale -> null);
     }
 
     /**
      * Creates a new Freemarker template processor from the given template.
      *
-     * @param freemarkerTemplate The template
+     * @param freemarkerTemplateLookup The template
+     * @param resourceBundle The resource bundle
      */
-    public FreemarkerTemplateProcessor(Template freemarkerTemplate) {
-        this.freemarkerTemplate = locale -> freemarkerTemplate;
+    public FreemarkerTemplateProcessor(Template freemarkerTemplateLookup, ResourceBundle resourceBundle) {
+        this.freemarkerTemplateLookup = locale -> freemarkerTemplateLookup;
+        this.resourceBundleLookup = locale -> resourceBundle;
     }
 
     /**
      * Creates a new Freemarker template processor from the given locale aware template function.
      *
-     * @param freemarkerTemplate The locale aware template function
+     * @param freemarkerTemplateLookup The locale aware template function
+     * @param resourceBundleLookup The locale aware resource bundle function
      */
-    public FreemarkerTemplateProcessor(FreemarkerTemplateLookup freemarkerTemplate) {
-        this.freemarkerTemplate = freemarkerTemplate;
+    public FreemarkerTemplateProcessor(FreemarkerTemplateLookup freemarkerTemplateLookup, TemplateResourceBundleLookup resourceBundleLookup) {
+        this.freemarkerTemplateLookup = freemarkerTemplateLookup;
+        this.resourceBundleLookup = resourceBundleLookup;
     }
 
     @Override
     public String processTemplate(Map<String, Object> model) {
         Locale locale = (Locale) model.get(LOCALE_KEY);
-        ResourceBundle resourceBundle = (ResourceBundle) model.get(RESOURCE_BUNDLE_KEY);
+        ResourceBundle resourceBundle = resourceBundleLookup.findResourceBundle(locale);
+        if (resourceBundle == null) {
+            resourceBundle = (ResourceBundle) model.get(RESOURCE_BUNDLE_KEY);
+        }
         if (resourceBundle != null) {
             model = new HashMap<>(model);
             if (locale == null) {
@@ -123,7 +133,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
 
         StringWriter stringWriter = new StringWriter();
         try {
-            freemarkerTemplate.findTemplate(locale).process(model, stringWriter);
+            freemarkerTemplateLookup.findTemplate(locale).process(model, stringWriter);
         } catch (freemarker.template.TemplateException | IOException e) {
             throw new TemplateException(e);
         }
