@@ -15,6 +15,7 @@
  */
 package com.blazebit.notify.template.api;
 
+import java.io.Serializable;
 import java.util.function.Function;
 
 /**
@@ -23,7 +24,7 @@ import java.util.function.Function;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface ConfigurationSource {
+public interface ConfigurationSource extends Serializable {
 
     /**
      * Returns the property value registered for the given property key.

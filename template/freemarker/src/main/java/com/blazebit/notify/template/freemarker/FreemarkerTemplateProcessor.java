@@ -23,6 +23,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Locale;
@@ -36,7 +37,7 @@ import java.util.function.Function;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
+public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, Serializable {
 
     /**
      * The key for which the template processor is registered.
@@ -64,7 +65,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
      */
     public static final String LOCALE_KEY = "locale";
 
-    private final Function<Locale, Template> freemarkerTemplate;
+    private final FreemarkerTemplateLookup freemarkerTemplate;
 
     /**
      * Creates a new Freemarker template processor from the given configuration source.
@@ -72,14 +73,14 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
      * @param configurationSource The configuration source
      */
     public FreemarkerTemplateProcessor(ConfigurationSource configurationSource) {
-        Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
-            Configuration c = new Configuration();
-            c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
-            return c;
-        });
-        String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
-        Function<String, Function<Locale, Template>> templateAccessor = name -> {
+        Function<String, FreemarkerTemplateLookup> templateAccessor = name -> {
             return (Locale locale) -> {
+                Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
+                    Configuration c = new Configuration();
+                    c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
+                    return c;
+                });
+                String templateEncoding = configurationSource.getPropertyOrDefault(FREEMARKER_ENCODING_PROPERTY, String.class, Function.identity(), o -> null);
                 try {
                     return configuration.getTemplate(name, locale, templateEncoding);
                 } catch (IOException e) {
@@ -87,7 +88,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
                 }
             };
         };
-        this.freemarkerTemplate = (Function<Locale, Template>) configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, (Class) Function.class, templateAccessor);
+        this.freemarkerTemplate = configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, FreemarkerTemplateLookup.class, templateAccessor);
     }
 
     /**
@@ -104,7 +105,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
      *
      * @param freemarkerTemplate The locale aware template function
      */
-    public FreemarkerTemplateProcessor(Function<Locale, Template> freemarkerTemplate) {
+    public FreemarkerTemplateProcessor(FreemarkerTemplateLookup freemarkerTemplate) {
         this.freemarkerTemplate = freemarkerTemplate;
     }
 
@@ -122,7 +123,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String> {
 
         StringWriter stringWriter = new StringWriter();
         try {
-            freemarkerTemplate.apply(locale).process(model, stringWriter);
+            freemarkerTemplate.findTemplate(locale).process(model, stringWriter);
         } catch (freemarker.template.TemplateException | IOException e) {
             throw new TemplateException(e);
         }

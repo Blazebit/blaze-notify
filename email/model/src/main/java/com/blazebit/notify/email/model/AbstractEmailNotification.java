@@ -36,7 +36,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Locale;
@@ -163,7 +162,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param subjectTemplateProcessor The template processor
      */
     public void setSubjectTemplateProcessor(TemplateProcessor<String> subjectTemplateProcessor) {
-        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, (Serializable) subjectTemplateProcessor);
+        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subjectTemplateProcessor);
     }
 
     /**
@@ -182,7 +181,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyTextTemplateProcessor The template processor
      */
     public void setBodyTextTemplateProcessor(TemplateProcessor<String> bodyTextTemplateProcessor) {
-        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, (Serializable) bodyTextTemplateProcessor);
+        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyTextTemplateProcessor);
     }
 
     /**
@@ -201,7 +200,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyHtmlTemplateProcessor The template processor
      */
     public void setBodyHtmlTemplateProcessor(TemplateProcessor<String> bodyHtmlTemplateProcessor) {
-        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, (Serializable) bodyHtmlTemplateProcessor);
+        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtmlTemplateProcessor);
     }
 
     /**
@@ -220,7 +219,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param attachmentsTemplateProcessor The template processor
      */
     public void setAttachmentsTemplateProcessor(TemplateProcessor<Collection<Attachment>> attachmentsTemplateProcessor) {
-        getJobConfiguration().getParameters().put(ATTACHMENTS_PARAMETER_NAME, (Serializable) attachmentsTemplateProcessor);
+        getJobConfiguration().getParameters().put(ATTACHMENTS_PARAMETER_NAME, attachmentsTemplateProcessor);
     }
 
     /**

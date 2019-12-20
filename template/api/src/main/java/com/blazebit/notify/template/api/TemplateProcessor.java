@@ -15,6 +15,7 @@
  */
 package com.blazebit.notify.template.api;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface TemplateProcessor<R> {
+public interface TemplateProcessor<R> extends Serializable {
 
     /**
      * Processes this template based on the given map model.
@@ -41,7 +42,7 @@ public interface TemplateProcessor<R> {
      * @param <T>     The template processor result type
      * @return a {@link TemplateProcessor}
      */
-    static <T> TemplateProcessor<T> of(T element) {
+    static <T extends Serializable> TemplateProcessor<T> of(T element) {
         return new TemplateProcessor<T>() {
             @Override
             public T processTemplate(Map<String, Object> model) {
