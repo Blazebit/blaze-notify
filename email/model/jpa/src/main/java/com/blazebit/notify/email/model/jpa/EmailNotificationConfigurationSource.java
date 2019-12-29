@@ -48,9 +48,9 @@ public class EmailNotificationConfigurationSource implements ConfigurationSource
 //        properties.put(EmailNotificationMessageResolver.EMAIL_TEMPLATE_CONTEXT_PROPERTY, null);
         properties.put(EmailNotificationMessageResolver.EMAIL_TEMPLATE_PROCESSOR_FACTORY_PROPERTY, emailNotification.getTemplateProcessorType());
 
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_PROPERTY, emailNotification.getSubjectTemplateProcessor());
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_PROPERTY, emailNotification.getBodyTextTemplateProcessor());
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_HTML_PROPERTY, emailNotification.getBodyHtmlTemplateProcessor());
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.SUBJECT_PARAMETER_NAME));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_TEXT_PARAMETER_NAME));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_HTML_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_HTML_PARAMETER_NAME));
         properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY, emailNotification.getAttachmentProcessor());
         this.properties = properties;
     }
