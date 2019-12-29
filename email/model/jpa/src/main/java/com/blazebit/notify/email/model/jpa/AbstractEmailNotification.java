@@ -238,7 +238,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param subject The subject
      */
     public void setSubject(String subject) {
-        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subject);
+        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, TemplateProcessor.of(subject));
     }
 
     /**
@@ -257,7 +257,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyText The text body
      */
     public void setBodyText(String bodyText) {
-        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyText);
+        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, TemplateProcessor.of(bodyText));
     }
 
     /**
@@ -276,7 +276,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyHtml The html body
      */
     public void setBodyHtml(String bodyHtml) {
-        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtml);
+        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, TemplateProcessor.of(bodyHtml));
     }
 
     /**

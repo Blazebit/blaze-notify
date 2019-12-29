@@ -24,7 +24,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 /**
  * An abstract mapped superclass implementing the {@link com.blazebit.notify.Notification} interface that is based on a {@link NotificationJobInstance}.
@@ -37,7 +36,7 @@ import javax.persistence.Transient;
  */
 @MappedSuperclass
 @Table(name = "notification")
-public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long, Long>> extends AbstractNotification<ID> {
+public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<?, ?>> extends AbstractNotification<ID> {
 
     private static final long serialVersionUID = 1L;
 
@@ -51,12 +50,6 @@ public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNo
      */
     public AbstractJobInstanceBasedNotification(ID id) {
         super(id);
-    }
-
-    @Override
-    @Transient
-    public Long getPartitionKey() {
-        return (Long) getRecipient().getId();
     }
 
     @Override

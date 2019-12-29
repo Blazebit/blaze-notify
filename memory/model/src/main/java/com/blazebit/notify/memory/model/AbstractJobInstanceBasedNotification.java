@@ -29,7 +29,7 @@ import com.blazebit.notify.NotificationRecipient;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<Long, Long>> extends AbstractNotification<ID> implements Notification<ID> {
+public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<?, ?>> extends AbstractNotification<ID> implements Notification<ID> {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,11 +43,6 @@ public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNo
      */
     public AbstractJobInstanceBasedNotification(ID id) {
         super(id);
-    }
-
-    @Override
-    public Long getPartitionKey() {
-        return (Long) getRecipient().getId();
     }
 
     @Override
