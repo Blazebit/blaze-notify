@@ -19,7 +19,6 @@ package com.blazebit.notify.server.model;
 import com.blazebit.domain.declarative.DiscoverMode;
 import com.blazebit.domain.declarative.DomainAttribute;
 import com.blazebit.domain.declarative.DomainType;
-import com.blazebit.domain.declarative.persistence.EntityAttribute;
 import com.blazebit.notify.jpa.model.base.AbstractNotificationRecipient;
 
 import javax.persistence.Column;
@@ -48,7 +47,6 @@ public class EmailNotificationRecipient extends AbstractNotificationRecipient im
 
     @Override
     @DomainAttribute(Integer.class)
-    @EntityAttribute("id")
     public Long getId() {
         return super.getId();
     }

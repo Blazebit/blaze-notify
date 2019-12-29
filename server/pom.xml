@@ -127,6 +127,11 @@
             <artifactId>blaze-expression-persistence</artifactId>
             <version>${version.blaze-expression}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-expression-declarative-persistence</artifactId>
+            <version>${version.blaze-expression}</version>
+        </dependency>
         <!-- Templating dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -149,7 +154,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-domain-declarative-persistence</artifactId>
+            <artifactId>blaze-domain-declarative-api</artifactId>
             <version>${version.blaze-domain}</version>
         </dependency>
         <dependency>
