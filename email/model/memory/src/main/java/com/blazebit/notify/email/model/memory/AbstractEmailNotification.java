@@ -203,7 +203,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @return the subject string
      */
     public String getSubject() {
-        return (String) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME);
+        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME)).processTemplate(null);
     }
 
     /**
@@ -221,7 +221,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @return the text body string
      */
     public String getBodyText() {
-        return (String) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME);
+        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME)).processTemplate(null);
     }
 
     /**
@@ -239,7 +239,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @return the html body string
      */
     public String getBodyHtml() {
-        return (String) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME);
+        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME)).processTemplate(null);
     }
 
     /**
@@ -249,6 +249,60 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      */
     public void setBodyHtml(String bodyHtml) {
         getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, TemplateProcessor.of(bodyHtml));
+    }
+
+    /**
+     * Returns the subject template name.
+     *
+     * @return the subject template name
+     */
+    public String getSubjectTemplateName() {
+        return (String) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the given subject template name.
+     *
+     * @param subjectTemplateName The subject template name
+     */
+    public void setSubjectTemplateName(String subjectTemplateName) {
+        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subjectTemplateName);
+    }
+
+    /**
+     * Returns the text body template name.
+     *
+     * @return the text body template name
+     */
+    public String getBodyTextTemplateName() {
+        return (String) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the given text body template name.
+     *
+     * @param bodyTextTemplateName The text body template name
+     */
+    public void setBodyTextTemplateName(String bodyTextTemplateName) {
+        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyTextTemplateName);
+    }
+
+    /**
+     * Returns the html body template name.
+     *
+     * @return the html body template name
+     */
+    public String getBodyHtmlTemplateName() {
+        return (String) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the given html body template name.
+     *
+     * @param bodyHtmlTemplateName The html body template name
+     */
+    public void setBodyHtmlTemplateName(String bodyHtmlTemplateName) {
+        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtmlTemplateName);
     }
 
     /**
