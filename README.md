@@ -40,7 +40,7 @@ Blaze-Notify is split up into different modules. We recommend that you define a 
 
 ```xml
 <properties>
-    <blaze-notify.version>1.0.0-Alpha3</blaze-notify.version>
+    <blaze-notify.version>1.0.0-Alpha5</blaze-notify.version>
     <blaze-expression.version>1.0.0-Alpha5</blaze-expression.version>
     <blaze-job.version>1.0.0-Alpha5</blaze-job.version>
 </properties>
