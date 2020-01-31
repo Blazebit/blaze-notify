@@ -156,7 +156,6 @@ public interface NotificationJobContext extends JobContext {
         private NotificationPartitionKeyProvider notificationPartitionKeyProvider;
         private NotificationRecipientResolver recipientResolver;
         private NotificationJobProcessorFactory notificationJobProcessorFactory;
-        private NotificationJobInstanceProcessorFactory notificationJobInstanceProcessorFactory;
         private NotificationProcessorFactory notificationProcessorFactory;
         private final Map<String, ChannelFactory<?>> channelFactories = new HashMap<>();
         private final Map<Class<? extends NotificationMessage>, NotificationMessageResolverFactory<?>> messageResolverFactories = new HashMap<>();
@@ -167,7 +166,9 @@ public interface NotificationJobContext extends JobContext {
             notificationPartitionKeyProviderFactory = loadFirstServiceOrNone(NotificationPartitionKeyProviderFactory.class);
             recipientResolver = loadFirstServiceOrNone(NotificationRecipientResolver.class);
             notificationJobProcessorFactory = loadFirstServiceOrNone(NotificationJobProcessorFactory.class);
-            notificationJobInstanceProcessorFactory = loadFirstServiceOrNone(NotificationJobInstanceProcessorFactory.class);
+            if (getJobInstanceProcessorFactory() == null) {
+                withJobInstanceProcessorFactory(loadFirstServiceOrNone(NotificationJobInstanceProcessorFactory.class));
+            }
             notificationProcessorFactory = loadFirstServiceOrNone(NotificationProcessorFactory.class);
             for (ChannelFactory channelFactory : loadServices(ChannelFactory.class)) {
                 channelFactories.put(channelFactory.getChannelType().getChannelType(), channelFactory);
@@ -360,27 +361,6 @@ public interface NotificationJobContext extends JobContext {
             return this;
         }
 
-        @Override
-        public NotificationJobInstanceProcessorFactory getJobInstanceProcessorFactory() {
-            return notificationJobInstanceProcessorFactory;
-        }
-
-        @Override
-        public Builder withJobInstanceProcessorFactory(JobInstanceProcessorFactory jobInstanceProcessorFactory) {
-            return withJobInstanceProcessorFactory((NotificationJobInstanceProcessorFactory) jobInstanceProcessorFactory);
-        }
-
-        /**
-         * Sets the given notification job instance processor factory.
-         *
-         * @param notificationJobInstanceProcessorFactory The notification job instance processor factory
-         * @return this for chaining
-         */
-        public Builder withJobInstanceProcessorFactory(NotificationJobInstanceProcessorFactory notificationJobInstanceProcessorFactory) {
-            this.notificationJobInstanceProcessorFactory = notificationJobInstanceProcessorFactory;
-            return this;
-        }
-
         /**
          * Returns the configured notification processor factory.
          *
@@ -416,7 +396,7 @@ public interface NotificationJobContext extends JobContext {
          * @param channelFactory The channel factory
          * @return this for chaining
          */
-        public Builder withChannelFactory(ChannelFactory channelFactory) {
+        public Builder withChannelFactory(ChannelFactory<?> channelFactory) {
             channelFactories.put(channelFactory.getChannelType().getChannelType(), channelFactory);
             return this;
         }

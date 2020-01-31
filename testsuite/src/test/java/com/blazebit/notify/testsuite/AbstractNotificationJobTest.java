@@ -43,16 +43,16 @@ import java.util.concurrent.*;
 
 public abstract class AbstractNotificationJobTest<R extends NotificationRecipient<?>, T extends NotificationMessage> {
 
-    protected static ChannelKey channelKey = ChannelKey.of("default", null);
+    protected static ChannelKey<?> channelKey = ChannelKey.of("default", null);
 
     private CountDownLatch latch;
     protected NotificationJobContext jobContext;
     protected Channel<R, T> channel;
-    protected BlockingQueue<NotificationMessage> sink;
+    protected BlockingQueue<T> sink;
 
     public AbstractNotificationJobTest() {
         this.sink = new ArrayBlockingQueue<>(1024);
-        this.channel = new MemoryChannel(sink);
+        this.channel = new MemoryChannel<>(sink);
     }
 
     protected NotificationJobContext.Builder builder() {
@@ -83,14 +83,14 @@ public abstract class AbstractNotificationJobTest<R extends NotificationRecipien
                     }
                 })
                 .withMessageResolverFactory(new SimpleMessageResolverFactory())
-                .withChannelFactory(new ChannelFactory() {
+                .withChannelFactory(new ChannelFactory<Channel<R, T>>() {
                     @Override
-                    public ChannelKey getChannelType() {
-                        return channelKey;
+                    public ChannelKey<Channel<R, T>> getChannelType() {
+                        return (ChannelKey<Channel<R, T>>) channelKey;
                     }
 
                     @Override
-                    public Channel<? extends NotificationRecipient<?>, ? extends NotificationMessage> createChannel(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
+                    public Channel<R, T> createChannel(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
                         return channel;
                     }
                 })
@@ -160,17 +160,17 @@ public abstract class AbstractNotificationJobTest<R extends NotificationRecipien
         }
     }
 
-    private static class SimpleMessageResolverFactory implements NotificationMessageResolverFactory {
+    private static class SimpleMessageResolverFactory implements NotificationMessageResolverFactory<NotificationMessage> {
         @Override
-        public Class getNotificationMessageType() {
+        public Class<NotificationMessage> getNotificationMessageType() {
             return NotificationMessage.class;
         }
 
         @Override
-        public NotificationMessageResolver createNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
-            return new NotificationMessageResolver() {
+        public NotificationMessageResolver<NotificationMessage> createNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
+            return new NotificationMessageResolver<NotificationMessage>() {
                 @Override
-                public NotificationMessage resolveNotificationMessage(Notification notification) {
+                public NotificationMessage resolveNotificationMessage(Notification<?> notification) {
                     return new SimpleNotificationMessage();
                 }
             };
