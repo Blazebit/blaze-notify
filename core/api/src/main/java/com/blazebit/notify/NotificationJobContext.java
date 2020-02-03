@@ -22,6 +22,8 @@ import com.blazebit.job.JobContext;
 import com.blazebit.job.JobException;
 import com.blazebit.job.JobInstance;
 import com.blazebit.job.JobInstanceProcessor;
+import com.blazebit.job.JobProcessor;
+import com.blazebit.job.JobTrigger;
 import com.blazebit.job.PartitionKey;
 import com.blazebit.job.ServiceProvider;
 import com.blazebit.job.JobInstanceListener;
@@ -340,13 +342,32 @@ public interface NotificationJobContext extends JobContext {
         }
 
         @Override
-        public NotificationJobProcessorFactory getJobProcessorFactory() {
+        public JobProcessorFactory getJobProcessorFactory() {
+            final JobProcessorFactory jobProcessorFactory = super.getJobProcessorFactory();
+            if (notificationJobProcessorFactory != null) {
+                return new NotificationDelegatingJobProcessorFactory(notificationJobProcessorFactory, jobProcessorFactory == null ? notificationJobProcessorFactory : jobProcessorFactory);
+            } else {
+                return jobProcessorFactory;
+            }
+        }
+
+        /**
+         * Returns the job processor factory for notification jobs.
+         *
+         * @return the job processor factory for notification jobs
+         */
+        public NotificationJobProcessorFactory getNotificationJobProcessorFactory() {
             return notificationJobProcessorFactory;
         }
 
         @Override
         public Builder withJobProcessorFactory(JobProcessorFactory jobProcessorFactory) {
-            return withJobProcessorFactory((NotificationJobProcessorFactory) jobProcessorFactory);
+            if (jobProcessorFactory instanceof NotificationJobProcessorFactory) {
+                this.notificationJobProcessorFactory = (NotificationJobProcessorFactory) jobProcessorFactory;
+                return this;
+            } else {
+                return super.withJobProcessorFactory(jobProcessorFactory);
+            }
         }
 
         /**
@@ -361,13 +382,32 @@ public interface NotificationJobContext extends JobContext {
         }
 
         @Override
-        public NotificationJobInstanceProcessorFactory getJobInstanceProcessorFactory() {
+        public JobInstanceProcessorFactory getJobInstanceProcessorFactory() {
+            final JobInstanceProcessorFactory jobInstanceProcessorFactory = super.getJobInstanceProcessorFactory();
+            if (notificationJobInstanceProcessorFactory != null) {
+                return new NotificationDelegatingJobInstanceProcessorFactory(notificationJobInstanceProcessorFactory, jobInstanceProcessorFactory == null ? notificationJobInstanceProcessorFactory : jobInstanceProcessorFactory);
+            } else {
+                return jobInstanceProcessorFactory;
+            }
+        }
+
+        /**
+         * Returns the job instance processor factory for notification job instances.
+         *
+         * @return the job instance processor factory for notification job instances
+         */
+        public NotificationJobInstanceProcessorFactory getNotificationJobInstanceProcessorFactory() {
             return notificationJobInstanceProcessorFactory;
         }
 
         @Override
         public Builder withJobInstanceProcessorFactory(JobInstanceProcessorFactory jobInstanceProcessorFactory) {
-            return withJobInstanceProcessorFactory((NotificationJobInstanceProcessorFactory) jobInstanceProcessorFactory);
+            if (jobInstanceProcessorFactory instanceof NotificationJobInstanceProcessorFactory) {
+                this.notificationJobInstanceProcessorFactory = (NotificationJobInstanceProcessorFactory) jobInstanceProcessorFactory;
+                return this;
+            } else {
+                return super.withJobInstanceProcessorFactory(jobInstanceProcessorFactory);
+            }
         }
 
         /**
@@ -416,7 +456,7 @@ public interface NotificationJobContext extends JobContext {
          * @param channelFactory The channel factory
          * @return this for chaining
          */
-        public Builder withChannelFactory(ChannelFactory channelFactory) {
+        public Builder withChannelFactory(ChannelFactory<?> channelFactory) {
             channelFactories.put(channelFactory.getChannelType().getChannelType(), channelFactory);
             return this;
         }
@@ -439,6 +479,58 @@ public interface NotificationJobContext extends JobContext {
         public Builder withMessageResolverFactory(NotificationMessageResolverFactory<?> messageResolverFactory) {
             this.messageResolverFactories.put(messageResolverFactory.getNotificationMessageType(), messageResolverFactory);
             return this;
+        }
+
+        /**
+         * An implementation that delegates to a {@link NotificationJobProcessorFactory} on {@link NotificationJobTrigger}.
+         *
+         * @author Christian Beikov
+         * @since 1.0.0
+         */
+        private static final class NotificationDelegatingJobProcessorFactory implements JobProcessorFactory {
+
+            private final NotificationJobProcessorFactory notificationJobProcessorFactory;
+            private final JobProcessorFactory jobProcessorFactory;
+
+            public NotificationDelegatingJobProcessorFactory(NotificationJobProcessorFactory notificationJobProcessorFactory, JobProcessorFactory jobProcessorFactory) {
+                this.notificationJobProcessorFactory = notificationJobProcessorFactory;
+                this.jobProcessorFactory = jobProcessorFactory;
+            }
+
+            @Override
+            public <T extends JobTrigger> JobProcessor<T> createJobProcessor(JobContext jobContext, T jobTrigger) {
+                if (jobTrigger instanceof NotificationJobTrigger) {
+                    return (JobProcessor<T>) notificationJobProcessorFactory.createJobProcessor((NotificationJobContext) jobContext, (NotificationJobTrigger) jobTrigger);
+                } else {
+                    return jobProcessorFactory.createJobProcessor(jobContext, jobTrigger);
+                }
+            }
+        }
+
+        /**
+         * An implementation that delegates to a {@link NotificationJobInstanceProcessorFactory} on {@link NotificationJobInstance}.
+         *
+         * @author Christian Beikov
+         * @since 1.0.0
+         */
+        private static final class NotificationDelegatingJobInstanceProcessorFactory implements JobInstanceProcessorFactory {
+
+            private final NotificationJobInstanceProcessorFactory notificationJobInstanceProcessorFactory;
+            private final JobInstanceProcessorFactory jobInstanceProcessorFactory;
+
+            public NotificationDelegatingJobInstanceProcessorFactory(NotificationJobInstanceProcessorFactory notificationJobInstanceProcessorFactory, JobInstanceProcessorFactory jobInstanceProcessorFactory) {
+                this.notificationJobInstanceProcessorFactory = notificationJobInstanceProcessorFactory;
+                this.jobInstanceProcessorFactory = jobInstanceProcessorFactory;
+            }
+
+            @Override
+            public <T extends JobInstance<?>> JobInstanceProcessor<?, T> createJobInstanceProcessor(JobContext jobContext, T jobInstance) {
+                if (jobInstance instanceof NotificationJobInstance<?, ?>) {
+                    return (JobInstanceProcessor<?, T>) notificationJobInstanceProcessorFactory.createJobInstanceProcessor((NotificationJobContext) jobContext, (NotificationJobInstance<?, ?>) jobInstance);
+                } else {
+                    return jobInstanceProcessorFactory.createJobInstanceProcessor(jobContext, jobInstance);
+                }
+            }
         }
 
         /**

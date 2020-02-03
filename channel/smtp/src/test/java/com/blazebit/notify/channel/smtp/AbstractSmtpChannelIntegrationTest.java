@@ -35,7 +35,7 @@ public abstract class AbstractSmtpChannelIntegrationTest {
     protected final static String TEST_MAIL_USER = "blaze-notify-test@" + TEST_MAIL_SERVER_DOMAIN;
     private final static String TEST_MAIL_PWD = "blaze-notify-test";
     private final static int TEST_MAIL_SERVER_SMTP_PORT = 1025;
-    private final static int TEST_MAIL_SERVER_IMAP_PORT = 1143;
+    private final static int TEST_MAIL_SERVER_IMAP_PORT = 10143;
 
     protected static final ImapMailClient mailClient = new ImapMailClient(TEST_MAIL_USER, TEST_MAIL_PWD, TEST_MAIL_SERVER_DOMAIN, TEST_MAIL_SERVER_IMAP_PORT, false);
 
