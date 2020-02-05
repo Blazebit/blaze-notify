@@ -37,7 +37,7 @@ public class EmailNotificationMessageResolverFactory implements NotificationMess
 
     @Override
     public NotificationMessageResolver<EmailNotificationMessage> createNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
-        return new EmailNotificationMessageResolver(jobContext, configurationSource);
+        return new EmailNotificationMessageResolver(jobContext, configurationSource, null);
     }
 
 }

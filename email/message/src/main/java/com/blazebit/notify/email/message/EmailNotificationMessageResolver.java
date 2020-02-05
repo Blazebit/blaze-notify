@@ -20,6 +20,7 @@ import com.blazebit.notify.Notification;
 import com.blazebit.notify.NotificationException;
 import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.NotificationMessageResolver;
+import com.blazebit.notify.NotificationMessageResolverModelCustomizer;
 import com.blazebit.notify.NotificationRecipient;
 import com.blazebit.notify.template.api.TemplateContext;
 import com.blazebit.notify.template.api.TemplateProcessor;
@@ -105,14 +106,15 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
     private final TemplateProcessor<String> textBodyTemplateProcessor;
     private final TemplateProcessor<String> htmlBodyTemplateProcessor;
     private final Collection<TemplateProcessor> attachmentProcessors;
+    private final NotificationMessageResolverModelCustomizer modelCustomizer;
 
     /**
      * Creates a new message resolver from the given notification job context and configuration source.
-     *
-     * @param jobContext          The notification job context
+     *  @param jobContext          The notification job context
      * @param configurationSource The configuration source
+     * @param modelCustomizer A model customizer
      */
-    public EmailNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
+    public EmailNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource, NotificationMessageResolverModelCustomizer modelCustomizer) {
         this.from = configurationSource.getPropertyOrFail(EMAIL_MESSAGE_FROM_PROPERTY, String.class, Function.identity());
         this.fromDisplayName = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_FROM_NAME_PROPERTY, String.class, Function.identity(), o -> null);
         this.replyTo = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_REPLY_TO_PROPERTY, String.class, Function.identity(), o -> null);
@@ -150,6 +152,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
             throw new NotificationException("Invalid attachment processors given via property '" + EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY + "': " + o);
         }
         this.attachmentProcessors = attachmentProcessors;
+        this.modelCustomizer = modelCustomizer;
     }
 
     /**
@@ -165,10 +168,12 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
      * @param textBodyTemplateProcessor The text body template processor
      * @param htmlBodyTemplateProcessor The html body template processor
      * @param attachmentProcessors      The attachment processors
+     * @param modelCustomizer A model customizer
      */
     public EmailNotificationMessageResolver(String from, String fromDisplayName, String replyTo, String replyToDisplayName, String envelopeFrom, String resourceBundleName,
                                             TemplateProcessor<String> subjectTemplateProcessor, TemplateProcessor<String> textBodyTemplateProcessor,
-                                            TemplateProcessor<String> htmlBodyTemplateProcessor, Collection<TemplateProcessor> attachmentProcessors) {
+                                            TemplateProcessor<String> htmlBodyTemplateProcessor, Collection<TemplateProcessor> attachmentProcessors,
+                                            NotificationMessageResolverModelCustomizer modelCustomizer) {
         this.from = from;
         this.fromDisplayName = fromDisplayName;
         this.replyTo = replyTo;
@@ -179,6 +184,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         this.textBodyTemplateProcessor = textBodyTemplateProcessor;
         this.htmlBodyTemplateProcessor = htmlBodyTemplateProcessor;
         this.attachmentProcessors = attachmentProcessors == null ? Collections.emptyList() : attachmentProcessors;
+        this.modelCustomizer = modelCustomizer;
     }
 
     private static Function<Locale, ResourceBundle> resourceBundleByName(String name) {
@@ -212,6 +218,9 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         }
         model.put("locale", locale);
         model.put("recipient", notificationRecipient);
+        if (modelCustomizer != null) {
+            modelCustomizer.customize(model, notification);
+        }
         model = Collections.unmodifiableMap(model);
 
         String subjectString = subjectTemplateProcessor == null ? null : subjectTemplateProcessor.processTemplate(model);
