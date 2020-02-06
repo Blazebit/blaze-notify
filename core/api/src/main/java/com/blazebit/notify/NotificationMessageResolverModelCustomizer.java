@@ -29,8 +29,8 @@ public interface NotificationMessageResolverModelCustomizer {
      * This method is invoked by the {@link NotificationMessageResolver} for each notification before finalizing the model
      * and resolving a notification message for it.
      *
-     * @param model the model
-     * @param notification the notification that is currently being resolved
+     * @param model The model
+     * @param notificationJobContext The notification job context
      */
-    void customize(Map<String, Object> model, Notification<?> notification);
+    void customize(Map<String, Object> model, NotificationJobContext notificationJobContext);
 }
