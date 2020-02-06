@@ -57,9 +57,8 @@ public class EmailNotificationMessageResolverFactory implements NotificationMess
 
     private static <T> List<T> loadServices(Class<T> serviceType) {
         List<T> services = new ArrayList<>();
-        Iterator<T> servicesIterator = ServiceLoader.load(serviceType).iterator();
-        while (servicesIterator.hasNext()) {
-            services.add(servicesIterator.next());
+        for (T service : ServiceLoader.load(serviceType)) {
+            services.add(service);
         }
         return services;
     }
