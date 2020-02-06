@@ -30,7 +30,8 @@ public interface NotificationMessageResolverModelCustomizer {
      * and resolving a notification message for it.
      *
      * @param model The model
+     * @param notification the notification that is currently being resolved
      * @param notificationJobContext The notification job context
      */
-    void customize(Map<String, Object> model, NotificationJobContext notificationJobContext);
+    void customize(Map<String, Object> model, Notification<?> notification, NotificationJobContext notificationJobContext);
 }

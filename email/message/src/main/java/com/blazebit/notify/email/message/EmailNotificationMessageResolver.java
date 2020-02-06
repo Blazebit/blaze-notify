@@ -224,7 +224,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         model.put("locale", locale);
         model.put("recipient", notificationRecipient);
         for (NotificationMessageResolverModelCustomizer modelCustomizer : modelCustomizers) {
-            modelCustomizer.customize(model, notificationJobContext);
+            modelCustomizer.customize(model, notification, notificationJobContext);
         }
         model = Collections.unmodifiableMap(model);
 
