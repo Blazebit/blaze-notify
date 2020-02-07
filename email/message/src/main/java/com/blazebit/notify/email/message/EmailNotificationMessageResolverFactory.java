@@ -20,6 +20,12 @@ import com.blazebit.job.ConfigurationSource;
 import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.NotificationMessageResolver;
 import com.blazebit.notify.NotificationMessageResolverFactory;
+import com.blazebit.notify.NotificationMessageResolverModelCustomizer;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ServiceLoader;
 
 /**
  * A factory for {@link EmailNotificationMessageResolver}.
@@ -30,6 +36,15 @@ import com.blazebit.notify.NotificationMessageResolverFactory;
 @ServiceProvider(NotificationMessageResolverFactory.class)
 public class EmailNotificationMessageResolverFactory implements NotificationMessageResolverFactory<EmailNotificationMessage> {
 
+    protected final List<NotificationMessageResolverModelCustomizer> modelCustomizers;
+
+    /**
+     * This is the no-parameter constructor that loads the {@link NotificationMessageResolverModelCustomizer}s.
+     */
+    public EmailNotificationMessageResolverFactory() {
+        this.modelCustomizers = loadServices(NotificationMessageResolverModelCustomizer.class);
+    }
+
     @Override
     public Class<EmailNotificationMessage> getNotificationMessageType() {
         return EmailNotificationMessage.class;
@@ -37,7 +52,14 @@ public class EmailNotificationMessageResolverFactory implements NotificationMess
 
     @Override
     public NotificationMessageResolver<EmailNotificationMessage> createNotificationMessageResolver(NotificationJobContext jobContext, ConfigurationSource configurationSource) {
-        return new EmailNotificationMessageResolver(jobContext, configurationSource);
+        return new EmailNotificationMessageResolver(jobContext, configurationSource, modelCustomizers);
     }
 
+    private static <T> List<T> loadServices(Class<T> serviceType) {
+        List<T> services = new ArrayList<>();
+        for (T service : ServiceLoader.load(serviceType)) {
+            services.add(service);
+        }
+        return services;
+    }
 }
