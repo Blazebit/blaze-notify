@@ -25,7 +25,7 @@
         <version.blaze-domain>1.0.0-Alpha3</version.blaze-domain>
         <version.weld>2.4.5.Final</version.weld>
         <version.spring>5.0.7.RELEASE</version.spring>
-        <version.junit>4.12</version.junit>
+        <version.junit>4.13.1</version.junit>
     </properties>
 
     <dependencyManagement>
