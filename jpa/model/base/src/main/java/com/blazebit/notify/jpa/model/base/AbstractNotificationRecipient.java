@@ -19,6 +19,8 @@ package com.blazebit.notify.jpa.model.base;
 import com.blazebit.job.jpa.model.BaseEntity;
 import com.blazebit.notify.NotificationRecipient;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import java.util.TimeZone;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -30,6 +32,7 @@ import java.util.Locale;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @MappedSuperclass
 public abstract class AbstractNotificationRecipient extends BaseEntity<Long> implements NotificationRecipient<Long> {
 

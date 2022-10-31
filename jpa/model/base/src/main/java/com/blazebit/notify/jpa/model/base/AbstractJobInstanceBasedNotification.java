@@ -19,6 +19,8 @@ package com.blazebit.notify.jpa.model.base;
 import com.blazebit.notify.NotificationJobInstance;
 import com.blazebit.notify.NotificationRecipient;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -34,6 +36,7 @@ import jakarta.persistence.Table;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @MappedSuperclass
 @Table(name = "notification")
 public abstract class AbstractJobInstanceBasedNotification<ID extends AbstractNotificationId<?, ?>, R extends NotificationRecipient<?>, I extends NotificationJobInstance<?, ?>> extends AbstractNotification<ID> {
