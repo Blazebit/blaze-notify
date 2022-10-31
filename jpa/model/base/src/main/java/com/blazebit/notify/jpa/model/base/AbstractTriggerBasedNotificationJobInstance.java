@@ -20,6 +20,8 @@ import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.job.jpa.model.AbstractTriggerBasedJobInstance;
 import com.blazebit.notify.NotificationJobInstance;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
 
@@ -33,6 +35,7 @@ import jakarta.persistence.Transient;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @MappedSuperclass
 public abstract class AbstractTriggerBasedNotificationJobInstance<ID, R, J extends AbstractNotificationJob, T extends AbstractNotificationJobTrigger<J>> extends AbstractTriggerBasedJobInstance<ID, T> implements NotificationJobInstance<ID, R> {
 

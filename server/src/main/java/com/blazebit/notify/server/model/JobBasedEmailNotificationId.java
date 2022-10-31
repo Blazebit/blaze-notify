@@ -18,6 +18,8 @@ package com.blazebit.notify.server.model;
 
 import com.blazebit.notify.jpa.model.base.AbstractNotificationId;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
@@ -25,6 +27,7 @@ import jakarta.persistence.Embeddable;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @Embeddable
 public class JobBasedEmailNotificationId extends AbstractNotificationId<Long, Long> {
 

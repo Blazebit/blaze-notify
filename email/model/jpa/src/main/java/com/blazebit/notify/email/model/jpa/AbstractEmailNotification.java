@@ -23,6 +23,8 @@ import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.email.message.Attachment;
 import com.blazebit.notify.jpa.model.base.AbstractNotification;
 import com.blazebit.notify.template.api.TemplateProcessor;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,7 @@ import jakarta.validation.constraints.NotNull;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @MappedSuperclass
 public abstract class AbstractEmailNotification<ID> extends AbstractNotification<ID> implements ConfigurationSourceProvider {
 

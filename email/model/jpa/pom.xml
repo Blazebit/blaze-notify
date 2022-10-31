@@ -41,5 +41,11 @@
             <artifactId>blaze-notify-email-sns-sqs-feedback</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${version.hibernate}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

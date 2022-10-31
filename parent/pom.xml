@@ -24,6 +24,7 @@
         <version.blaze-expression>1.0.0-Alpha33</version.blaze-expression>
         <version.blaze-domain>3.0.0-Alpha5</version.blaze-domain>
         <version.spring>6.2.1</version.spring>
+        <version.hibernate>6.6.4.Final</version.hibernate>
         <version.junit>4.12</version.junit>
         <version.surefire.plugin>3.5.2</version.surefire.plugin>
     </properties>
@@ -79,8 +80,6 @@
                 <configuration>
                     <source>${maven.compiler.argument.source}</source>
                     <target>${maven.compiler.argument.target}</target>
-                    <!-- Disable annotation processing via compiler plugin. -->
-                    <compilerArgument>-proc:none</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>

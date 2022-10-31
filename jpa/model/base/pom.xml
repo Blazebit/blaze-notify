@@ -26,6 +26,12 @@
             <artifactId>blaze-job-jpa-model</artifactId>
             <version>${version.blaze-job}</version>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${version.hibernate}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Test dependencies -->
 		<dependency>

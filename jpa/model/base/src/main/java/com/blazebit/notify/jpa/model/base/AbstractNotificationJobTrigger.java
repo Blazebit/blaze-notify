@@ -21,6 +21,8 @@ import com.blazebit.job.Schedule;
 import com.blazebit.job.jpa.model.AbstractJobTrigger;
 import com.blazebit.notify.NotificationJobTrigger;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.MappedSuperclass;
 
 /**
@@ -30,6 +32,7 @@ import jakarta.persistence.MappedSuperclass;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@Access(AccessType.PROPERTY)
 @MappedSuperclass
 public abstract class AbstractNotificationJobTrigger<J extends AbstractNotificationJob> extends AbstractJobTrigger<J> implements NotificationJobTrigger {
 
