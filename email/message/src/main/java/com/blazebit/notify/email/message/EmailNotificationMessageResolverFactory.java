@@ -21,9 +21,7 @@ import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.NotificationMessageResolver;
 import com.blazebit.notify.NotificationMessageResolverFactory;
 import com.blazebit.notify.NotificationMessageResolverModelCustomizer;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 

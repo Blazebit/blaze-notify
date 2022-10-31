@@ -16,6 +16,7 @@
 package com.blazebit.notify.email.model.jpa;
 
 import com.blazebit.job.ConfigurationSource;
+import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.notify.ConfigurationSourceProvider;
 import com.blazebit.notify.Notification;
 import com.blazebit.notify.NotificationJobContext;
@@ -111,8 +112,8 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
     }
 
     @Override
-    public void markDone(Object result) {
-        super.markDone(result);
+    public void markDone(JobInstanceProcessingContext<?> jobProcessingContext, Object result) {
+        super.markDone(jobProcessingContext, result);
         setMessageId((String) result);
     }
 

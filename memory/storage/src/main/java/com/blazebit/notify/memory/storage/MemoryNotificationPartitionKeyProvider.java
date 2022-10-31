@@ -52,17 +52,27 @@ public class MemoryNotificationPartitionKeyProvider implements NotificationParti
         if (channelType == null) {
             return new PartitionKey() {
                 @Override
+                public String getName() {
+                    return "jobInstance";
+                }
+
+                @Override
                 public boolean matches(JobInstance<?> jobInstance) {
                     return !(jobInstance instanceof Notification<?>) && defaultJobInstancePartitionKey.matches(jobInstance);
                 }
 
                 @Override
                 public String toString() {
-                    return "jobInstance";
+                    return getName();
                 }
             };
         }
         return new PartitionKey() {
+            @Override
+            public String getName() {
+                return "notification/" + channelType;
+            }
+
             @Override
             public boolean matches(JobInstance<?> jobInstance) {
                 return jobInstance instanceof Notification<?> && channelType.equals(((Notification<?>) jobInstance).getChannelType()) && defaultJobInstancePartitionKey.matches(jobInstance);
@@ -70,7 +80,7 @@ public class MemoryNotificationPartitionKeyProvider implements NotificationParti
 
             @Override
             public String toString() {
-                return "notification/" + channelType;
+                return getName();
             }
         };
     }

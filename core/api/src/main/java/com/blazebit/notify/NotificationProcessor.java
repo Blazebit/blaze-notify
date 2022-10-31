@@ -29,7 +29,7 @@ public interface NotificationProcessor<N extends Notification<?>> extends JobIns
 
     @Override
     default Object process(N jobInstance, JobInstanceProcessingContext<Object> context) {
-        process(jobInstance, (NotificationJobContext) context.getJobContext());
+        processWithoutResult(jobInstance, context);
         return null;
     }
 
@@ -39,5 +39,5 @@ public interface NotificationProcessor<N extends Notification<?>> extends JobIns
      * @param notification The notification to process
      * @param context The job instance context
      */
-    void process(N notification, NotificationJobContext context);
+    void processWithoutResult(N notification, JobInstanceProcessingContext<Object> context);
 }
