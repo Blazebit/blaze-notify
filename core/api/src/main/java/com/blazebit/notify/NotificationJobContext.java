@@ -16,7 +16,6 @@
 
 package com.blazebit.notify;
 
-import com.blazebit.actor.ActorContext;
 import com.blazebit.job.ConfigurationSource;
 import com.blazebit.job.JobContext;
 import com.blazebit.job.JobException;
@@ -26,18 +25,11 @@ import com.blazebit.job.JobProcessor;
 import com.blazebit.job.JobTrigger;
 import com.blazebit.job.PartitionKey;
 import com.blazebit.job.ServiceProvider;
-import com.blazebit.job.JobInstanceListener;
-import com.blazebit.job.JobTriggerListener;
 import com.blazebit.job.spi.JobInstanceProcessorFactory;
-import com.blazebit.job.spi.JobManagerFactory;
 import com.blazebit.job.spi.JobProcessorFactory;
-import com.blazebit.job.spi.JobSchedulerFactory;
 import com.blazebit.job.spi.PartitionKeyProvider;
-import com.blazebit.job.spi.ScheduleFactory;
-import com.blazebit.job.spi.TransactionSupport;
 import com.blazebit.notify.spi.NotificationPartitionKeyProvider;
 import com.blazebit.notify.spi.NotificationPartitionKeyProviderFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -151,9 +143,6 @@ public interface NotificationJobContext extends JobContext {
      */
     class Builder extends JobContext.BuilderBase<Builder> {
 
-        private static final int DEFAULT_JOB_INSTANCE_PROCESS_COUNT = 1;
-        private static final int DEFAULT_NOTIFICATION_PROCESS_COUNT = 10;
-
         private NotificationPartitionKeyProviderFactory notificationPartitionKeyProviderFactory;
         private NotificationPartitionKeyProvider notificationPartitionKeyProvider;
         private NotificationRecipientResolver recipientResolver;
@@ -202,50 +191,38 @@ public interface NotificationJobContext extends JobContext {
         @Override
         public NotificationJobContext createContext() {
             checkCreateContext();
-            Map<PartitionKey, Integer> partitionKeyMap = getPartitionKeyMap();
+            Map<String, PartitionKey> partitionKeys = getPartitionKeys();
             Map<String, PartitionKey> channelPartitionKeys = new HashMap<>(channelFactories.size());
-            if (partitionKeyMap.isEmpty()) {
+            if (partitionKeys.isEmpty()) {
                 PartitionKeyProvider partitionKeyProvider = super.getPartitionKeyProvider();
                 NotificationPartitionKeyProvider notificationPartitionKeyProvider = getNotificationPartitionKeyProvider();
                 Collection<PartitionKey> defaultJobInstancePartitionKeys = partitionKeyProvider.getDefaultJobInstancePartitionKeys();
-                partitionKeyMap = new HashMap<>(defaultJobInstancePartitionKeys.size() * (channelFactories.size() + 1));
+                partitionKeys = new HashMap<>(defaultJobInstancePartitionKeys.size() * (channelFactories.size() + 1));
                 if (defaultJobInstancePartitionKeys.size() == 1) {
-                    PartitionKey defaultJobInstancePartitionKey = defaultJobInstancePartitionKeys.iterator().next();
-                    partitionKeyMap.put(notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(defaultJobInstancePartitionKey), DEFAULT_JOB_INSTANCE_PROCESS_COUNT);
+                    PartitionKey defaultJobInstancePartitionKey = notificationPartitionKeyProvider.getDefaultJobInstancePartitionKey(defaultJobInstancePartitionKeys.iterator().next());
+                    partitionKeys.put(defaultJobInstancePartitionKey.getName(), defaultJobInstancePartitionKey);
                 } else {
                     for (PartitionKey defaultJobInstancePartitionKey : defaultJobInstancePartitionKeys) {
-                        if (Notification.class.isAssignableFrom(defaultJobInstancePartitionKey.getJobInstanceType())) {
+                        if (defaultJobInstancePartitionKey.getJobInstanceTypes().stream().anyMatch(Notification.class::isAssignableFrom)) {
                             for (String channelType : channelFactories.keySet()) {
                                 PartitionKey partitionKey = notificationPartitionKeyProvider.getPartitionKey(defaultJobInstancePartitionKey, channelType);
                                 channelPartitionKeys.put(channelType, partitionKey);
-                                partitionKeyMap.put(partitionKey, DEFAULT_NOTIFICATION_PROCESS_COUNT);
+                                partitionKeys.put(partitionKey.getName(), partitionKey);
                             }
                         } else {
-                            partitionKeyMap.put(notificationPartitionKeyProvider.getPartitionKey(defaultJobInstancePartitionKey, null), DEFAULT_JOB_INSTANCE_PROCESS_COUNT);
+                            PartitionKey partitionKey = notificationPartitionKeyProvider.getPartitionKey(defaultJobInstancePartitionKey, null);
+                            partitionKeys.put(partitionKey.getName(), partitionKey);
                         }
                     }
                 }
             }
             return new DefaultNotificationJobContext(
-                    getTransactionSupport(),
-                    getJobManagerFactory(),
-                    getOrCreateActorContext(),
-                    getScheduleFactory(),
-                    getJobSchedulerFactory(),
-                    getJobProcessorFactory(),
-                    getJobInstanceProcessorFactory(),
-                    partitionKeyMap,
-                    getPartitionKeyProvider(),
-                    getJobTriggerListeners(),
-                    getJobInstanceListeners(),
-                    getProperties(),
-                    getServiceMap(),
-                    getNotificationProcessorFactory(),
-                    getNotificationPartitionKeyProvider(),
-                    getRecipientResolver(),
-                    getChannelFactories(),
-                    getMessageResolverFactories(),
-                    channelPartitionKeys
+                this,
+                getNotificationProcessorFactory(),
+                getRecipientResolver(),
+                getChannelFactories(),
+                getMessageResolverFactories(),
+                channelPartitionKeys
             );
         }
 
@@ -549,11 +526,9 @@ public interface NotificationJobContext extends JobContext {
             private final Map<ChannelMapKey, Channel<?, ?>> channels = new ConcurrentHashMap<>();
             private final Map<MessageResolverMapKey, NotificationMessageResolver<?>> messageResolvers = new ConcurrentHashMap<>();
 
-            protected DefaultNotificationJobContext(TransactionSupport transactionSupport, JobManagerFactory jobManagerFactory, ActorContext actorContext, ScheduleFactory scheduleFactory, JobSchedulerFactory jobSchedulerFactory, JobProcessorFactory jobProcessorFactory,
-                                                    JobInstanceProcessorFactory jobInstanceProcessorFactory, Map<PartitionKey, Integer> partitionKeyEntries, PartitionKeyProvider partitionKeyProvider, List<JobTriggerListener> jobTriggerListeners, List<JobInstanceListener> jobInstanceListeners,
-                                                    Map<String, Object> properties, Map<Class<?>, Object> serviceMap, NotificationProcessorFactory notificationProcessorFactory, NotificationPartitionKeyProvider notificationPartitionKeyProvider, NotificationRecipientResolver recipientResolver,
+            protected DefaultNotificationJobContext(JobContext.BuilderBase<?> builder, NotificationProcessorFactory notificationProcessorFactory, NotificationRecipientResolver recipientResolver,
                                                     Map<String, ChannelFactory<?>> channelFactories, Map<Class<? extends NotificationMessage>, NotificationMessageResolverFactory<?>> messageResolverFactories, Map<String, PartitionKey> channelPartitionKeys) {
-                super(transactionSupport, jobManagerFactory, actorContext, scheduleFactory, jobSchedulerFactory, jobProcessorFactory, jobInstanceProcessorFactory, partitionKeyEntries, partitionKeyProvider, jobTriggerListeners, jobInstanceListeners, properties, serviceMap);
+                super(builder);
                 this.notificationProcessorFactory = notificationProcessorFactory;
                 this.recipientResolver = recipientResolver;
                 this.channelFactories = channelFactories;

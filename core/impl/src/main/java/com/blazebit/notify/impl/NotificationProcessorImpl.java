@@ -16,6 +16,7 @@
 
 package com.blazebit.notify.impl;
 
+import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.notify.Channel;
 import com.blazebit.notify.ConfigurationSourceProvider;
 import com.blazebit.notify.Notification;
@@ -34,8 +35,9 @@ public class NotificationProcessorImpl<N extends Notification<?>> implements Not
     }
 
     @Override
-    public void process(N notification, NotificationJobContext context) {
-        Channel<NotificationRecipient<?>, NotificationMessage> channel = context.getChannel(notification.getChannelType());
+    public void processWithoutResult(N notification, JobInstanceProcessingContext<Object> context) {
+        NotificationJobContext notificationJobContext = (NotificationJobContext) context.getJobContext();
+        Channel<NotificationRecipient<?>, NotificationMessage> channel = notificationJobContext.getChannel(notification.getChannelType());
         NotificationRecipient<?> recipient = notification.getRecipient();
 
         if (recipient == null) {
@@ -43,9 +45,9 @@ public class NotificationProcessorImpl<N extends Notification<?>> implements Not
         }
         NotificationMessageResolver<NotificationMessage> notificationMessageResolver;
         if (notification instanceof ConfigurationSourceProvider) {
-            notificationMessageResolver = context.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType(), ((ConfigurationSourceProvider) notification).getConfigurationSource(context));
+            notificationMessageResolver = notificationJobContext.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType(), ((ConfigurationSourceProvider) notification).getConfigurationSource(notificationJobContext));
         } else {
-            notificationMessageResolver = context.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType());
+            notificationMessageResolver = notificationJobContext.getNotificationMessageResolver((Class<NotificationMessage>) channel.getNotificationMessageType());
         }
         NotificationMessage notificationMessage;
         if (notificationMessageResolver == null) {
@@ -61,6 +63,6 @@ public class NotificationProcessorImpl<N extends Notification<?>> implements Not
             throw new NotificationException("No notification message can be resolved from: " + notification);
         }
         Object result = channel.sendNotificationMessage(recipient, notificationMessage);
-        notification.markDone(result);
+        notification.markDone(context, result);
     }
 }

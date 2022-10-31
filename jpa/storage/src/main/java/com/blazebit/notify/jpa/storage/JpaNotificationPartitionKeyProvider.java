@@ -23,9 +23,8 @@ import com.blazebit.job.PartitionKey;
 import com.blazebit.job.ServiceProvider;
 import com.blazebit.job.jpa.model.JpaPartitionKey;
 import com.blazebit.notify.spi.NotificationPartitionKeyProvider;
-
-import javax.persistence.EntityManager;
 import java.util.function.Function;
+import javax.persistence.EntityManager;
 
 /**
  * A {@link NotificationPartitionKeyProvider} implementation that makes use of the JPA metamodel and configuration attributes for creating relevant {@link JpaPartitionKey}s.
@@ -144,8 +143,13 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
         String name = k.toString() + "/" + channelType;
         return new JpaPartitionKey() {
             @Override
-            public Class<? extends JobInstance<?>> getJobInstanceType() {
-                return k.getJobInstanceType();
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public Class<? extends JobInstance<?>> getEntityClass() {
+                return k.getEntityClass();
             }
 
             @Override
@@ -195,7 +199,7 @@ public class JpaNotificationPartitionKeyProvider implements NotificationPartitio
 
             @Override
             public String toString() {
-                return name;
+                return getName();
             }
         };
     }
