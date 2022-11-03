@@ -25,7 +25,7 @@ package com.blazebit.notify.template.api;
 public interface TemplateProcessorFactory<R> {
 
     /**
-     * Returns the template processor ley class.
+     * Returns the template processor key class.
      *
      * @return the template processor key class
      */

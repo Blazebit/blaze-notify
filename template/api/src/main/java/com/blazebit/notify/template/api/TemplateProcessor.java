@@ -27,6 +27,8 @@ import java.util.Map;
  */
 public interface TemplateProcessor<R> extends Serializable {
 
+    String TEMPLATE_NAME_PROPERTY = "template";
+
     /**
      * Processes this template based on the given map model.
      *
