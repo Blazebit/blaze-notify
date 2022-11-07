@@ -55,7 +55,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
     /**
      * The configuration property for the Freemarker {@link Template}.
      */
-    public static final String FREEMARKER_TEMPLATE_PROPERTY = "template";
+    public static final String FREEMARKER_TEMPLATE_PROPERTY = TEMPLATE_NAME_PROPERTY;
 
     /**
      * The configuration property for the {@link ResourceBundle}.

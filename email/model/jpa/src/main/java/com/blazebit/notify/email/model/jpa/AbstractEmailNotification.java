@@ -26,6 +26,8 @@ import com.blazebit.notify.jpa.model.base.AbstractNotification;
 import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateProcessorKey;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -37,7 +39,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 
@@ -56,28 +57,43 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      */
     public static final String TEMPLATE_PROCESSOR_TYPE_PARAMETER_NAME = "templateProcessorType";
     /**
-     * The parameter name for the subject which can be a plain {@link String} or a {@link TemplateProcessor}.
+     * The parameter name for the subject which is a plain {@link String}.
+     * The value represents the literal subject.
      */
     public static final String SUBJECT_PARAMETER_NAME = "subject";
     /**
-     * The parameter name for the text body which can be a plain {@link String} or a {@link TemplateProcessor}.
+     * The parameter name for the subject template which is a plain {@link String}.
+     * The value refers to a template name.
+     */
+    public static final String SUBJECT_TEMPLATE_PARAMETER_NAME = "subjectTemplate";
+    /**
+     * The parameter name for the text body which is a plain {@link String}.
+     * The value refers to the literal text body.
      */
     public static final String BODY_TEXT_PARAMETER_NAME = "text";
     /**
-     * The parameter name for the html body which can be a plain {@link String} or a {@link TemplateProcessor}.
+     * The parameter name for the text body template which is a plain {@link String}.
+     * The value refers to a template name.
+     */
+    public static final String BODY_TEXT_TEMPLATE_PARAMETER_NAME = "textTemplate";
+    /**
+     * The parameter name for the html body which is a plain {@link String}.
+     * The value refers to the literal html body.
      */
     public static final String BODY_HTML_PARAMETER_NAME = "html";
     /**
-     * The parameter name for the attachments represented by a {@link TemplateProcessor} producing a collection of {@link Attachment}.
+     * The parameter name for the html body template which is a plain {@link String}.
+     * The value refers to a template name.
+     */
+    public static final String BODY_HTML_TEMPLATE_PARAMETER_NAME = "htmlTemplate";
+    /**
+     * The parameter name for the attachments which is a collection of plain {@link String}s referring to
+     * template names. The templates are expected to be processed to a collection of {@link Attachment} by a
+     * {@link TemplateProcessor}.
      */
     public static final String ATTACHMENTS_PARAMETER_NAME = "attachments";
 
     private static final long serialVersionUID = 1L;
-
-    private static final TemplateProcessor<String> SUBJECT_TEMPLATE_PROCESSOR = new ModelGetOrDelegateTemplateProcessor<>(SUBJECT_PARAMETER_NAME);
-    private static final TemplateProcessor<String> BODY_TEXT_TEMPLATE_PROCESSOR = new ModelGetOrDelegateTemplateProcessor<>(BODY_TEXT_PARAMETER_NAME);
-    private static final TemplateProcessor<String> BODY_HTML_TEMPLATE_PROCESSOR = new ModelGetOrDelegateTemplateProcessor<>(BODY_HTML_PARAMETER_NAME);
-    private static final TemplateProcessor<Collection<Attachment>> ATTACHMENTS_TEMPLATE_PROCESSOR = new ModelGetOrDelegateTemplateProcessor<>(ATTACHMENTS_PARAMETER_NAME);
 
     private FromEmail from;
     private Long fromId;
@@ -147,79 +163,22 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
     }
 
     /**
-     * Returns the subject template processor.
+     * Returns the subject template name.
      *
-     * @return the subject template processor
+     * @return the subject template name
      */
     @Transient
-    public TemplateProcessor<String> getSubjectTemplateProcessor() {
-        return SUBJECT_TEMPLATE_PROCESSOR;
+    public String getSubjectTemplateName() {
+        return (String) getJobConfiguration().getParameters().get(SUBJECT_TEMPLATE_PARAMETER_NAME);
     }
 
     /**
-     * Sets the given subject template processor.
+     * Sets the given subject template name.
      *
-     * @param subjectTemplateProcessor The template processor
+     * @param subjectTemplateName The subject template name
      */
-    public void setSubjectTemplateProcessor(TemplateProcessor<String> subjectTemplateProcessor) {
-        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subjectTemplateProcessor);
-    }
-
-    /**
-     * Returns the text body template processor.
-     *
-     * @return the text body template processor
-     */
-    @Transient
-    public TemplateProcessor<String> getBodyTextTemplateProcessor() {
-        return BODY_TEXT_TEMPLATE_PROCESSOR;
-    }
-
-    /**
-     * Sets the given text body template processor.
-     *
-     * @param bodyTextTemplateProcessor The template processor
-     */
-    public void setBodyTextTemplateProcessor(TemplateProcessor<String> bodyTextTemplateProcessor) {
-        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyTextTemplateProcessor);
-    }
-
-    /**
-     * Returns the html body template processor.
-     *
-     * @return the html body template processor
-     */
-    @Transient
-    public TemplateProcessor<String> getBodyHtmlTemplateProcessor() {
-        return BODY_HTML_TEMPLATE_PROCESSOR;
-    }
-
-    /**
-     * Sets the given html body template processor.
-     *
-     * @param bodyHtmlTemplateProcessor The template processor
-     */
-    public void setBodyHtmlTemplateProcessor(TemplateProcessor<String> bodyHtmlTemplateProcessor) {
-        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtmlTemplateProcessor);
-    }
-
-    /**
-     * Returns the attachment template processor.
-     *
-     * @return the attachment template processor
-     */
-    @Transient
-    public TemplateProcessor<Collection<Attachment>> getAttachmentProcessor() {
-        return ATTACHMENTS_TEMPLATE_PROCESSOR;
-    }
-
-    /**
-     * Sets the given attachment template processor.
-     *
-     * @param attachmentsTemplateProcessor The template processor
-     */
-    public void setAttachmentsTemplateProcessor(TemplateProcessor<Collection<Attachment>> attachmentsTemplateProcessor) {
-        getJobConfiguration().getParameters().put(ATTACHMENTS_PARAMETER_NAME, attachmentsTemplateProcessor);
+    public void setSubjectTemplateName(String subjectTemplateName) {
+        getJobConfiguration().getParameters().put(SUBJECT_TEMPLATE_PARAMETER_NAME, subjectTemplateName);
     }
 
     /**
@@ -229,7 +188,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      */
     @Transient
     public String getSubject() {
-        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME)).processTemplate(null);
+        return (String) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME);
     }
 
     /**
@@ -238,64 +197,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param subject The subject
      */
     public void setSubject(String subject) {
-        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, TemplateProcessor.of(subject));
-    }
-
-    /**
-     * Returns the text body string.
-     *
-     * @return the text body string
-     */
-    @Transient
-    public String getBodyText() {
-        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME)).processTemplate(null);
-    }
-
-    /**
-     * Sets the given text body.
-     *
-     * @param bodyText The text body
-     */
-    public void setBodyText(String bodyText) {
-        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, TemplateProcessor.of(bodyText));
-    }
-
-    /**
-     * Returns the html body string.
-     *
-     * @return the html body string
-     */
-    @Transient
-    public String getBodyHtml() {
-        return ((TemplateProcessor<String>) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME)).processTemplate(null);
-    }
-
-    /**
-     * Sets the given html body.
-     *
-     * @param bodyHtml The html body
-     */
-    public void setBodyHtml(String bodyHtml) {
-        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, TemplateProcessor.of(bodyHtml));
-    }
-
-    /**
-     * Returns the subject template name.
-     *
-     * @return the subject template name
-     */
-    @Transient
-    public String getSubjectTemplateName() {
-        return (String) getJobConfiguration().getParameters().get(SUBJECT_PARAMETER_NAME);
-    }
-
-    /**
-     * Sets the given subject template name.
-     *
-     * @param subjectTemplateName The subject template name
-     */
-    public void setSubjectTemplateName(String subjectTemplateName) {
-        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subjectTemplateName);
+        getJobConfiguration().getParameters().put(SUBJECT_PARAMETER_NAME, subject);
     }
 
     /**
@@ -305,7 +207,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      */
     @Transient
     public String getBodyTextTemplateName() {
-        return (String) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME);
+        return (String) getJobConfiguration().getParameters().get(BODY_TEXT_TEMPLATE_PARAMETER_NAME);
     }
 
     /**
@@ -314,7 +216,26 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyTextTemplateName The text body template name
      */
     public void setBodyTextTemplateName(String bodyTextTemplateName) {
-        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyTextTemplateName);
+        getJobConfiguration().getParameters().put(BODY_TEXT_TEMPLATE_PARAMETER_NAME, bodyTextTemplateName);
+    }
+
+    /**
+     * Returns the body text string.
+     *
+     * @return the body text string
+     */
+    @Transient
+    public String getBodyText() {
+        return (String) getJobConfiguration().getParameters().get(BODY_TEXT_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the given body text.
+     *
+     * @param bodyText The body text
+     */
+    public void setBodyText(String bodyText) {
+        getJobConfiguration().getParameters().put(BODY_TEXT_PARAMETER_NAME, bodyText);
     }
 
     /**
@@ -324,7 +245,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      */
     @Transient
     public String getBodyHtmlTemplateName() {
-        return (String) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME);
+        return (String) getJobConfiguration().getParameters().get(BODY_HTML_TEMPLATE_PARAMETER_NAME);
     }
 
     /**
@@ -333,7 +254,45 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
      * @param bodyHtmlTemplateName The html body template name
      */
     public void setBodyHtmlTemplateName(String bodyHtmlTemplateName) {
-        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtmlTemplateName);
+        getJobConfiguration().getParameters().put(BODY_HTML_TEMPLATE_PARAMETER_NAME, bodyHtmlTemplateName);
+    }
+
+    /**
+     * Returns the body html string.
+     *
+     * @return the body html string
+     */
+    @Transient
+    public String getBodyHtml() {
+        return (String) getJobConfiguration().getParameters().get(BODY_HTML_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the given body html.
+     *
+     * @param bodyHtml The body html
+     */
+    public void setBodyHtml(String bodyHtml) {
+        getJobConfiguration().getParameters().put(BODY_HTML_PARAMETER_NAME, bodyHtml);
+    }
+
+    /**
+     * Returns the attachment template names.
+     *
+     * @return the attachment template names
+     */
+    @Transient
+    public List<Attachment> getAttachmentTemplateNames() {
+        return (List<Attachment>) getJobConfiguration().getParameters().get(ATTACHMENTS_PARAMETER_NAME);
+    }
+
+    /**
+     * Sets the attachment template names.
+     *
+     * @param attachmentTemplateNames The attachment template names
+     */
+    public void setAttachmentTemplateNames(List<String> attachmentTemplateNames) {
+        getJobConfiguration().getParameters().put(ATTACHMENTS_PARAMETER_NAME, new ArrayList<>(attachmentTemplateNames));
     }
 
     /**
