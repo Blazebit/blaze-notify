@@ -16,12 +16,7 @@
 package com.blazebit.notify.email.model.jpa;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -30,10 +25,8 @@ import javax.validation.constraints.NotNull;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@Entity
-@SequenceGenerator(name = "idGenerator", sequenceName = "from_email_seq")
-@Table(name = "from_email")
-public class FromEmail extends BaseEntity<Long> {
+@MappedSuperclass
+public abstract class AbstractFromEmail extends BaseEntity<Long> {
 
     private String email;
     private String name;
@@ -41,34 +34,27 @@ public class FromEmail extends BaseEntity<Long> {
     private String replyToName;
 
     /**
-     * Creates an empty {@link FromEmail} entity.
+     * Creates an empty {@link AbstractFromEmail} entity.
      */
-    public FromEmail() {
+    public AbstractFromEmail() {
     }
 
     /**
-     * Creates {@link FromEmail} entity for the given id.
+     * Creates {@link AbstractFromEmail} entity for the given id.
      *
      * @param id The id
      */
-    public FromEmail(Long id) {
+    public AbstractFromEmail(Long id) {
         super(id);
     }
 
     /**
-     * Creates {@link FromEmail} entity for the given E-Mail address.
+     * Creates {@link AbstractFromEmail} entity for the given E-Mail address.
      *
      * @param email The E-Mail address
      */
-    public FromEmail(String email) {
+    public AbstractFromEmail(String email) {
         this.email = email;
-    }
-
-    @Override
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-    public Long getId() {
-        return id();
     }
 
     /**

@@ -23,5 +23,7 @@
     <entity class="com.blazebit.notify.server.model.EmailNotificationJobInstance"/>
     <entity class="com.blazebit.notify.server.model.EmailNotificationJobTrigger"/>
     <entity class="com.blazebit.notify.server.model.EmailNotificationRecipient"/>
+    <entity class="com.blazebit.notify.server.model.FromEmail"/>
+    <entity class="com.blazebit.notify.server.model.EmailNotification"/>
 
 </entity-mappings>

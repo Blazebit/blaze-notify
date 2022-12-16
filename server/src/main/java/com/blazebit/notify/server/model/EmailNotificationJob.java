@@ -19,6 +19,9 @@ package com.blazebit.notify.server.model;
 import com.blazebit.notify.jpa.model.expression.AbstractExpressionAwareNotificationJob;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 
 /**
@@ -28,4 +31,11 @@ import javax.persistence.SequenceGenerator;
 @Entity
 @SequenceGenerator(name = "idGenerator", sequenceName = "job_seq", allocationSize = 1)
 public class EmailNotificationJob extends AbstractExpressionAwareNotificationJob {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
+    @Override
+    public Long getId() {
+        return id();
+    }
 }
