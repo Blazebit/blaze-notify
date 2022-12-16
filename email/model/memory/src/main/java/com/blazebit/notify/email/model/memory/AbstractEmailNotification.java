@@ -30,7 +30,7 @@ import com.blazebit.notify.template.api.TemplateProcessorKey;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * An abstract class implementing the {@link Notification} interface for E-Mail notifications.
@@ -100,7 +100,7 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
 
     @Override
     public NotificationRecipient getRecipient() {
-        return EmailNotificationRecipient.of(to, Locale.getDefault(), to);
+        return EmailNotificationRecipient.of(to, Locale.getDefault(), TimeZone.getDefault(), to);
     }
 
     @Override
