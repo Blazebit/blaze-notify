@@ -15,14 +15,13 @@
  */
 package com.blazebit.template.thymeleaf;
 
-import com.blazebit.notify.template.api.ConfigurationSource;
+import com.blazebit.job.ServiceProvider;
 import com.blazebit.notify.template.api.TemplateException;
 import com.blazebit.notify.template.api.TemplateProcessor;
 import com.blazebit.notify.template.api.TemplateProcessorKey;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Function;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -38,8 +37,6 @@ public class ThymeleafTemplateProcessor implements TemplateProcessor<String>, Se
 
     public static final TemplateProcessorKey<String> KEY = TemplateProcessorKey.of("thymeleaf", String.class);
 
-    public static final String THYMELEAF_TEMPLATE_ENGINE_PROPERTY = "templateEngine";
-    public static final String THYMELEAF_TEMPLATE_NAME_PROPERTY = TEMPLATE_NAME_PROPERTY;
     public static final String LOCALE_MODEL_KEY = "locale";
 
     private final ITemplateEngine templateEngine;
@@ -48,11 +45,14 @@ public class ThymeleafTemplateProcessor implements TemplateProcessor<String>, Se
     /**
      * Creates a new Thymeleaf template processor from the given configuration source.
      *
-     * @param configurationSource The configuration source
+     * @param templateName The template name
+     * @param serviceProvider The service provider of the job context
+     *
      */
-    public ThymeleafTemplateProcessor(ConfigurationSource configurationSource) {
-        this.templateEngine = configurationSource.getPropertyOrDefault(THYMELEAF_TEMPLATE_ENGINE_PROPERTY, ITemplateEngine.class, val -> null, val -> new TemplateEngine());
-        this.templateName = configurationSource.getPropertyOrFail(THYMELEAF_TEMPLATE_NAME_PROPERTY, String.class, Function.identity());
+    public ThymeleafTemplateProcessor(String templateName, ServiceProvider serviceProvider) {
+        ITemplateEngine templateEngine = serviceProvider.getService(ITemplateEngine.class);
+        this.templateEngine = templateEngine == null ? new TemplateEngine() : templateEngine;
+        this.templateName = templateName;
     }
 
     @Override

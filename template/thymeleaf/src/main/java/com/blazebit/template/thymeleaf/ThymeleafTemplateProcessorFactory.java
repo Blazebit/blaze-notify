@@ -37,7 +37,7 @@ public class ThymeleafTemplateProcessorFactory  implements TemplateProcessorFact
     }
 
     @Override
-    public TemplateProcessor<String> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource) {
-        return new ThymeleafTemplateProcessor(configurationSource);
+    public TemplateProcessor<String> createTemplateProcessor(TemplateContext templateContext, String templateName, ConfigurationSource configurationSource, com.blazebit.job.ServiceProvider serviceProvider) {
+        return new ThymeleafTemplateProcessor(templateName, serviceProvider);
     }
 }
