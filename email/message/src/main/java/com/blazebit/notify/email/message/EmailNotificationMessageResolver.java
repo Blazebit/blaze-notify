@@ -237,6 +237,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
             model.put("resourceBundle", resourceBundle);
         }
         model.put("locale", locale);
+        model.put("timeZone", notificationRecipient.getTimeZone());
         model.put("recipient", notificationRecipient);
         for (NotificationMessageResolverModelCustomizer modelCustomizer : modelCustomizers) {
             modelCustomizer.customize(model, notification, notificationJobContext);

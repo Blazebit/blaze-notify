@@ -19,6 +19,7 @@ import com.blazebit.notify.email.message.EmailNotificationRecipient;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.TimeZone;
 
 public class DefaultEmailNotificationRecipient<ID> implements EmailNotificationRecipient<ID> {
 
@@ -48,6 +49,11 @@ public class DefaultEmailNotificationRecipient<ID> implements EmailNotificationR
     @Override
     public Locale getLocale() {
         return Locale.getDefault();
+    }
+
+    @Override
+    public TimeZone getTimeZone() {
+        return TimeZone.getDefault();
     }
 
     @Override
