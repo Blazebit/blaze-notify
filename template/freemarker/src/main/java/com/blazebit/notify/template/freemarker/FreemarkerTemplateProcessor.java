@@ -78,7 +78,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
     public FreemarkerTemplateProcessor(ConfigurationSource configurationSource) {
         Function<String, FreemarkerTemplateLookup> templateAccessor = name -> (Locale locale) -> {
             Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
-                Configuration c = new Configuration();
+                Configuration c = new Configuration(Configuration.VERSION_2_3_28);
                 c.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "");
                 return c;
             });
