@@ -20,9 +20,6 @@ import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.job.jpa.model.AbstractJobInstance;
 import com.blazebit.notify.NotificationJobInstance;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
@@ -53,12 +50,6 @@ public abstract class AbstractNotificationJobInstance<R> extends AbstractJobInst
      */
     public AbstractNotificationJobInstance(Long id) {
         super(id);
-    }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-    public Long getId() {
-        return id();
     }
 
     @Override

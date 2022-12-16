@@ -13,24 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.jpa.model.expression.AbstractExpressionAwareNotificationJob;
-
+import com.blazebit.notify.email.model.jpa.AbstractFromEmail;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
-/**
- * @author Christian Beikov
- * @since 1.0.0
- */
 @Entity
-@SequenceGenerator(name = "idGenerator", sequenceName = "job_seq", allocationSize = 1)
-public class EmailNotificationJob extends AbstractExpressionAwareNotificationJob {
+@Table(name = "from_email")
+@SequenceGenerator(name = "idGenerator", sequenceName = "from_email_seq")
+public class FromEmail extends AbstractFromEmail {
+
+    /**
+     * Creates an empty {@link FromEmail} entity.
+     */
+    public FromEmail() {
+    }
+
+    /**
+     * Creates {@link FromEmail} entity for the given id.
+     *
+     * @param id The id
+     */
+    public FromEmail(Long id) {
+        super(id);
+    }
+
+    /**
+     * Creates {@link FromEmail} entity for the given E-Mail address.
+     *
+     * @param email The E-Mail address
+     */
+    public FromEmail(String email) {
+        super(email);
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")

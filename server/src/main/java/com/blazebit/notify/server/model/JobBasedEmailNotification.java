@@ -25,6 +25,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Christian Beikov
@@ -37,6 +38,7 @@ public class JobBasedEmailNotification extends AbstractEmailNotification<JobBase
     private EmailNotificationJobInstance notificationJobInstance;
     private Long recipientId;
     private Long notificationJobInstanceId;
+    private FromEmail from;
 
     public JobBasedEmailNotification() {
         super(new JobBasedEmailNotificationId());
@@ -105,5 +107,17 @@ public class JobBasedEmailNotification extends AbstractEmailNotification<JobBase
 
     public void setNotificationJobInstanceId(Long notificationJobInstanceId) {
         this.notificationJobInstanceId = notificationJobInstanceId;
+    }
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "from_email", nullable = false)
+    @Override
+    public FromEmail getFrom() {
+        return from;
+    }
+
+    public void setFrom(FromEmail from) {
+        this.from = from;
     }
 }

@@ -32,10 +32,7 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -96,7 +93,6 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
 
     private static final long serialVersionUID = 1L;
 
-    private FromEmail from;
     private Long fromId;
     private String to;
 
@@ -297,30 +293,17 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
     }
 
     /**
-     * Returns the {@link FromEmail}.
+     * Returns the {@link AbstractFromEmail}.
      *
-     * @return the {@link FromEmail}
+     * @return the {@link AbstractFromEmail}
      */
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "from_email", nullable = false)
-    public FromEmail getFrom() {
-        return from;
-    }
+    @Transient
+    public abstract AbstractFromEmail getFrom();
 
     /**
-     * Sets the {@link FromEmail}.
+     * Returns the {@link AbstractFromEmail} id.
      *
-     * @param from The {@link FromEmail}
-     */
-    public void setFrom(FromEmail from) {
-        this.from = from;
-    }
-
-    /**
-     * Returns the {@link FromEmail} id.
-     *
-     * @return the {@link FromEmail} id
+     * @return the {@link AbstractFromEmail} id
      */
     @Column(name = "from_email", nullable = false, insertable = false, updatable = false)
     public Long getFromId() {
@@ -328,9 +311,9 @@ public abstract class AbstractEmailNotification<ID> extends AbstractNotification
     }
 
     /**
-     * Sets the {@link FromEmail} id.
+     * Sets the {@link AbstractFromEmail} id.
      *
-     * @param fromId The {@link FromEmail} id
+     * @param fromId The {@link AbstractFromEmail} id
      */
     public void setFromId(Long fromId) {
         this.fromId = fromId;
