@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
@@ -68,7 +69,6 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
      * The configuration property for the E-Mail {@link ResourceBundle}.
      */
     public static final String EMAIL_MESSAGE_RESOURCE_BUNDLE_PROPERTY = "message.email.resource_bundle";
-
     /**
      * The configuration property for the {@link TemplateContext} to use for the subject and body properties.
      */
@@ -76,36 +76,35 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
     /**
      * The configuration property for the {@link TemplateProcessorFactory} to use for the subject and body properties.
      */
-    public static final String EMAIL_TEMPLATE_PROCESSOR_FACTORY_PROPERTY = "message.email.template_processor_factory";
-
+    public static final String EMAIL_TEMPLATE_PROCESSOR_TYPE_PROPERTY = "message.email.template_processor_type";
     /**
      * The configuration property for the E-Mail subject.
      */
-    public static final String EMAIL_MESSAGE_SUBJECT_PROPERTY = "message.email.subject";
+    public static final String EMAIL_MESSAGE_SUBJECT_PROPERTY = "message.email.subject.value";
     /**
      * The configuration property for the E-Mail subject template.
      */
-    public static final String EMAIL_MESSAGE_SUBJECT_TEMPLATE_PROPERTY = "message.email.subject_template";
+    public static final String EMAIL_MESSAGE_SUBJECT_TEMPLATE_PROPERTY = "message.email.subject.template";
     /**
      * The configuration property for the E-Mail text body.
      */
-    public static final String EMAIL_MESSAGE_TEXT_PROPERTY = "message.email.text";
+    public static final String EMAIL_MESSAGE_TEXT_PROPERTY = "message.email.body_text.value";
     /**
      * The configuration property for the E-Mail text body template.
      */
-    public static final String EMAIL_MESSAGE_TEXT_TEMPLATE_PROPERTY = "message.email.text_template";
+    public static final String EMAIL_MESSAGE_TEXT_TEMPLATE_PROPERTY = "message.email.body_text.template";
     /**
      * The configuration property for the E-Mail html body.
      */
-    public static final String EMAIL_MESSAGE_HTML_PROPERTY = "message.email.html";
+    public static final String EMAIL_MESSAGE_HTML_PROPERTY = "message.email.body_html.value";
     /**
      * The configuration property for the E-Mail html body template.
      */
-    public static final String EMAIL_MESSAGE_HTML_TEMPLATE_PROPERTY = "message.email.html_template";
+    public static final String EMAIL_MESSAGE_HTML_TEMPLATE_PROPERTY = "message.email.body_html.template";
     /**
-     * The configuration property for the E-Mail attachment processors.
+     * The configuration property for the E-Mail attachment templates.
      */
-    public static final String EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY = "message.email.attachment_processors";
+    public static final String EMAIL_MESSAGE_ATTACHMENT_TEMPLATES_PROPERTY = "message.email.attachment.templates";
 
     private final NotificationJobContext notificationJobContext;
     private final String from;
@@ -135,35 +134,41 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         this.envelopeFrom = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_ENVELOP_FROM_PROPERTY, String.class, Function.identity(), o -> null);
         this.resourceBundleAccessor = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_RESOURCE_BUNDLE_PROPERTY, Function.class, EmailNotificationMessageResolver::resourceBundleByName, o -> null);
         TemplateContext templateContext = configurationSource.getPropertyOrDefault(EMAIL_TEMPLATE_CONTEXT_PROPERTY, TemplateContext.class, null, o -> jobContext.getService(TemplateContext.class));
-        TemplateProcessorFactory templateProcessorFactory = configurationSource.getPropertyOrDefault(EMAIL_TEMPLATE_PROCESSOR_FACTORY_PROPERTY, TemplateProcessorFactory.class, s -> {
-            if (templateContext == null) {
-                throw new NotificationException("No template context given!");
-            }
-            return templateContext.getTemplateProcessorFactory(s, String.class);
-        }, o -> null);
-        Function<String, TemplateProcessor> templateProcessorFunction = templateName -> templateProcessorByName(notificationJobContext, templateContext, templateProcessorFactory, configurationSource, templateName);
+        Function<String, Function<String, TemplateProcessor<String>>> templateProcessorFunction = templateProcessorFactoryNameProperty -> templateName ->
+            templateProcessorByType(
+                templateContext,
+                templateProcessorFactory,
+                configurationSource,
+                templateName);
+        Function<String, TemplateProcessor<Attachment>> attachmentTemplateProcessorFunction = templateProcessorKey -> templateProcessorByKey(
+            templateContext,
+            attachmentTemplateProcessorFactory.apply(templateProcessorType),
+            configurationSource,
+            null);
         String literalSubject = (String) configurationSource.getProperty(EMAIL_MESSAGE_SUBJECT_PROPERTY);
         this.subjectTemplateProcessor = literalSubject == null ? templateProcessorFunction.apply((String) configurationSource.getProperty(EMAIL_MESSAGE_SUBJECT_TEMPLATE_PROPERTY)) : TemplateProcessor.of(literalSubject);
         String literalBodyText = (String) configurationSource.getProperty(EMAIL_MESSAGE_TEXT_PROPERTY);
         this.textBodyTemplateProcessor = literalBodyText == null ? templateProcessorFunction.apply((String) configurationSource.getProperty(EMAIL_MESSAGE_TEXT_TEMPLATE_PROPERTY)) : TemplateProcessor.of(literalBodyText);
         String literalBodyHtml = (String) configurationSource.getProperty(EMAIL_MESSAGE_HTML_PROPERTY);
         this.htmlBodyTemplateProcessor = literalBodyHtml == null ? templateProcessorFunction.apply((String) configurationSource.getProperty(EMAIL_MESSAGE_HTML_TEMPLATE_PROPERTY)) : TemplateProcessor.of(literalBodyHtml);
-        Object o = configurationSource.getProperty(EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY);
+        Object o = configurationSource.getProperty(EMAIL_MESSAGE_ATTACHMENT_TEMPLATES_PROPERTY);
         List<TemplateProcessor<Attachment>> attachmentProcessors = Collections.emptyList();
         if (o instanceof Collection<?>) {
             Collection<?> collection = (Collection<?>) o;
             attachmentProcessors = new ArrayList<>(collection.size());
             for (Object element : collection) {
                 if (element instanceof String) {
-                    attachmentProcessors.add(templateProcessorFunction.apply((String) element));
+                    attachmentProcessors.add(attachmentTemplateProcessorFunction.apply((String) element));
                 } else {
-                    throw new NotificationException("Invalid attachment processor given via property '" + EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY + "': " + element);
+                    throw new NotificationException("Invalid attachment processor given via property '" + EMAIL_MESSAGE_ATTACHMENT_TEMPLATES_PROPERTY
+                        + "': " + element);
                 }
             }
         } else if (o instanceof String) {
-            attachmentProcessors = Collections.singletonList(templateProcessorFunction.apply((String) o));
+            attachmentProcessors = Collections.singletonList(attachmentTemplateProcessorFunction.apply((String) o));
         } else if (o != null) {
-            throw new NotificationException("Invalid attachment processors given via property '" + EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY + "': " + o);
+            throw new NotificationException("Invalid attachment processors given via property '" + EMAIL_MESSAGE_ATTACHMENT_TEMPLATES_PROPERTY
+                + "': " + o);
         }
         this.attachmentProcessors = attachmentProcessors;
         this.modelCustomizers = modelCustomizers == null ? Collections.emptyList() : modelCustomizers;
@@ -208,7 +213,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         return locale -> ResourceBundle.getBundle(name, locale);
     }
 
-    private static TemplateProcessor<String> templateProcessorByName(NotificationJobContext jobContext, TemplateContext templateContext, TemplateProcessorFactory<String> templateProcessorFactory, ConfigurationSource configurationSource, String templateName) {
+    private static <T> TemplateProcessor<T> templateProcessorByType(TemplateContext templateContext, TemplateProcessorFactory<T> templateProcessorFactory, ConfigurationSource configurationSource, String templateName) {
         if (templateName == null) {
             return null;
         }
@@ -222,8 +227,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
             if (TemplateProcessor.TEMPLATE_NAME_PROPERTY.equals(key)) {
                 return templateName;
             }
-            Object value = configurationSource.getProperty(key);
-            return value == null ? jobContext.getProperty(key) : value;
+            return configurationSource.getProperty(key);
         });
     }
 

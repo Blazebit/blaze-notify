@@ -46,12 +46,15 @@ public class EmailNotificationConfigurationSource implements ConfigurationSource
 //        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_RESOURCE_BUNDLE_PROPERTY, null);
 
 //        properties.put(EmailNotificationMessageResolver.EMAIL_TEMPLATE_CONTEXT_PROPERTY, null);
-        properties.put(EmailNotificationMessageResolver.EMAIL_TEMPLATE_PROCESSOR_FACTORY_PROPERTY, emailNotification.getTemplateProcessorType());
+        properties.put(EmailNotificationMessageResolver.EMAIL_TEMPLATE_PROCESSOR_TYPE_PROPERTY, emailNotification.getTemplateProcessorType());
 
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.SUBJECT_PARAMETER_NAME));
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_TEXT_PARAMETER_NAME));
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_HTML_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_HTML_PARAMETER_NAME));
-        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_ATTACHMENT_PROCESSORS_PROPERTY, emailNotification.getAttachmentProcessor());
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.SUBJECT_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_SUBJECT_TEMPLATE_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.SUBJECT_TEMPLATE_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_TEXT_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_TEXT_TEMPLATE_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_TEXT_TEMPLATE_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_HTML_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_HTML_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_HTML_TEMPLATE_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.BODY_HTML_TEMPLATE_PARAMETER));
+        properties.put(EmailNotificationMessageResolver.EMAIL_MESSAGE_ATTACHMENT_TEMPLATES_PROPERTY, emailNotification.getJobConfiguration().getParameters().get(AbstractEmailNotification.ATTACHMENT_TEMPLATES_PARAMETER));
         this.properties = properties;
     }
 
