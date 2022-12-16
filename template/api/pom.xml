@@ -10,4 +10,11 @@
 
     <artifactId>blaze-notify-template-api</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-job-core-api</artifactId>
+            <version>${version.blaze-job}</version>
+        </dependency>
+    </dependencies>
 </project>
