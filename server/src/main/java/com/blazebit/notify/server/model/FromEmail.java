@@ -13,57 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.notify.email.model.jpa;
+package com.blazebit.notify.server.model;
 
-import com.blazebit.notify.ConfigurationSourceProvider;
-
+import com.blazebit.notify.email.model.jpa.AbstractFromEmail;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
-/**
- * A simple E-Mail notification.
- *
- * @author Christian Beikov
- * @since 1.0.0
- */
 @Entity
-@SequenceGenerator(name = "idGenerator", sequenceName = "email_notification_seq")
-@Table(name = "email_notification")
-public class EmailNotification extends AbstractEmailNotification<Long> implements ConfigurationSourceProvider {
-
-    private static final long serialVersionUID = 1L;
+@Table(name = "from_email")
+@SequenceGenerator(name = "idGenerator", sequenceName = "from_email_seq")
+public class FromEmail extends AbstractFromEmail {
 
     /**
-     * Creates an empty E-Mail notification.
+     * Creates an empty {@link FromEmail} entity.
      */
-    public EmailNotification() {
-        super();
+    public FromEmail() {
     }
 
     /**
-     * Creates a E-Mail notification with the given id.
+     * Creates {@link FromEmail} entity for the given id.
      *
-     * @param id The notification id
+     * @param id The id
      */
-    public EmailNotification(Long id) {
+    public FromEmail(Long id) {
         super(id);
     }
 
-    @Id
-    @Override
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-    public Long getId() {
-        return id();
+    /**
+     * Creates {@link FromEmail} entity for the given E-Mail address.
+     *
+     * @param email The E-Mail address
+     */
+    public FromEmail(String email) {
+        super(email);
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
     @Override
-    @Transient
-    public Long getPartitionKey() {
+    public Long getId() {
         return id();
     }
 }
