@@ -15,6 +15,8 @@
  */
 package com.blazebit.notify.template.api;
 
+import com.blazebit.job.ServiceProvider;
+
 /**
  * A factory for template processors of a specific type.
  *
@@ -34,9 +36,11 @@ public interface TemplateProcessorFactory<R> {
     /**
      * Creates a new template processor for the given template context and configuration source.
      *
-     * @param templateContext     The template context
+     * @param templateContext The template context
+     * @param templateName The name of the template to retrieve a template processor for
      * @param configurationSource The configuration source
+     * @param serviceProvider The service provider of the job context
      * @return the template processor
      */
-    TemplateProcessor<R> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource);
+    TemplateProcessor<R> createTemplateProcessor(TemplateContext templateContext, String templateName, ConfigurationSource configurationSource, ServiceProvider serviceProvider);
 }

@@ -625,7 +625,12 @@ public interface NotificationJobContext extends JobContext {
                         if (channelFactory == null) {
                             throw new NotificationException("No channel factory for channel key available: " + channelKey);
                         }
-                        return channelFactory.createChannel(this, configurationSource);
+                        return channelFactory.createChannel(this, (key) -> {
+                            if (Channel.SERVICE_PROVIDER_PROPERTY.equals(key)) {
+                                return this;
+                            }
+                            return configurationSource.getProperty(key);
+                        });
                     }
                 );
             }

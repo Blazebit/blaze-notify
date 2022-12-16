@@ -16,6 +16,7 @@
 package com.blazebit.notify.email.message;
 
 import com.blazebit.job.ConfigurationSource;
+import com.blazebit.job.ServiceProvider;
 import com.blazebit.notify.Notification;
 import com.blazebit.notify.NotificationException;
 import com.blazebit.notify.NotificationJobContext;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
@@ -134,17 +134,32 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         this.envelopeFrom = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_ENVELOP_FROM_PROPERTY, String.class, Function.identity(), o -> null);
         this.resourceBundleAccessor = configurationSource.getPropertyOrDefault(EMAIL_MESSAGE_RESOURCE_BUNDLE_PROPERTY, Function.class, EmailNotificationMessageResolver::resourceBundleByName, o -> null);
         TemplateContext templateContext = configurationSource.getPropertyOrDefault(EMAIL_TEMPLATE_CONTEXT_PROPERTY, TemplateContext.class, null, o -> jobContext.getService(TemplateContext.class));
-        Function<String, Function<String, TemplateProcessor<String>>> templateProcessorFunction = templateProcessorFactoryNameProperty -> templateName ->
+        TemplateProcessorFactory<String> templateProcessorFactory = configurationSource.getPropertyOrDefault(
+            EMAIL_TEMPLATE_PROCESSOR_TYPE_PROPERTY, TemplateProcessorFactory.class, s -> {
+            if (templateContext == null) {
+                throw new NotificationException("No template context given!");
+            }
+            return templateContext.getTemplateProcessorFactory(s, String.class);
+        }, o -> null);
+        Function<String, TemplateProcessorFactory<Attachment>> attachmentTemplateProcessorFactory = templateProcessorFactoryKey -> {
+            if (templateContext == null) {
+                throw new NotificationException("No template context given!");
+            }
+            return templateContext.getTemplateProcessorFactory(templateProcessorFactoryKey, Attachment.class);
+        };
+        Function<String, TemplateProcessor<String>> templateProcessorFunction = templateName ->
             templateProcessorByType(
                 templateContext,
                 templateProcessorFactory,
                 configurationSource,
-                templateName);
-        Function<String, TemplateProcessor<Attachment>> attachmentTemplateProcessorFunction = templateProcessorKey -> templateProcessorByKey(
+                templateName,
+                jobContext);
+        Function<String, TemplateProcessor<Attachment>> attachmentTemplateProcessorFunction = templateProcessorType -> templateProcessorByType(
             templateContext,
             attachmentTemplateProcessorFactory.apply(templateProcessorType),
             configurationSource,
-            null);
+            null,
+            jobContext);
         String literalSubject = (String) configurationSource.getProperty(EMAIL_MESSAGE_SUBJECT_PROPERTY);
         this.subjectTemplateProcessor = literalSubject == null ? templateProcessorFunction.apply((String) configurationSource.getProperty(EMAIL_MESSAGE_SUBJECT_TEMPLATE_PROPERTY)) : TemplateProcessor.of(literalSubject);
         String literalBodyText = (String) configurationSource.getProperty(EMAIL_MESSAGE_TEXT_PROPERTY);
@@ -213,7 +228,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         return locale -> ResourceBundle.getBundle(name, locale);
     }
 
-    private static <T> TemplateProcessor<T> templateProcessorByType(TemplateContext templateContext, TemplateProcessorFactory<T> templateProcessorFactory, ConfigurationSource configurationSource, String templateName) {
+    private static <T> TemplateProcessor<T> templateProcessorByType(TemplateContext templateContext, TemplateProcessorFactory<T> templateProcessorFactory, ConfigurationSource configurationSource, String templateName, ServiceProvider serviceProvider) {
         if (templateName == null) {
             return null;
         }
@@ -223,12 +238,7 @@ public class EmailNotificationMessageResolver implements NotificationMessageReso
         if (templateProcessorFactory == null) {
             throw new NotificationException("No template processor factory given!");
         }
-        return templateProcessorFactory.createTemplateProcessor(templateContext, key -> {
-            if (TemplateProcessor.TEMPLATE_NAME_PROPERTY.equals(key)) {
-                return templateName;
-            }
-            return configurationSource.getProperty(key);
-        });
+        return templateProcessorFactory.createTemplateProcessor(templateContext, templateName, configurationSource::getProperty, serviceProvider);
     }
 
     @Override

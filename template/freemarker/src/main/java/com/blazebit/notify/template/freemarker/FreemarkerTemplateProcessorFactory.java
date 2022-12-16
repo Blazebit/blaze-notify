@@ -37,7 +37,7 @@ public class FreemarkerTemplateProcessorFactory implements TemplateProcessorFact
     }
 
     @Override
-    public TemplateProcessor<String> createTemplateProcessor(TemplateContext templateContext, ConfigurationSource configurationSource) {
-        return new FreemarkerTemplateProcessor(configurationSource);
+    public TemplateProcessor<String> createTemplateProcessor(TemplateContext templateContext, String templateName, ConfigurationSource configurationSource, com.blazebit.job.ServiceProvider serviceProvider) {
+        return new FreemarkerTemplateProcessor(templateName, configurationSource);
     }
 }

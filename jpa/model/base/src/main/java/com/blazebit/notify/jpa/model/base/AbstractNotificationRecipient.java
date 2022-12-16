@@ -19,10 +19,8 @@ package com.blazebit.notify.jpa.model.base;
 import com.blazebit.job.jpa.model.BaseEntity;
 import com.blazebit.notify.NotificationRecipient;
 
+import java.util.TimeZone;
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import java.util.Locale;
 
@@ -36,6 +34,7 @@ import java.util.Locale;
 public abstract class AbstractNotificationRecipient extends BaseEntity<Long> implements NotificationRecipient<Long> {
 
     private Locale locale;
+    private TimeZone timeZone;
 
     /**
      * Creates an empty notification recipient.
@@ -52,12 +51,6 @@ public abstract class AbstractNotificationRecipient extends BaseEntity<Long> imp
         super(id);
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-    public Long getId() {
-        return id();
-    }
-
     @Override
     @Column(nullable = false)
     public Locale getLocale() {
@@ -71,5 +64,15 @@ public abstract class AbstractNotificationRecipient extends BaseEntity<Long> imp
      */
     public void setLocale(Locale locale) {
         this.locale = locale;
+    }
+
+    @Override
+    @Column(nullable = false)
+    public TimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(TimeZone timeZone) {
+        this.timeZone = timeZone;
     }
 }

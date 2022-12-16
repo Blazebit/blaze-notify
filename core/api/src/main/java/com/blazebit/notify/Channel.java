@@ -27,6 +27,8 @@ package com.blazebit.notify;
  */
 public interface Channel<R extends NotificationRecipient<?>, M extends NotificationMessage> extends AutoCloseable {
 
+    String SERVICE_PROVIDER_PROPERTY = "serviceProvider";
+
     /**
      * Returns the notification message type class.
      *

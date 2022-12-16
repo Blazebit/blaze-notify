@@ -55,7 +55,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
     /**
      * The configuration property for the Freemarker {@link Template}.
      */
-    public static final String FREEMARKER_TEMPLATE_PROPERTY = TEMPLATE_NAME_PROPERTY;
+    public static final String FREEMARKER_TEMPLATE_PROPERTY = "template";
 
     /**
      * The configuration property for the {@link ResourceBundle}.
@@ -73,9 +73,10 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
     /**
      * Creates a new Freemarker template processor from the given configuration source.
      *
+     * @param templateName The template name
      * @param configurationSource The configuration source
      */
-    public FreemarkerTemplateProcessor(ConfigurationSource configurationSource) {
+    public FreemarkerTemplateProcessor(String templateName, ConfigurationSource configurationSource) {
         Function<String, FreemarkerTemplateLookup> templateAccessor = name -> (Locale locale) -> {
             Configuration configuration = configurationSource.getPropertyOrDefault(FREEMARKER_CONFIGURATION_PROPERTY, Configuration.class, null, o -> {
                 Configuration c = new Configuration(Configuration.VERSION_2_3_28);
@@ -89,7 +90,7 @@ public class FreemarkerTemplateProcessor implements TemplateProcessor<String>, S
                 throw new TemplateException("", e);
             }
         };
-        this.freemarkerTemplateLookup = configurationSource.getPropertyOrFail(FREEMARKER_TEMPLATE_PROPERTY, FreemarkerTemplateLookup.class, templateAccessor);
+        this.freemarkerTemplateLookup = configurationSource.getPropertyOrDefault(FREEMARKER_TEMPLATE_PROPERTY, FreemarkerTemplateLookup.class, templateAccessor, o -> templateAccessor.apply(templateName));
         Function<String, TemplateResourceBundleLookup> resourceBundleAccessor = name -> (Locale locale) -> ResourceBundle.getBundle(name, locale);
         this.resourceBundleLookup = configurationSource.getPropertyOrDefault(RESOURCE_BUNDLE_KEY, TemplateResourceBundleLookup.class, resourceBundleAccessor, o -> locale -> null);
     }
