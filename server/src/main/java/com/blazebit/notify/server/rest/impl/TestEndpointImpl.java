@@ -18,19 +18,18 @@ package com.blazebit.notify.server.rest.impl;
 
 import com.blazebit.job.JobContext;
 import com.blazebit.notify.email.model.jpa.AbstractEmailNotification;
-import com.blazebit.notify.email.model.jpa.EmailNotification;
-import com.blazebit.notify.email.model.jpa.FromEmail;
+import com.blazebit.notify.server.model.EmailNotification;
 import com.blazebit.notify.server.model.EmailNotificationJob;
 import com.blazebit.notify.server.model.EmailNotificationJobTrigger;
 import com.blazebit.notify.server.model.EmailNotificationRecipient;
+import com.blazebit.notify.server.model.FromEmail;
 import com.blazebit.notify.server.rest.api.TestEndpoint;
-
+import java.time.Instant;
+import java.util.Locale;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
-import java.time.Instant;
-import java.util.Locale;
 
 /**
  * @author Christian Beikov
@@ -56,7 +55,6 @@ public class TestEndpointImpl implements TestEndpoint {
         if (direct) {
             EmailNotification emailNotification = new EmailNotification();
             emailNotification.setTo(recipient.getEmail());
-            emailNotification.setTemplateProcessorType("freemarker");
             emailNotification.setChannelType("smtp");
             emailNotification.setFrom(entityManager.createQuery("SELECT e FROM FromEmail e", FromEmail.class).setMaxResults(1).getSingleResult());
             emailNotification.setSubject("Hello");
@@ -72,9 +70,9 @@ public class TestEndpointImpl implements TestEndpoint {
             emailNotificationJobTrigger.setName("test");
             emailNotificationJobTrigger.setJob(emailJob);
             emailNotificationJobTrigger.setNotificationCronExpression("0 0 22 * * ?");
-            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.TEMPLATE_PROCESSOR_TYPE_PARAMETER_NAME, "freemarker");
-            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.SUBJECT_PARAMETER_NAME, "subject.ftl");
-            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.BODY_TEXT_PARAMETER_NAME, "text.ftl");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.TEMPLATE_PROCESSOR_TYPE_PARAMETER, "freemarker");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.SUBJECT_TEMPLATE_PARAMETER, "subject.ftl");
+            emailNotificationJobTrigger.getJobConfiguration().getParameters().put(AbstractEmailNotification.BODY_TEXT_TEMPLATE_PARAMETER, "text.ftl");
 //        emailNotificationJobTrigger.setScheduleCronExpression("0 * * * * ?");
             emailNotificationJobTrigger.setScheduleCronExpression(jobContext.getScheduleFactory().asCronExpression(Instant.now()));
             jobContext.getJobManager().addJobInstance(emailNotificationJobTrigger);
