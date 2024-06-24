@@ -25,6 +25,7 @@
         <version.blaze-domain>1.0.0-Alpha3</version.blaze-domain>
         <version.weld>2.4.5.Final</version.weld>
         <version.spring>5.0.7.RELEASE</version.spring>
+        <version.hibernate>5.2.11.Final</version.hibernate>
         <version.junit>4.12</version.junit>
     </properties>
 
@@ -92,8 +93,6 @@
                 <configuration>
                     <source>${maven.compiler.argument.source}</source>
                     <target>${maven.compiler.argument.target}</target>
-                    <!-- Disable annotation processing via compiler plugin. -->
-                    <compilerArgument>-proc:none</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>
