@@ -18,11 +18,10 @@
   under the License.                                           
  -->
 
+<!-- Read https://james.apache.org/server/config-domainlist.html for further details -->
+
 <domainlist>
-    <domainnames>
-        <domainname>localhost</domainname>
-    </domainnames>
-    <autodetect>true</autodetect>
-    <autodetectIP>true</autodetectIP>
+    <autodetect>false</autodetect>
+    <autodetectIP>false</autodetectIP>
     <defaultDomain>localhost</defaultDomain>
 </domainlist>

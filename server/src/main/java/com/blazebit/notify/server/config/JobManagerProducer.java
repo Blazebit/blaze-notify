@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.server.config;
 
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.channel.smtp.SmtpChannel;
 import com.blazebit.notify.server.notification.NotificationJobInstanceProcessorFactoryImpl;
@@ -25,13 +25,13 @@ import com.blazebit.notify.server.notification.NotificationRecipientResolverImpl
 import com.blazebit.notify.template.api.TemplateContext;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 
-import javax.annotation.Resource;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Disposes;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
+import jakarta.annotation.Resource;
+import jakarta.enterprise.concurrent.ManagedScheduledExecutorService;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -46,7 +46,7 @@ public class JobManagerProducer {
     @Inject
     CriteriaBuilderFactory criteriaBuilderFactory;
     @Inject
-    ExpressionServiceFactory expressionServiceFactory;
+    ExpressionService expressionService;
 
     @Resource
     ManagedScheduledExecutorService scheduledExecutorService;
@@ -56,7 +56,7 @@ public class JobManagerProducer {
     public NotificationJobContext createNotificationJobContext() {
         return NotificationJobContext.builder()
                 .withService(EntityManager.class, entityManager)
-                .withService(ExpressionServiceFactory.class, expressionServiceFactory)
+                .withService(ExpressionService.class, expressionService)
                 .withService(CriteriaBuilderFactory.class, criteriaBuilderFactory)
                 .withService(ScheduledExecutorService.class, scheduledExecutorService)
                 .withService(TemplateContext.class, TemplateContext.builder().createContext())

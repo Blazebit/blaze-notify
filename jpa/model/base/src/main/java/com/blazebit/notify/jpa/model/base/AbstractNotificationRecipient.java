@@ -20,8 +20,8 @@ import com.blazebit.job.jpa.model.BaseEntity;
 import com.blazebit.notify.NotificationRecipient;
 
 import java.util.TimeZone;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import java.util.Locale;
 
 /**

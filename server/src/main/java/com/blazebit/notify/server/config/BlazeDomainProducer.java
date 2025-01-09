@@ -18,13 +18,10 @@ package com.blazebit.notify.server.config;
 
 import com.blazebit.domain.declarative.DeclarativeDomainConfiguration;
 import com.blazebit.domain.runtime.model.DomainModel;
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.expression.Expressions;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 /**
  * @author Christian Beikov
@@ -32,9 +29,6 @@ import javax.persistence.EntityManagerFactory;
  */
 @ApplicationScoped
 public class BlazeDomainProducer {
-
-    @Inject
-    EntityManagerFactory entityManagerFactory;
 
     @Produces
     @ApplicationScoped
@@ -44,8 +38,7 @@ public class BlazeDomainProducer {
 
     @Produces
     @ApplicationScoped
-    ExpressionServiceFactory createExpressionServiceFactory(DomainModel domainModel) {
-        return Expressions.getDefaultProvider()
-                .create(domainModel);
+    ExpressionService createExpressionService(DomainModel domainModel) {
+        return Expressions.forModel(domainModel);
     }
 }

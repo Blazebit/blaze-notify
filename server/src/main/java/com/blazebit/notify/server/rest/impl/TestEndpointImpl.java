@@ -26,10 +26,10 @@ import com.blazebit.notify.server.model.FromEmail;
 import com.blazebit.notify.server.rest.api.TestEndpoint;
 import java.time.Instant;
 import java.util.Locale;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.ws.rs.core.Response;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.ws.rs.core.Response;
 
 /**
  * @author Christian Beikov

@@ -11,10 +11,9 @@
     <artifactId>blaze-notify-processor-hibernate-insert-select</artifactId>
 
     <dependencies>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -34,7 +33,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api</artifactId>
+            <artifactId>blaze-persistence-core-api-jakarta</artifactId>
         </dependency>
     </dependencies>
 

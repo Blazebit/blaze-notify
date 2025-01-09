@@ -15,9 +15,9 @@
  */
 package com.blazebit.notify.email.model.jpa;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * An entity for the from address.

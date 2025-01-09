@@ -11,10 +11,16 @@
     <artifactId>blaze-notify-channel-smtp</artifactId>
 
     <properties>
-        <version.james>3.2.0</version.james>
+        <version.james>3.6.2</version.james>
+        <version.angus>2.0.3</version.angus>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>jakarta.mail</groupId>
+            <artifactId>jakarta.mail-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-core-api</artifactId>
@@ -31,10 +37,14 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
-            <scope>provided</scope>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>${version.angus}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>smtp</artifactId>
+            <version>${version.angus}</version>
         </dependency>
 
         <dependency>
@@ -67,17 +77,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
-            <artifactId>james-server-memory-guice</artifactId>
-            <version>${version.james}</version>
+            <artifactId>james-server-memory-app</artifactId>
+            <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-lucene</artifactId>
-            <version>${version.james}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>

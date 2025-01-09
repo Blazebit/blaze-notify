@@ -16,6 +16,9 @@
 
 package com.blazebit.notify.server.notification;
 
+import com.blazebit.expression.ExpressionSerializer;
+import com.blazebit.expression.ExpressionService;
+import com.blazebit.expression.persistence.PersistenceExpressionSerializerContext;
 import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.job.JobInstanceState;
 import com.blazebit.job.Schedule;
@@ -85,10 +88,11 @@ public class EmailNotificationJobInstanceProcessor extends AbstractInsertSelectN
     }
 
     @Override
-    protected Map<String, Object> getSerializerContext(EmailNotificationJobInstance jobInstance, JobInstanceProcessingContext<Long> context, String recipientAlias, String jobInstanceAlias) {
+    protected ExpressionSerializer.Context getSerializerContext(EmailNotificationJobInstance jobInstance, JobInstanceProcessingContext<Long> context, String recipientAlias, String jobInstanceAlias) {
+        ExpressionService expressionService = context.getJobContext().getService(ExpressionService.class);
         Map<String, Object> serializerContext = new HashMap<>();
         serializerContext.put("user", recipientAlias);
-        return serializerContext;
+        return new PersistenceExpressionSerializerContext(expressionService, serializerContext);
     }
 
     @Override

@@ -18,11 +18,11 @@ package com.blazebit.notify.server.rest.impl;
 
 import com.blazebit.notify.NotificationJobContext;
 import com.blazebit.notify.server.model.FromEmail;
-import javax.annotation.PostConstruct;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
+import jakarta.annotation.PostConstruct;
+import jakarta.ejb.Singleton;
+import jakarta.ejb.Startup;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Christian Beikov

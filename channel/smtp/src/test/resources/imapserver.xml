@@ -19,36 +19,32 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!-- Read https://james.apache.org/server/config-imap4.html for further details -->
+
 
 <imapservers>
     <imapserver enabled="true">
         <jmxName>imapserver</jmxName>
         <bind>0.0.0.0:10143</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="true">
+        <tls socketTLS="false" startTLS="false">
             <!-- To create a new keystore execute:
-            keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-              -->
-            <keystore>classpath:/keystore</keystore>
-            <secret>storepass</secret>
-            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-        </tls>
-        <connectionLimit>0</connectionLimit>
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-    </imapserver>
-    <imapserver enabled="true">
-        <jmxName>imapserver-ssl</jmxName>
-        <bind>0.0.0.0:10993</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="true" startTLS="false">
-            <!-- To create a new keystore execute:
-              keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
              -->
             <keystore>classpath:/keystore</keystore>
             <secret>storepass</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+
+            <!-- Alternatively TLS keys can be supplied via PEM files -->
+            <!-- <privateKey>file://conf/private.key</privateKey> -->
+            <!-- <certificates>file://conf/certs.self-signed.csr</certificates> -->
+            <!-- An optional secret might be specified for the private key -->
+            <!-- <secret>james72laBalle</secret> -->
         </tls>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
     </imapserver>
 </imapservers>

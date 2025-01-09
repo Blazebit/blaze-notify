@@ -24,7 +24,7 @@ import com.blazebit.job.ServiceProvider;
 import com.blazebit.job.jpa.model.JpaPartitionKey;
 import com.blazebit.notify.spi.NotificationPartitionKeyProvider;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A {@link NotificationPartitionKeyProvider} implementation that makes use of the JPA metamodel and configuration attributes for creating relevant {@link JpaPartitionKey}s.

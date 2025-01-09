@@ -18,13 +18,11 @@ package com.blazebit.notify.server.notification;
 
 import com.blazebit.domain.runtime.model.DomainModel;
 import com.blazebit.domain.runtime.model.DomainType;
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.notify.NotificationJobInstance;
 import com.blazebit.notify.recipient.resolver.expression.AbstractPredicatingExpressionNotificationRecipientResolver;
 import com.blazebit.notify.server.model.EmailNotificationJobInstance;
-import com.blazebit.notify.server.model.EmailNotificationRecipient;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,9 +35,9 @@ public class NotificationRecipientResolverImpl extends AbstractPredicatingExpres
     @Override
     protected Map<String, DomainType> getRootDomainTypes(JobInstanceProcessingContext<?> jobContext) {
         Map<String, DomainType> rootDomainTypes = new HashMap<>();
-        ExpressionServiceFactory expressionServiceFactory = jobContext.getJobContext().getService(ExpressionServiceFactory.class);
-        DomainModel domainModel = expressionServiceFactory.getDomainModel();
-        rootDomainTypes.put("user", domainModel.getType(EmailNotificationRecipient.class));
+        ExpressionService expressionService = jobContext.getJobContext().getService(ExpressionService.class);
+        DomainModel domainModel = expressionService.getDomainModel();
+        rootDomainTypes.put("user", domainModel.getEntityType("EmailNotificationRecipient"));
         return rootDomainTypes;
     }
 

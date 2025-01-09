@@ -19,7 +19,7 @@ package com.blazebit.notify.jpa.model.base;
 import com.blazebit.job.jpa.model.AbstractJob;
 import com.blazebit.notify.NotificationJob;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * An abstract mapped superclass implementing the {@link NotificationJob} interface.

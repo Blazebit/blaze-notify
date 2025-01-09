@@ -21,7 +21,7 @@ import com.blazebit.job.Schedule;
 import com.blazebit.job.jpa.model.AbstractJobTrigger;
 import com.blazebit.notify.NotificationJobTrigger;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * An abstract mapped superclass implementing the {@link NotificationJobTrigger} interface.

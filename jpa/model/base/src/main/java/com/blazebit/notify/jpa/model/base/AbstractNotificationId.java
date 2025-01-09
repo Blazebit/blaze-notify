@@ -16,7 +16,7 @@
 
 package com.blazebit.notify.jpa.model.base;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.io.Serializable;
 
 /**

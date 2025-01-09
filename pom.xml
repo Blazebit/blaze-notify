@@ -33,7 +33,7 @@
 
     <properties>
         <jdk8.home>${env.JAVA_HOME}</jdk8.home>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <version.checkstyle>8.7</version.checkstyle>
