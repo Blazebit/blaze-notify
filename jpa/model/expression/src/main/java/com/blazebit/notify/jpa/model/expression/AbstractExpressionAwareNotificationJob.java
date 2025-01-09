@@ -18,7 +18,7 @@ package com.blazebit.notify.jpa.model.expression;
 
 import com.blazebit.notify.jpa.model.base.AbstractNotificationJob;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * An extension of {@link AbstractNotificationJob} that contains a Blaze-Expression expression to select recipients.

@@ -19,11 +19,11 @@ package com.blazebit.notify.jpa.model.base;
 import com.blazebit.notify.NotificationJobInstance;
 import com.blazebit.notify.NotificationRecipient;
 
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
 
 /**
  * An abstract mapped superclass implementing the {@link com.blazebit.notify.Notification} interface that is based on a {@link NotificationJobInstance}.

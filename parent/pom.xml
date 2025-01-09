@@ -18,29 +18,24 @@
         <blaze-notify.codename>Pidgey</blaze-notify.codename>
 
         <version.blaze-utils>0.1.19</version.blaze-utils>
-        <version.blaze-persistence>1.4.0</version.blaze-persistence>
-        <version.blaze-job>1.0.1</version.blaze-job>
-        <version.blaze-actor>1.0.0-Alpha5</version.blaze-actor>
-        <version.blaze-expression>1.0.0-Alpha5</version.blaze-expression>
-        <version.blaze-domain>1.0.0-Alpha3</version.blaze-domain>
-        <version.weld>2.4.5.Final</version.weld>
-        <version.spring>5.0.7.RELEASE</version.spring>
+        <version.blaze-persistence>1.6.14</version.blaze-persistence>
+        <version.blaze-job>1.0.2</version.blaze-job>
+        <version.blaze-actor>1.0.0-Alpha6</version.blaze-actor>
+        <version.blaze-expression>1.0.0-Alpha33</version.blaze-expression>
+        <version.blaze-domain>3.0.0-Alpha5</version.blaze-domain>
+        <version.spring>6.2.1</version.spring>
         <version.junit>4.12</version.junit>
+        <version.surefire.plugin>3.5.2</version.surefire.plugin>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
             <dependency>
-                <groupId>javax</groupId>
-                <artifactId>javaee-api</artifactId>
-                <version>7.0</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>javax.json</groupId>
-                <artifactId>javax.json-api</artifactId>
-                <version>1.1</version>
+                <groupId>jakarta.platform</groupId>
+                <artifactId>jakarta.jakartaee-bom</artifactId>
+                <version>10.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- Test -->
@@ -65,27 +60,19 @@
                 <version>${version.blaze-utils}</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                <groupId>org.jboss.weld.se</groupId>
-                <artifactId>weld-se-core</artifactId>
-                <version>${version.weld}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.jboss</groupId>
-                        <artifactId>jandex</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <!-- Since we are including a module-info.class file, we need at least 2.0.4.Final -->
-            <dependency>
-                <groupId>org.jboss</groupId>
-                <artifactId>jandex</artifactId>
-                <version>2.0.4.Final</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
+<!--        <pluginManagement>-->
+<!--            <plugins>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-surefire-plugin</artifactId>-->
+<!--                    <version>${version.surefire.plugin}</version>-->
+<!--                </plugin>-->
+<!--            </plugins>-->
+<!--        </pluginManagement>-->
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -110,7 +97,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${version.checkstyle.plugin}</version>
                 <configuration>
                     <configLocation>blaze-notify/checkstyle-config.xml</configLocation>
                     <suppressionsLocation>blaze-notify/checkstyle-suppressions.xml</suppressionsLocation>

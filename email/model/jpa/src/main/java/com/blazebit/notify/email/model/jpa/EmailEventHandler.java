@@ -20,7 +20,7 @@ import com.blazebit.notify.email.sns.EmailComplaintEvent;
 import com.blazebit.notify.email.sns.EmailEvent;
 import com.blazebit.notify.email.sns.EmailEventBounceRecipient;
 
-import javax.json.Json;
+import jakarta.json.Json;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

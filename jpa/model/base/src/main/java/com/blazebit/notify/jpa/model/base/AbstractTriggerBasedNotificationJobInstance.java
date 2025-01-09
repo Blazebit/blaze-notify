@@ -20,8 +20,8 @@ import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.job.jpa.model.AbstractTriggerBasedJobInstance;
 import com.blazebit.notify.NotificationJobInstance;
 
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 /**
  * An abstract mapped superclass implementing the {@link NotificationJobInstance} interface.

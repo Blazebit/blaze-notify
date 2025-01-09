@@ -15,8 +15,8 @@
  */
 package com.blazebit.notify.email.model.jpa;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.net.IDN;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

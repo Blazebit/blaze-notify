@@ -17,7 +17,7 @@ package com.blazebit.notify.channel.smtp;
 
 import com.blazebit.notify.email.message.EmailNotificationMessage;
 import com.blazebit.notify.email.message.EmailNotificationRecipient;
-import com.sun.mail.smtp.SMTPMessage;
+import org.eclipse.angus.mail.smtp.SMTPMessage;
 
 /**
  * A filter that allows to control what messages to send.

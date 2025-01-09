@@ -17,13 +17,12 @@ package com.blazebit.notify.recipient.resolver.expression;
 
 import com.blazebit.domain.runtime.model.DomainType;
 import com.blazebit.expression.ExpressionCompiler;
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.expression.Predicate;
 import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.notify.NotificationJobInstance;
 import com.blazebit.notify.NotificationRecipient;
 import com.blazebit.notify.NotificationRecipientResolver;
-
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +47,8 @@ public abstract class AbstractPredicatingExpressionNotificationRecipientResolver
      * @return the recipient predicate
      */
     public Predicate resolveNotificationRecipientPredicate(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
-        ExpressionServiceFactory expressionServiceFactory = jobContext.getJobContext().getService(ExpressionServiceFactory.class);
-        ExpressionCompiler compiler = expressionServiceFactory.createCompiler();
+        ExpressionService expressionService = jobContext.getJobContext().getService(ExpressionService.class);
+        ExpressionCompiler compiler = expressionService.createCompiler();
         Map<String, DomainType> rootDomainTypes = getRootDomainTypes(jobContext);
         ExpressionCompiler.Context context = compiler.createContext(rootDomainTypes);
         String recipientPredicateExpression = getRecipientPredicateExpression(jobInstance, jobContext);

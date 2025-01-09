@@ -11,10 +11,14 @@
     <artifactId>blaze-notify-email-sns-sqs-feedback</artifactId>
 
     <dependencies>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.jms</groupId>
+            <artifactId>jakarta.jms-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

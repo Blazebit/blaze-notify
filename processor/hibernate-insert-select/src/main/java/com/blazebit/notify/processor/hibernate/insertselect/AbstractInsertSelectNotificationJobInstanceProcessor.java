@@ -16,7 +16,7 @@
 package com.blazebit.notify.processor.hibernate.insertselect;
 
 import com.blazebit.expression.ExpressionSerializer;
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.expression.Predicate;
 import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.job.processor.hibernate.insertselect.AbstractInsertSelectJobInstanceProcessor;
@@ -29,11 +29,9 @@ import com.blazebit.notify.recipient.resolver.expression.AbstractPredicatingExpr
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.WhereBuilder;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An abstract notification job instance processor implementation that produces target entities via a INSERT-SELECT statement.
@@ -63,9 +61,9 @@ public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T
             if (recipientResolver instanceof AbstractPredicatingExpressionNotificationRecipientResolver) {
                 Predicate predicate = ((AbstractPredicatingExpressionNotificationRecipientResolver) recipientResolver).resolveNotificationRecipientPredicate(jobInstance, context);
                 if (predicate != null) {
-                    ExpressionServiceFactory expressionServiceFactory = context.getJobContext().getService(ExpressionServiceFactory.class);
-                    ExpressionSerializer<WhereBuilder> serializer = expressionServiceFactory.createSerializer(WhereBuilder.class);
-                    ExpressionSerializer.Context serializerContext = serializer.createContext(getSerializerContext(jobInstance, context, recipientAlias, jobInstanceAlias));
+                    ExpressionService expressionService = context.getJobContext().getService(ExpressionService.class);
+                    ExpressionSerializer<WhereBuilder> serializer = expressionService.createSerializer(WhereBuilder.class);
+                    ExpressionSerializer.Context serializerContext = getSerializerContext(jobInstance, context, recipientAlias, jobInstanceAlias);
                     serializer.serializeTo(serializerContext, predicate, insertCriteriaBuilder);
                 }
             } else {
@@ -108,7 +106,7 @@ public abstract class AbstractInsertSelectNotificationJobInstanceProcessor<ID, T
      * @param jobInstanceAlias The job instance alias
      * @return the serializer context
      */
-    protected abstract Map<String, Object> getSerializerContext(I jobInstance, JobInstanceProcessingContext<ID> context, String recipientAlias, String jobInstanceAlias);
+    protected abstract ExpressionSerializer.Context getSerializerContext(I jobInstance, JobInstanceProcessingContext<ID> context, String recipientAlias, String jobInstanceAlias);
 
     @Override
     protected ID execute(InsertCriteriaBuilder<T> insertCriteriaBuilder, I jobInstance, JobInstanceProcessingContext<ID> context) {

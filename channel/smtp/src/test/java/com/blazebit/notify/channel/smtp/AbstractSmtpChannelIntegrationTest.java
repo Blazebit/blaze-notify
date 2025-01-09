@@ -15,20 +15,22 @@
  */
 package com.blazebit.notify.channel.smtp;
 
-import com.blazebit.notify.channel.smtp.james.module.MessageSearchIndexModule;
 import com.blazebit.notify.channel.smtp.util.ImapMailClient;
-import com.google.inject.Binder;
-import com.google.inject.Module;
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
+import org.apache.james.FakeSearchMailboxModule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJamesConfiguration;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-
-import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
 public abstract class AbstractSmtpChannelIntegrationTest {
     private final static String TEST_MAIL_SERVER_DOMAIN = "localhost";
@@ -74,22 +76,32 @@ public abstract class AbstractSmtpChannelIntegrationTest {
 
     private static void startMailServer() {
         String tempDir = System.getProperty("java.io.tmpdir");
-        Configuration configuration = Configuration.builder().configurationFromClasspath().workingDirectory(tempDir).build();
-        final MemoryUsersRepository jamesUsersRepository = MemoryUsersRepository.withVirtualHosting();
-        jamesServer = GuiceJamesServer.forConfiguration(configuration).combineWith(
-                IN_MEMORY_SERVER_AGGREGATE_MODULE,
-                new JMXServerModule(),
-                new MessageSearchIndexModule()
-        ).overrideWith(new Module() {
-            @Override
-            public void configure(Binder binder) {
-                binder.bind(MemoryUsersRepository.class).toInstance(jamesUsersRepository);
-
-            }
-        });
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
+            .configurationFromClasspath()
+            .workingDirectory(tempDir)
+            .build();
+        jamesServer = MemoryJamesServerMain.createServer(configuration)
+            .combineWith(new FakeSearchMailboxModule(), new JMXServerModule());
         try {
             jamesServer.start();
-            jamesUsersRepository.addUser(TEST_MAIL_USER, TEST_MAIL_PWD);
+            addUser(TEST_MAIL_USER, TEST_MAIL_PWD);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void addUser(String email, String password) {
+        try {
+            String serverUrl = "service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi";
+            String beanNameUser = "org.apache.james:type=component,name=usersrepository";
+
+            MBeanServerConnection server =
+                JMXConnectorFactory.connect(new JMXServiceURL(serverUrl)).getMBeanServerConnection();
+
+            UsersRepositoryManagementMBean userBean =
+                MBeanServerInvocationHandler.newProxyInstance(server, new ObjectName(beanNameUser),
+                    UsersRepositoryManagementMBean.class, false);
+            userBean.addUser(email, password);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

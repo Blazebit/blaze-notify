@@ -18,13 +18,13 @@ package com.blazebit.notify.recipient.resolver.expression;
 import com.blazebit.domain.runtime.model.DomainType;
 import com.blazebit.expression.ExpressionCompiler;
 import com.blazebit.expression.ExpressionInterpreter;
-import com.blazebit.expression.ExpressionServiceFactory;
+import com.blazebit.expression.ExpressionInterpreterContext;
+import com.blazebit.expression.ExpressionService;
 import com.blazebit.expression.Predicate;
 import com.blazebit.job.JobInstanceProcessingContext;
 import com.blazebit.notify.NotificationJobInstance;
 import com.blazebit.notify.NotificationRecipient;
 import com.blazebit.notify.NotificationRecipientResolver;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +39,14 @@ public abstract class AbstractInterpretingExpressionNotificationRecipientResolve
 
     @Override
     public List<? extends NotificationRecipient<?>> resolveNotificationRecipients(NotificationJobInstance<Long, ?> jobInstance, JobInstanceProcessingContext<?> jobContext) {
-        ExpressionServiceFactory expressionServiceFactory = jobContext.getJobContext().getService(ExpressionServiceFactory.class);
-        ExpressionInterpreter interpreter = expressionServiceFactory.createInterpreter();
-        ExpressionCompiler compiler = expressionServiceFactory.createCompiler();
+        ExpressionService expressionService = jobContext.getJobContext().getService(ExpressionService.class);
+        ExpressionInterpreter interpreter = expressionService.createInterpreter();
+        ExpressionCompiler compiler = expressionService.createCompiler();
         Map<String, DomainType> rootDomainTypes = getRootDomainTypes(jobContext);
         Map<String, Object> rootDomainObjects = getRootDomainObjects(jobContext);
         ExpressionCompiler.Context compilerContext = compiler.createContext(rootDomainTypes);
-        ExpressionInterpreter.Context context = interpreter.createContext(rootDomainTypes, rootDomainObjects);
+        ExpressionInterpreterContext<?> context = ExpressionInterpreterContext.create(expressionService);
+        rootDomainObjects.forEach(context::withRoot);
         String recipientPredicateExpression = getRecipientPredicateExpression(jobInstance, jobContext);
         List<? extends NotificationRecipient<?>> allRecipients = getAllRecipients(jobContext);
         if (recipientPredicateExpression != null && !recipientPredicateExpression.isEmpty()) {

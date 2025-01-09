@@ -18,8 +18,8 @@ package com.blazebit.notify.server.model;
 
 import com.blazebit.notify.jpa.model.base.AbstractNotificationId;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Christian Beikov

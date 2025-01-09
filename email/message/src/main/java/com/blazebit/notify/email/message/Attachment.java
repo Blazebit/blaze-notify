@@ -15,7 +15,7 @@
  */
 package com.blazebit.notify.email.message;
 
-import javax.activation.DataSource;
+import jakarta.activation.DataSource;
 
 /**
  * An E-Mail attachment.

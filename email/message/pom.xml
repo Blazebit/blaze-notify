@@ -12,6 +12,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-notify-core-api</artifactId>
             <version>${project.version}</version>

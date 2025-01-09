@@ -17,11 +17,11 @@ package com.blazebit.notify.channel.smtp;
 
 import com.blazebit.notify.email.message.EmailNotificationMessage;
 import com.blazebit.notify.email.message.EmailNotificationRecipient;
-import com.sun.mail.smtp.SMTPMessage;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.eclipse.angus.mail.smtp.SMTPMessage;
 
 /**
  * A regex pattern based SMTP filter for recipient email addresses.

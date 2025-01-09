@@ -11,7 +11,7 @@
     <artifactId>blaze-notify-channel-ses</artifactId>
 
     <properties>
-        <version.aws.sdk>2.7.27</version.aws.sdk>
+        <version.aws.sdk>2.29.46</version.aws.sdk>
     </properties>
 
     <dependencies>
@@ -32,8 +32,8 @@
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
+            <artifactId>jakarta.mail</artifactId>
+            <version>2.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

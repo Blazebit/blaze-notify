@@ -21,10 +21,10 @@ import com.blazebit.notify.email.message.EmailNotificationMessage;
 import com.blazebit.notify.email.message.EmailSubject;
 import org.junit.Test;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;

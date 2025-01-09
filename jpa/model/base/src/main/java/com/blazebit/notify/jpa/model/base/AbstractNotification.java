@@ -22,11 +22,11 @@ import com.blazebit.job.jpa.model.JobConfiguration;
 import com.blazebit.job.jpa.model.TimeFrame;
 import com.blazebit.notify.Notification;
 
-import javax.persistence.Column;
-import javax.persistence.Lob;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Map;
