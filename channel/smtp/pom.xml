@@ -12,7 +12,7 @@
 
     <properties>
         <version.james>3.6.2</version.james>
-        <version.angus>2.0.3</version.angus>
+        <version.angus>2.0.4</version.angus>
     </properties>
 
     <dependencies>
